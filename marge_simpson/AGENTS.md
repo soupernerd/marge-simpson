@@ -147,4 +147,70 @@ When delivering work, use:
 - **How to verify:** (short checklist)
 - **Notes / risks:** (only if needed)
 
-If verification fails or is incomplete, keep the item as Doing and write what’s missing.
+If verification fails or is incomplete, keep the item as Doing and write what's missing.
+
+---
+
+## D) Bulleted Issues Workflow
+
+When the user provides a message containing `Questions / Confirmations:` and/or `Issues:` sections with bullets, follow this workflow:
+
+### Goal
+Fix all listed issues in one run. After EACH fix, run automated verification and record evidence. Do not require follow-up input unless blocked from executing commands.
+
+### Execution Rules
+
+1) **Minimize questions (cost-aware)**
+   - Ask questions only if a wrong assumption would cause major rework or if you are blocked.
+   - If needed, ask ALL questions in one short batch (max 5).
+
+2) **Issue intake + tracking (required)**
+   - Treat each bullet under `Issues:` as a new candidate item.
+   - For each bullet:
+     - Create the next MS-#### ID.
+     - Add an entry in `marge_simpson/assessment.md`.
+     - Add a task in `marge_simpson/tasklist.md` (DoD + Verification).
+     - Increment `Next ID` in BOTH files immediately.
+
+3) **Work order**
+   - A) Existing unchecked P0/P1 items already in `tasklist.md`
+   - B) Then the newly created items from this message
+   - C) Then remaining unchecked items (P0 → P1 → P2)
+
+4) **Verification Gate** — Follow Section A.7 exactly (NON-NEGOTIABLE).
+
+5) **Response format** — Use Section C format, plus:
+   - `Verification evidence (per ID):` section with raw output or log path
+
+---
+
+## E) System-Wide Audit Workflow
+
+When the user requests a system-wide audit, follow this workflow:
+
+### Audit Phase
+1) Read and understand the architecture and major workflows.
+2) Identify correctness issues, risky patterns, and high-impact improvements.
+3) Do not break intended functionality.
+
+### Update/Create Tracking Docs (required)
+- `marge_simpson/assessment.md`
+  - Current snapshot (scope, status, top risks)
+  - Findings by area
+  - Issues Log entries (MS-####) with root cause, fix plan, and verification plan
+- `marge_simpson/tasklist.md`
+  - Prioritized, ordered tasks with Definition of Done and Verification (automated)
+- `marge_simpson/instructions_log.md`
+  - Append any new standing instructions the user provides
+
+### Execution Phase
+Immediately start executing the remaining unchecked items in `marge_simpson/tasklist.md` (P0 → P1 → P2), keeping docs updated as you go.
+
+### Verification Requirements (do not skip)
+- For EACH MS item you implement, run automated verification and record evidence before moving on.
+- Follow Section A.7 Verification Gate exactly (NON-NEGOTIABLE).
+- Prefer adding an automated regression test for each fix.
+- Never claim tests passed without raw output or a verify log file path.
+
+### Response Format
+Use Section C format, including IDs touched.
