@@ -1,8 +1,4 @@
-## USE EVERYTHING BELOW THIS LINE IN YOUR PROMPT (MODIFY THE QUESTIONS  AND THE ISSUES SECTIONS TO YOUR NEEDS)
-
-
-
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the marge_for_marge folder and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)
@@ -16,4 +12,4 @@ Issues:
 - Example / New Issue: "The right hand side nav is not expanding as expected"
 - Example / Existing issue not fixed: "MS-0046 is still exibiting [insert issue here]"
 
-After the issues above, continue remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0 → P1 → P2).
+After the issues above, continue remaining unchecked items (if any exist) in marge_for_marge/tasklist.md (P0 → P1 → P2).
