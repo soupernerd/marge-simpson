@@ -1,5 +1,5 @@
 # Meta-development folder (not for distribution)
-marge_for_marge/
+meta_marge/
 
 # OS / filesystem noise
 .DS_Store

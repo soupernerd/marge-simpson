@@ -4,6 +4,9 @@ This folder is a drop-in workflow for running audits and fixing bugs in any code
 
 Priority order: correctness > safety > minimal diffs > speed.
 
+**CRITICAL RULE: Marge NEVER creates files outside its own folder.**
+All tracking docs, logs, and artifacts stay within `marge_simpson/`.
+
 ---
 
 ## A) Universal Rules (always apply)
@@ -37,7 +40,6 @@ Before any of the following, stop and request approval with a short plan + risks
 7) Verification is required (AUTOMATED + LINEAR)
 - For EACH issue, verification is a hard gate.
 - Do NOT move to the next issue until the current issue has passing verification evidence.
-- Prefer adding an automated regression test. If not feasible quickly, add a deterministic repro script/steps.
 - Always run the repo verification runner:
   - macOS/Linux: `./marge_simpson/verify.sh fast`
   - Windows (PowerShell): `./marge_simpson/verify.ps1 fast`
@@ -50,27 +52,18 @@ Before any of the following, stop and request approval with a short plan + risks
 ### Verification Gate (NON-NEGOTIABLE)
 For each issue (MS-####), work MUST be linear:
 
-A) Test plan first
-   - Identify the smallest test(s) that prove the fix.
-   - Prefer an automated regression test.
-   - If automation is not feasible quickly, create a deterministic repro script/steps.
-
-B) Prove it fails (before)
-   - Ensure the test/repro fails on the current code (or document why it cannot).
-
-C) Fix
+A) Fix
    - Implement the smallest safe fix.
 
-D) Run verification (after)
+B) Run verification (after)
    - Run the verification runner (fast by default), plus any issue-specific command(s).
 
-E) Record evidence
+C) Record evidence
    - In `assessment.md` under the MS entry, record:
-     - Tests added/changed
      - Commands executed
      - Raw output (or the verify log file path)
 
-F) Only then
+D) Only then
    - Mark the task Verified/Done in `tasklist.md` and proceed.
 
 If command execution is unavailable in the current environment, treat verification as BLOCKED and request the minimum
@@ -210,7 +203,6 @@ Immediately start executing the remaining unchecked items in `marge_simpson/task
 ### Verification Requirements (do not skip)
 - For EACH MS item you implement, run automated verification and record evidence before moving on.
 - Follow Section A.7 Verification Gate exactly (NON-NEGOTIABLE).
-- Prefer adding an automated regression test for each fix.
 - Never claim tests passed without raw output or a verify log file path.
 
 ### Response Format
