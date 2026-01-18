@@ -161,7 +161,7 @@ function Test-Assert {
 Write-Banner
 
 # Test 1: Required files exist
-Write-Section "Test Suite 1/5: File Existence"
+Write-Section "Test Suite 1/6: File Existence"
 Test-Assert "AGENTS.md exists" { Test-Path (Join-Path $MsDir "AGENTS.md") }
 Test-Assert "verify.ps1 exists" { Test-Path (Join-Path $MsDir "verify.ps1") }
 Test-Assert "verify.sh exists" { Test-Path (Join-Path $MsDir "verify.sh") }
@@ -171,7 +171,7 @@ Test-Assert "verify.config.json exists" { Test-Path (Join-Path $MsDir "verify.co
 Test-Assert "README.md exists" { Test-Path (Join-Path $MsDir "README.md") }
 
 # Test 2: verify.ps1 syntax check
-Write-Section "Test Suite 2/5: Script Syntax Validation"
+Write-Section "Test Suite 2/6: Script Syntax Validation"
 Test-Assert "verify.ps1 valid syntax" {
     $null = [System.Management.Automation.Language.Parser]::ParseFile(
         (Join-Path $MsDir "verify.ps1"), [ref]$null, [ref]$null
@@ -186,12 +186,12 @@ Test-Assert "cleanup.ps1 valid syntax" {
 }
 
 # Test 3: Folder name detection
-Write-Section "Test Suite 3/5: Folder Auto-Detection"
+Write-Section "Test Suite 3/6: Folder Auto-Detection"
 Test-Assert "Detected folder name is '$MsFolderName'" { $MsFolderName -ne "" }
 Test-Assert "Parent folder exists" { Test-Path $RepoRoot }
 
 # Test 4: verify.ps1 with SkipIfNoTests (skip if already running through verify harness)
-Write-Section "Test Suite 4/5: Verify SkipIfNoTests Behavior"
+Write-Section "Test Suite 4/6: Verify SkipIfNoTests Behavior"
 $isNestedRun = $env:MARGE_TEST_RUNNING -eq "1"
 if ($isNestedRun) {
     Write-Host "    [SKIP] " -NoNewline -ForegroundColor DarkYellow
@@ -208,12 +208,37 @@ if ($isNestedRun) {
 }
 
 # Test 5: cleanup.ps1 preview mode
-Write-Section "Test Suite 5/5: Cleanup Preview Mode"
+Write-Section "Test Suite 5/6: Cleanup Preview Mode"
 $cleanupScript = Join-Path $MsDir "cleanup.ps1"
 $cleanupResult = & powershell -ExecutionPolicy Bypass -File $cleanupScript 2>&1
 $cleanupExitCode = $LASTEXITCODE
 Test-Assert "cleanup.ps1 exits 0 in preview mode" { $cleanupExitCode -eq 0 }
 Test-Assert "Output shows PREVIEW MODE" { ($cleanupResult -join "`n") -match "PREVIEW" }
+
+# Test 6: AGENTS.md content validation
+Write-Section "Test Suite 6/6: AGENTS.md Content Validation"
+$agentsPath = Join-Path $MsDir "AGENTS.md"
+$agentsContent = Get-Content -Path $agentsPath -Raw
+
+Test-Assert "AGENTS.md contains CRITICAL RULE(S)" { 
+    $agentsContent -match "\*\*CRITICAL RULE" 
+}
+Test-Assert "AGENTS.md contains folder reference '$MsFolderName/'" { 
+    $agentsContent -match [regex]::Escape("``$MsFolderName/``")
+}
+Test-Assert "AGENTS.md contains verification runner reference" { 
+    $agentsContent -match "verify\.ps1 fast" -and $agentsContent -match "verify\.sh fast"
+}
+Test-Assert "AGENTS.md contains MS-#### tracking ID format" { 
+    $agentsContent -match "MS-\d{4}" -or $agentsContent -match "MS-####"
+}
+
+# Meta-specific test: If this is meta_marge, check for audit exclusion rule
+if ($MsFolderName -eq "meta_marge") {
+    Test-Assert "AGENTS.md contains meta audit exclusion rule" {
+        $agentsContent -match "excluded from audits"
+    }
+}
 
 # Summary
 Write-FinalSummary
