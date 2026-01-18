@@ -250,6 +250,17 @@ if [[ -d "$VERIFY_LOGS_PATH" ]]; then
   echo "  Cleared: verify_logs/"
 fi
 
+# Add meta-specific AGENTS.md rule (exclude self from audits)
+AGENTS_PATH="$TARGET_FOLDER/AGENTS.md"
+if [[ -f "$AGENTS_PATH" ]]; then
+  # Check if it has the old single rule format and transform it
+  if grep -q "\*\*CRITICAL RULE:" "$AGENTS_PATH"; then
+    # Use perl for more reliable multi-line replacement
+    perl -i -0pe 's/\*\*CRITICAL RULE: Marge NEVER creates files outside its own folder\.\*\*\n+All tracking docs, logs, and artifacts stay within `'"$TARGET_NAME"'\/`\.\s*/**CRITICAL RULES:**\n1. Marge NEVER creates files outside its own folder. All tracking docs, logs, and artifacts stay within `'"$TARGET_NAME"'\/`.\n2. The `'"$TARGET_NAME"'\/` folder itself is excluded from audits and issue scans - it is the tooling, not the target.\n\n/g' "$AGENTS_PATH"
+    echo "  Updated: AGENTS.md (added meta exclusion rule)"
+  fi
+fi
+
 # Verify the conversion
 echo "[5/5] Verifying conversion..."
 
