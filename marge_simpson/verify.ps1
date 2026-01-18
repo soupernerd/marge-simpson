@@ -1,13 +1,13 @@
 <#
-verify.ps1 — Marge Simpson Verification Runner
+verify.ps1 - Marge Simpson Verification Runner
 
 Runs repo verification commands (tests/lint/build) and writes a timestamped log.
 This script auto-detects its own folder name, so you can rename the folder if needed.
 
 Usage:
-  powershell -ExecutionPolicy Bypass -File .\marge_simpson\verify.ps1 fast
-  powershell -ExecutionPolicy Bypass -File .\marge_simpson\verify.ps1 full
-  powershell -ExecutionPolicy Bypass -File .\marge_simpson\verify.ps1 fast -SkipIfNoTests
+  powershell -ExecutionPolicy Bypass -File .\meta_marge\verify.ps1 fast
+  powershell -ExecutionPolicy Bypass -File .\meta_marge\verify.ps1 full
+  powershell -ExecutionPolicy Bypass -File .\meta_marge\verify.ps1 fast -SkipIfNoTests
 
 Options:
   -Profile       fast|full (default: fast)
@@ -25,7 +25,112 @@ param(
   [switch]$SkipIfNoTests = $false
 )
 
-# Dynamic folder detection — works regardless of folder name
+# ==============================================================================
+# VISUAL HELPERS
+# ==============================================================================
+
+$script:StartTime = Get-Date
+$script:CommandsRun = 0
+$script:CommandsPassed = 0
+$script:CommandsFailed = 0
+
+function Write-Banner {
+    Write-Host ""
+    Write-Host "    +=========================================================================+" -ForegroundColor Cyan
+    Write-Host "    |                                                                         |" -ForegroundColor Cyan
+    Write-Host "    |    __  __    _    ____   ____ _____                                     |" -ForegroundColor Cyan
+    Write-Host "    |   |  \/  |  / \  |  _ \ / ___| ____|                                    |" -ForegroundColor Cyan
+    Write-Host "    |   | |\/| | / _ \ | |_) | |  _|  _|                                      |" -ForegroundColor Cyan
+    Write-Host "    |   | |  | |/ ___ \|  _ <| |_| | |___                                     |" -ForegroundColor Cyan
+    Write-Host "    |   |_|  |_/_/   \_\_| \_\\____|_____|                                    |" -ForegroundColor Cyan
+    Write-Host "    |                                                                         |" -ForegroundColor Cyan
+    Write-Host "    |              V E R I F I C A T I O N   R U N N E R                      |" -ForegroundColor Cyan
+    Write-Host "    |                                                                         |" -ForegroundColor Cyan
+    Write-Host "    +=========================================================================+" -ForegroundColor Cyan
+    Write-Host ""
+}
+
+function Write-Section([string]$Title) {
+    Write-Host ""
+    Write-Host "  +---------------------------------------------------------------------------+" -ForegroundColor DarkGray
+    Write-Host "  | " -NoNewline -ForegroundColor DarkGray
+    Write-Host "$Title".PadRight(73) -NoNewline -ForegroundColor White
+    Write-Host " |" -ForegroundColor DarkGray
+    Write-Host "  +---------------------------------------------------------------------------+" -ForegroundColor DarkGray
+}
+
+function Write-Info([string]$Text) {
+    Write-Host "    [i] " -NoNewline -ForegroundColor Cyan
+    Write-Host $Text -ForegroundColor Gray
+}
+
+function Write-Success([string]$Text) {
+    Write-Host "    [OK] " -NoNewline -ForegroundColor Green
+    Write-Host $Text -ForegroundColor Green
+}
+
+function Write-Failure([string]$Text) {
+    Write-Host "    [X] " -NoNewline -ForegroundColor Red
+    Write-Host $Text -ForegroundColor Red
+}
+
+function Write-Warning([string]$Text) {
+    Write-Host "    [!] " -NoNewline -ForegroundColor Yellow
+    Write-Host $Text -ForegroundColor Yellow
+}
+
+function Write-FinalSummary {
+    param(
+        [bool]$Success,
+        [string]$FolderName,
+        [string]$ProfileName
+    )
+    
+    $elapsed = (Get-Date) - $script:StartTime
+    $duration = "{0:mm}m {0:ss}s" -f $elapsed
+    $borderColor = if ($Success) { "Green" } else { "Red" }
+    
+    Write-Host ""
+    Write-Host "  +=========================================================================+" -ForegroundColor $borderColor
+    Write-Host "  |                       VERIFICATION SUMMARY                              |" -ForegroundColor $borderColor
+    Write-Host "  +=========================================================================+" -ForegroundColor $borderColor
+    Write-Host "  |                                                                         |" -ForegroundColor $borderColor
+    
+    # Status row
+    $statusText = if ($Success) { "   STATUS:  [OK] ALL CHECKS PASSED" } else { "   STATUS:  [X] VERIFICATION FAILED" }
+    Write-Host "  |" -NoNewline -ForegroundColor $borderColor
+    Write-Host $statusText.PadRight(73) -NoNewline -ForegroundColor $borderColor
+    Write-Host " |" -ForegroundColor $borderColor
+    
+    Write-Host "  |                                                                         |" -ForegroundColor $borderColor
+    Write-Host "  +---------------------------------------------------------------------------+" -ForegroundColor $borderColor
+    
+    # Stats table
+    $stats = @(
+        @{ Label = "Folder"; Value = $FolderName },
+        @{ Label = "Profile"; Value = $ProfileName },
+        @{ Label = "Commands"; Value = "$($script:CommandsPassed)/$($script:CommandsRun) passed" },
+        @{ Label = "Duration"; Value = $duration },
+        @{ Label = "Timestamp"; Value = (Get-Date -Format "yyyy-MM-dd HH:mm:ss") }
+    )
+    
+    foreach ($stat in $stats) {
+        $line = "   {0,-12} | {1}" -f $stat.Label, $stat.Value
+        Write-Host "  |" -NoNewline -ForegroundColor $borderColor
+        Write-Host $line.PadRight(73) -NoNewline -ForegroundColor White
+        Write-Host " |" -ForegroundColor $borderColor
+    }
+    
+    Write-Host "  |                                                                         |" -ForegroundColor $borderColor
+    Write-Host "  +=========================================================================+" -ForegroundColor $borderColor
+    Write-Host ""
+}
+
+# ==============================================================================
+# CORE LOGIC
+# ==============================================================================
+
+# Dynamic folder detection - works regardless of folder name
 $MsDir = $PSScriptRoot
 $MsFolderName = Split-Path $MsDir -Leaf
 $RootDir = Resolve-Path (Join-Path $PSScriptRoot "..")
@@ -41,8 +146,13 @@ function Write-Log([string]$Text) {
 }
 
 function Run-Cmd([string]$Cmd) {
+  $script:CommandsRun++
   Write-Log ""
   Write-Log ("==> {0}" -f $Cmd)
+  Write-Host "    [>] " -NoNewline -ForegroundColor Cyan
+  Write-Host "Running: " -NoNewline -ForegroundColor Gray
+  Write-Host $Cmd -ForegroundColor White
+  
   $psi = New-Object System.Diagnostics.ProcessStartInfo
   $psi.FileName = "powershell"
   $escapedCmd = $Cmd -replace '"', '\"'
@@ -63,8 +173,13 @@ function Run-Cmd([string]$Cmd) {
   if ($stderr) { $stderr.TrimEnd() | Tee-Object -FilePath $LogFile -Append }
 
   if ($p.ExitCode -ne 0) {
+    $script:CommandsFailed++
+    Write-Failure "Command failed (exit code $($p.ExitCode))"
     throw "Command failed with exit code $($p.ExitCode): $Cmd"
   }
+  
+  $script:CommandsPassed++
+  Write-Success "Command completed successfully"
 }
 
 function Read-ConfigCommands() {
@@ -155,6 +270,18 @@ function Detect-JavaCommands() {
   return @()
 }
 
+# ==============================================================================
+# MAIN EXECUTION
+# ==============================================================================
+
+Write-Banner
+
+Write-Section "Configuration"
+Write-Info "Folder: $MsFolderName"
+Write-Info "Profile: $Profile"
+Write-Info "Repo Root: $RootDir"
+Write-Info "Log File: $LogFile"
+
 Write-Log ("[{0}] verify profile={1}" -f $MsFolderName, $Profile)
 Write-Log ("[{0}] repo_root={1}" -f $MsFolderName, $RootDir)
 Write-Log ("[{0}] log={1}" -f $MsFolderName, $LogFile)
@@ -162,6 +289,8 @@ Write-Log ("[{0}] log={1}" -f $MsFolderName, $LogFile)
 $cmds = Read-ConfigCommands
 
 if (-not $cmds -or $cmds.Count -eq 0) {
+  Write-Section "Auto-Detection"
+  Write-Info "No config found, detecting test stacks..."
   $cmds = @()
   $cmds += Detect-NodeCommands
   $cmds += Detect-PythonCommands
@@ -172,30 +301,51 @@ if (-not $cmds -or $cmds.Count -eq 0) {
 }
 
 if (-not $cmds -or $cmds.Count -eq 0) {
+  Write-Section "No Tests Found"
   Write-Log ""
   Write-Log "No test commands detected."
   Write-Log ("Create or edit {0} to specify commands for '{1}'." -f $Conf, $Profile)
   Write-Log 'Example: {"fast": ["npm test"], "full": ["npm ci", "npm test"]}'
+  
+  Write-Warning "No test commands detected"
+  Write-Info "Create or edit verify.config.json to specify commands"
+  Write-Info 'Example: {"fast": ["npm test"], "full": ["npm ci", "npm test"]}'
+  
   if ($SkipIfNoTests) {
     Write-Log "[skip] No tests to run (SkipIfNoTests enabled)"
+    Write-Warning "Skipping - no tests to run (SkipIfNoTests enabled)"
+    Write-FinalSummary -Success $true -FolderName $MsFolderName -ProfileName $Profile
     exit 0
   }
+  Write-FinalSummary -Success $false -FolderName $MsFolderName -ProfileName $Profile
   exit 2
 }
 
+Write-Section "Commands Queue ($Profile)"
 Write-Log ""
 Write-Log ("Commands to run ({0}):" -f $Profile)
-foreach ($c in $cmds) { Write-Log ("- {0}" -f $c) }
+$cmdNum = 1
+foreach ($c in $cmds) { 
+  Write-Log ("- {0}" -f $c)
+  Write-Host "    " -NoNewline
+  Write-Host "[$cmdNum]" -NoNewline -ForegroundColor DarkGray
+  Write-Host " $c" -ForegroundColor White
+  $cmdNum++
+}
+
+Write-Section "Execution"
 
 try {
   foreach ($c in $cmds) { Run-Cmd $c }
   Write-Log ""
   Write-Log ("PASS: [{0}] verify ({1})" -f $MsFolderName, $Profile)
+  Write-FinalSummary -Success $true -FolderName $MsFolderName -ProfileName $Profile
   exit 0
 }
 catch {
   Write-Log ""
   Write-Log ("FAIL: [{0}] verify ({1})" -f $MsFolderName, $Profile)
   Write-Log $_
+  Write-FinalSummary -Success $false -FolderName $MsFolderName -ProfileName $Profile
   exit 1
 }
