@@ -219,6 +219,37 @@ if ($bashAvailable) {
         $result = & bash -n $shPath 2>&1
         $LASTEXITCODE -eq 0
     }
+    
+    # ShellCheck (optional, enhanced linting)
+    $shellcheckAvailable = $false
+    try {
+        $null = & shellcheck --version 2>&1
+        $shellcheckAvailable = $LASTEXITCODE -eq 0
+    } catch {
+        $shellcheckAvailable = $false
+    }
+    
+    if ($shellcheckAvailable) {
+        Test-Assert "verify.sh passes shellcheck" {
+            $shPath = (Join-Path $MsDir "verify.sh") -replace '\\', '/'
+            if ($shPath -match '^([A-Za-z]):(.*)$') {
+                $shPath = "/" + $Matches[1].ToLower() + $Matches[2]
+            }
+            $result = & shellcheck $shPath 2>&1
+            $LASTEXITCODE -eq 0
+        }
+        Test-Assert "cleanup.sh passes shellcheck" {
+            $shPath = (Join-Path $MsDir "cleanup.sh") -replace '\\', '/'
+            if ($shPath -match '^([A-Za-z]):(.*)$') {
+                $shPath = "/" + $Matches[1].ToLower() + $Matches[2]
+            }
+            $result = & shellcheck $shPath 2>&1
+            $LASTEXITCODE -eq 0
+        }
+    } else {
+        Write-Host "    [SKIP] " -NoNewline -ForegroundColor DarkYellow
+        Write-Host "ShellCheck tests - shellcheck not available (optional: install for enhanced linting)" -ForegroundColor DarkYellow
+    }
 } else {
     Write-Host "    [SKIP] " -NoNewline -ForegroundColor DarkYellow
     Write-Host "Bash syntax tests - bash not available (install Git Bash or WSL)" -ForegroundColor DarkYellow

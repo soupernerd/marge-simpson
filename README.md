@@ -133,6 +133,8 @@ After finished above, search for and complete remaining unchecked items (if any 
 ## Configuration
 
 Custom test commands in `verify.config.json`:
+
+**Node.js:**
 ```json
 {
   "fast": ["npm test"],
@@ -140,7 +142,51 @@ Custom test commands in `verify.config.json`:
 }
 ```
 
+**Python:**
+```json
+{
+  "fast": ["python -m pytest -q"],
+  "full": ["pip install -e .", "python -m pytest", "python -m mypy src/"]
+}
+```
+
+**Go:**
+```json
+{
+  "fast": ["go test ./..."],
+  "full": ["go test -v -race ./...", "go build ./..."]
+}
+```
+
+**Multi-language / Monorepo:**
+```json
+{
+  "fast": ["npm test", "python -m pytest -q"],
+  "full": ["npm ci", "npm test", "pip install -r requirements.txt", "python -m pytest"]
+}
+```
+
 No config? Scripts auto-detect Node, Python, Go, Rust, .NET, Java.
+
+---
+
+## Repository Architecture
+
+This repository has a **dual-folder architecture**:
+
+| Folder | Purpose | When to Use |
+|--------|---------|-------------|
+| `marge_simpson/` | **Production template** — copy this to your repos | End users installing Marge |
+| `meta_marge/` | **Development instance** — improve Marge here | Contributors developing Marge itself |
+
+**Key Points:**
+- `marge_simpson/` is the **source of truth** — this is what gets distributed
+- `meta_marge/` is a **working copy** with all paths/references transformed
+- The `convert-to-meta` scripts create `meta_marge/` from `marge_simpson/`
+- Changes flow: `marge_simpson/` → `meta_marge/` (via script) → test → manual copy back
+
+**Why two folders?**
+Marge tracks work using relative paths (e.g., `./marge_simpson/tasklist.md`). To develop Marge *using* Marge, we need a separate instance with different paths so the tooling doesn't overwrite itself.
 
 ---
 

@@ -1,0 +1,66 @@
+name: Marge Simpson CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test-windows:
+    name: Test on Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Marge Self-Tests (PowerShell)
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy Bypass -File ./marge_simpson/test-marge.ps1
+
+  test-linux:
+    name: Test on Linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Make scripts executable
+        run: |
+          chmod +x ./marge_simpson/verify.sh
+          chmod +x ./marge_simpson/cleanup.sh
+          chmod +x ./marge_simpson/test-marge.sh
+      
+      - name: Run Marge Self-Tests (Bash)
+        run: ./marge_simpson/test-marge.sh
+
+  test-macos:
+    name: Test on macOS
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Make scripts executable
+        run: |
+          chmod +x ./marge_simpson/verify.sh
+          chmod +x ./marge_simpson/cleanup.sh
+          chmod +x ./marge_simpson/test-marge.sh
+      
+      - name: Run Marge Self-Tests (Bash)
+        run: ./marge_simpson/test-marge.sh
+
+  shellcheck:
+    name: ShellCheck Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+      
+      - name: Run ShellCheck on shell scripts
+        run: |
+          shellcheck ./marge_simpson/verify.sh || true
+          shellcheck ./marge_simpson/cleanup.sh || true
+          shellcheck ./marge_simpson/test-marge.sh || true
+          shellcheck ./install.sh || true
+          shellcheck ./convert-to-meta.sh || true
