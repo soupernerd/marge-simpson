@@ -155,9 +155,26 @@ When delivering work:
 
 ### Workflows
 Read only when needed:
+- `workflows/session_start.md` — knowledge retrieval at conversation start
 - `workflows/work.md` — unified bug/feature/improvement process
 - `workflows/audit.md` — codebase discovery phase
-- `workflows/session_end.md` — knowledge capture after work complete
+- `workflows/session_end.md` — knowledge capture + memory evolution
+
+### Memory Evolution (CRITICAL)
+**Memory is infrastructure, not a feature.** Knowledge must evolve, not just accumulate.
+
+| Principle | Rule |
+|-----------|------|
+| **Evolve, don't append** | New info supersedes old → UPDATE existing entry |
+| **Atomic facts** | One fact per entry. No compound statements. |
+| **Conflict check first** | ALWAYS search before adding new entry |
+| **Decay is healthy** | Unverified/unused entries should be archived |
+
+**Before writing to knowledge/:**
+1. Search existing entries for overlap
+2. If conflict found → update existing entry with `Updated:` field
+3. If truly new → add with next available ID
+4. Never create duplicate concepts
 
 ### Experts (Optional)
 If `experts/` folder exists:
@@ -165,11 +182,15 @@ If `experts/` folder exists:
 2. Find keywords in the table
 3. Read only the relevant expert file(s)
 
-### Knowledge (Optional)
-If `knowledge/` folder exists:
-1. Read `knowledge/_index.md` first (~500 tokens)
-2. Check tags for relevant entries
-3. Read only the matching file(s)
+### Knowledge Retrieval (REQUIRED)
+**At session start:** Read `workflows/session_start.md` and apply stored preferences.
+
+**During work:** Before making decisions, check:
+1. `decisions.md` — prior choices on same topic?
+2. `preferences.md` — user's typical approach?
+3. `patterns.md` — observed behavior to follow?
+
+**If conflict:** Surface it, don't silently override.
 
 ### Cost Awareness
 | Scenario | Tokens |

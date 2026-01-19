@@ -1,6 +1,7 @@
 # Session End Workflow
 
-> Knowledge capture after delivering user's work. Non-blocking - user's goal always comes first.
+> Knowledge capture and memory evolution after delivering user's work.
+> Implements the "memory is infrastructure, not a feature" principle.
 
 ## When to Run
 
@@ -10,18 +11,64 @@
 
 **Do NOT run during active work.** Finish the user's request first.
 
-## Knowledge Review
+---
 
-Quickly scan the session:
+## Phase 1: Extract Atomic Facts
 
-| Check | If Yes → Action |
-|-------|-----------------|
-| User made an architecture/tech choice? | Add D-### to `knowledge/decisions.md` |
-| Same approach used 2+ times? | Add P-### to `knowledge/patterns.md` |
-| User said "I prefer..." or corrected you? | Add PR-### to `knowledge/preferences.md` |
-| You noticed something user didn't state? | Add I-### to `knowledge/insights.md` |
+Scan the session and extract **discrete, standalone facts**:
 
-## Writing Entries
+| Fact Type | Example | File |
+|-----------|---------|------|
+| User stated preference | "I prefer tabs over spaces" | `preferences.md` |
+| Technical decision made | "Using PostgreSQL for persistence" | `decisions.md` |
+| Repeated behavior (2+ times) | User always asks for tests first | `patterns.md` |
+| Discovered codebase info | "Auth module uses JWT refresh tokens" | `insights.md` |
+
+**Extract 3-5 facts per session.** Quality over quantity.
+
+---
+
+## Phase 2: Check for Conflicts (CRITICAL)
+
+Before adding new facts, **check if they conflict with existing entries**:
+
+```powershell
+# Quick search for potential conflicts
+Select-String -Path "marge_simpson/knowledge/*.md" -Pattern "keyword1|keyword2"
+```
+
+### Conflict Resolution Rules
+
+| Scenario | Action |
+|----------|--------|
+| **New info supersedes old** | Update existing entry, add `Updated: YYYY-MM-DD` |
+| **Context changed** (e.g., switched jobs) | Archive old entry, add new one with context |
+| **Contradiction unclear** | Ask user to clarify before storing |
+| **Same fact, stronger evidence** | Increase confidence/strength level |
+
+**Example conflict resolution:**
+```markdown
+### [PR-003] Preferred language #code-style
+- **Stated:** 2026-01-10
+- **Updated:** 2026-01-19 (switched from Python to Rust)
+- **Strength:** Strong
+- **Preference:** Rust for new projects
+- **Previous:** Python (archived to PR-003-old)
+```
+
+---
+
+## Phase 3: Write or Update Entries
+
+### Adding NEW entry
+1. Use next available ID (D-###, PR-###, P-###, I-###)
+2. Add to appropriate file
+3. Include timestamp
+
+### Updating EXISTING entry
+1. Add `Updated: YYYY-MM-DD` field
+2. Preserve original `Stated/Observed` date
+3. Note what changed in entry
 
 ### Entry Formats
 
@@ -41,6 +88,7 @@ Quickly scan the session:
 - **Stated:** YYYY-MM-DD
 - **Strength:** Weak / Moderate / Strong
 - **Preference:** What the user prefers
+- **Exceptions:** When this doesn't apply
 - **Quote:** Direct quote if available
 ```
 
@@ -63,33 +111,36 @@ Quickly scan the session:
 - **Verified:** [ ] User has confirmed
 ```
 
-## Index Update (Batch)
+---
 
-After adding entries, update `knowledge/_index.md` once:
-1. Increment counts in Quick Stats
-2. Add new entries to Recent Entries (keep last 5)
-3. Add any new tags to Tag Index
+## Phase 4: Update Index
 
-## Pruning Check
+After adding/updating entries, update `knowledge/_index.md`:
 
-While reviewing, check for entries to prune:
+1. **Quick Stats** — increment/update counts
+2. **Recent Entries** — add new entries (keep last 5, remove oldest)
+3. **Tag Index** — add any new tags with counts
 
-**KEEP if ANY:**
-- Referenced by other entries
-- Insight is verified
-- Decision still in effect
-- Preference is Strong/Moderate
-- Pattern is always/usually
+---
 
-**PRUNE if ALL:**
-- No references from other entries
-- Older than 90 days
-- AND: Low confidence unverified insight, OR Weak preference, OR superseded decision
+## Phase 5: Memory Decay Check
 
-### Pruning Process
-1. Move to `knowledge/archive.md`
-2. Add `Archived: YYYY-MM-DD | Reason: <reason>`
-3. Update index (decrement count)
+Entries should decay over time. Check for stale entries:
+
+| Condition | Action |
+|-----------|--------|
+| Insight unverified > 60 days | Mark for user verification |
+| Weak preference > 90 days | Consider archiving |
+| Pattern not observed recently | Reduce frequency or archive |
+| Decision superseded | Archive with reason |
+
+### Archiving Process
+1. Move entry to `knowledge/archive.md`
+2. Add: `Archived: YYYY-MM-DD | Reason: <reason>`
+3. Decrement count in index
+4. Remove from Recent Entries if present
+
+---
 
 ## Output (Minimal)
 
@@ -97,7 +148,7 @@ If knowledge was captured, note briefly:
 
 ```
 ---
-📝 Knowledge captured: D-003 (database choice), PR-007 (prefer functional)
+📝 Knowledge: PR-007 added (prefers functional), D-003 updated (switched to Postgres)
 ```
 
-Keep this minimal - user's work is the main output.
+Keep this minimal — user's work is the main output.

@@ -32,6 +32,7 @@ Whichever AGENTS.md you read determines where IDs go:
 
 | Intent | Signal | Workflow File | Creates ID? |
 |--------|--------|---------------|-------------|
+| **Session Start** | New conversation, first message | [session_start.md](session_start.md) | No |
 | **Question** | Curiosity, "how", "why", "what" | None (answer directly) | No |
 | **Work** | Fix, add, change, build | [work.md](work.md) | Yes (or continue existing) |
 | **Audit** | "audit", "review codebase" | [audit.md](audit.md) → then work.md | Yes (generates multiple) |
