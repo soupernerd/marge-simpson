@@ -119,13 +119,13 @@ If message has multiple intents:
 When delivering work:
 
 ```
-+=========================================================================+
-|    __  __    _    ____   ____ _____                                     |
-|   |  \/  |  / \  |  _ \ / ___| ____|                                    |
-|   | |\/| | / _ \ | |_) | |  _|  _|                                      |
-|   | |  | |/ ___ \|  _ <| |_| | |___                                     |
-|   |_|  |_/_/   \_\_| \_\\____|_____|   WORK COMPLETE                    |
-+=========================================================================+
++========================================================+
+|    __  __    _    ____   ____ _____                    |
+|   |  \/  |  / \  |  _ \ / ___| ____|                   |
+|   | |\/| | / _ \ | |_) | |  _|  _|                     |
+|   | |  | |/ ___ \|  _ <| |_| | |___                    |
+|   |_|  |_/_/   \_\_| \_\\____|_____|   WORK COMPLETE   |
++========================================================+
 ```
 
 | Field | Value |
@@ -145,6 +145,14 @@ When delivering work:
 ---
 
 ## F) Chunked Resources (Token-Efficient)
+
+### Routing (Simple)
+1. Start at `AGENTS.md`. Use Intent Router to pick the workflow.
+2. Read only `workflows/_index.md`, then open the single workflow file you need.
+3. If experts/knowledge are needed, read their `_index.md` first, then only the targeted small files.
+4. Track work only in the folder whose AGENTS you read.
+5. Keep changes minimal; avoid extra file reads unless blocked.
+6. If unsure, stop and ask rather than reading more files.
 
 ### Workflows
 Read only when needed:
