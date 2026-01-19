@@ -165,7 +165,31 @@ foreach ($file in $allFiles) {
         
         # Also do a regex replacement for any remaining word-boundary matches
         # This catches edge cases the literal replacements might miss
+        # BUT: Exclude patterns where both folder names appear together (documentation explaining the dual-folder setup)
+        # First, protect contextual references by temporarily replacing them
+        $contextualPatterns = @(
+            @{ Pattern = "both ``$SourceName/`` and ``$TargetName/``"; Placeholder = "###BOTH_FOLDERS_BACKTICK###" },
+            @{ Pattern = "both ``$TargetName/`` and ``$SourceName/``"; Placeholder = "###BOTH_FOLDERS_BACKTICK_REV###" },
+            @{ Pattern = "``$SourceName/`` and ``$TargetName/``"; Placeholder = "###AND_FOLDERS_BACKTICK###" },
+            @{ Pattern = "``$TargetName/`` and ``$SourceName/``"; Placeholder = "###AND_FOLDERS_BACKTICK_REV###" },
+            @{ Pattern = "$SourceName/`` (source of truth)"; Placeholder = "###SOURCE_TRUTH###" },
+            @{ Pattern = "$TargetName/`` (working copy"; Placeholder = "###WORKING_COPY###" },
+            @{ Pattern = "Read ``$SourceName/AGENTS.md``"; Placeholder = "###READ_SOURCE_AGENTS###" },
+            @{ Pattern = "IDs in ``$SourceName/tasklist.md``"; Placeholder = "###IDS_SOURCE_TASKLIST###" }
+        )
+        
+        # Protect contextual patterns
+        foreach ($ctx in $contextualPatterns) {
+            $content = $content.Replace($ctx.Pattern, $ctx.Placeholder)
+        }
+        
+        # Now do the main replacement
         $content = $content -replace "\b$([regex]::Escape($SourceName))\b", $TargetName
+        
+        # Restore protected patterns
+        foreach ($ctx in $contextualPatterns) {
+            $content = $content.Replace($ctx.Placeholder, $ctx.Pattern)
+        }
         
         if ($content -ne $originalContent) {
             Set-Content -Path $file.FullName -Value $content -NoNewline

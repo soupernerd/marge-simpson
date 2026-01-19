@@ -126,6 +126,21 @@ while IFS= read -r -d '' file; do
   original_content=$(cat "$file" 2>/dev/null) || continue
   content="$original_content"
 
+  # Protect contextual patterns where both folder names should appear together
+  # (documentation explaining the dual-folder architecture)
+  PLACEHOLDER1="###BOTH_FOLDERS_1###"
+  PLACEHOLDER2="###BOTH_FOLDERS_2###"
+  PLACEHOLDER3="###SOURCE_TRUTH###"
+  PLACEHOLDER4="###WORKING_COPY###"
+  PLACEHOLDER5="###READ_SOURCE_AGENTS###"
+  PLACEHOLDER6="###IDS_SOURCE_TASKLIST###"
+  
+  content=${content//"both \`$SOURCE_NAME/\` and \`$TARGET_NAME/\`"/"$PLACEHOLDER1"}
+  content=${content//"both \`$TARGET_NAME/\` and \`$SOURCE_NAME/\`"/"$PLACEHOLDER2"}
+  content=${content//"$SOURCE_NAME/\` (source of truth)"/"$PLACEHOLDER3"}
+  content=${content//"Read \`$SOURCE_NAME/AGENTS.md\`"/"$PLACEHOLDER5"}
+  content=${content//"IDs in \`$SOURCE_NAME/tasklist.md\`"/"$PLACEHOLDER6"}
+
   # Replace Windows-style backslash paths
   content=${content//".\\$SOURCE_NAME\\"/".\\$TARGET_NAME\\"}
   content=${content//"$SOURCE_NAME\\"/"$TARGET_NAME\\"}
@@ -149,6 +164,13 @@ while IFS= read -r -d '' file; do
   
   # Final word-boundary replacement for any remaining instances (portable sed)
   content=$(echo "$content" | sed -E "s/(^|[^[:alnum:]_])$SOURCE_NAME([^[:alnum:]_]|$)/\\1$TARGET_NAME\\2/g")
+  
+  # Restore protected contextual patterns
+  content=${content//"$PLACEHOLDER1"/"both \`$SOURCE_NAME/\` and \`$TARGET_NAME/\`"}
+  content=${content//"$PLACEHOLDER2"/"both \`$TARGET_NAME/\` and \`$SOURCE_NAME/\`"}
+  content=${content//"$PLACEHOLDER3"/"$SOURCE_NAME/\` (source of truth)"}
+  content=${content//"$PLACEHOLDER5"/"Read \`$SOURCE_NAME/AGENTS.md\`"}
+  content=${content//"$PLACEHOLDER6"/"IDs in \`$SOURCE_NAME/tasklist.md\`"}
   
   if [[ "$content" != "$original_content" ]]; then
     echo "$content" > "$file"
