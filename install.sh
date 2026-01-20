@@ -48,7 +48,8 @@ mkdir -p "$TARGET"
 cp -R "$SRC" "$DEST"
 
 # Validate installation
-REQUIRED_FILES=("AGENTS.md" "verify.ps1" "verify.sh" "verify.config.json" "README.md")
+# Note: verify.ps1 and verify.sh are in the scripts/ subfolder
+REQUIRED_FILES=("AGENTS.md" "scripts/verify.ps1" "scripts/verify.sh" "verify.config.json" "README.md")
 MISSING_FILES=()
 
 for file in "${REQUIRED_FILES[@]}"; do

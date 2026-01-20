@@ -41,7 +41,14 @@ if (Test-Path $dst) {
 Copy-Item -Recurse -Force $src $dst
 
 # Validate installation
-$requiredFiles = @("AGENTS.md", "verify.ps1", "verify.sh", "verify.config.json", "README.md")
+# Note: verify.ps1 and verify.sh are in the scripts/ subfolder
+$requiredFiles = @(
+  "AGENTS.md",
+  "scripts/verify.ps1",
+  "scripts/verify.sh",
+  "verify.config.json",
+  "README.md"
+)
 $missingFiles = @()
 
 foreach ($file in $requiredFiles) {
