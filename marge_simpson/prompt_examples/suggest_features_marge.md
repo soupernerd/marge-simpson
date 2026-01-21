@@ -21,4 +21,7 @@ Output format:
 1) Ranked list of features
 2) A short “Top pick summary” (2–4 lines) explaining why the #1–#2 options win on UX/value
 
+Update/append/create tracking doc (use the actual folder name where the above mentioned AGENTS.md lives):
+- marge_simpson/recommended_features.md (with the bullet points created per feature)
+
 Minimize follow-up questions. If info is missing, make reasonable assumptions and state them briefly.
