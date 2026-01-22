@@ -5,7 +5,7 @@
 **Full Featured - Drop-in AI workflow for automated audits, bug fixes, new feature suggestion/implementation and testing - for any codebase.**
 
 <p float="none">
-  <img src="marge_simpson\assets\many_marge_experts.jpg" width="100%" />
+  <img src="marge_simpson/assets/many_marge_experts.jpg" width="100%" />
 </p>
 
 ---

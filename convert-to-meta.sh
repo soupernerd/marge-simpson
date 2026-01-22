@@ -293,11 +293,11 @@ EOF
   echo "  Reset: instructions_log.md"
 fi
 
-# Clear verify_logs
+# Clear verify_logs (only *.log files - preserves .gitignore and .gitkeep)
 VERIFY_LOGS_PATH="$TARGET_FOLDER/verify_logs"
 if [[ -d "$VERIFY_LOGS_PATH" ]]; then
   find "$VERIFY_LOGS_PATH" -type f -name "*.log" -delete 2>/dev/null || true
-  echo "  Cleared: verify_logs/"
+  echo "  Cleared: verify_logs/ (preserved .gitignore, .gitkeep)"
 fi
 
 # Transform AGENTS.md for meta_marge (remove conditional clause)

@@ -97,12 +97,27 @@ write_entry() {
 # ==============================================================================
 
 # Parse date string (YYYY-MM-DD) to epoch seconds
+# Returns empty string if date is invalid or unparseable
 parse_date() {
     local date_str="$1"
-    if [[ -n "$date_str" ]]; then
-        # Try GNU date first, then BSD date
-        date -d "$date_str" +%s 2>/dev/null || date -j -f "%Y-%m-%d" "$date_str" +%s 2>/dev/null || echo ""
+    if [[ -z "$date_str" ]]; then
+        echo ""
+        return
     fi
+    
+    # Validate format first (YYYY-MM-DD)
+    if [[ ! "$date_str" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+        echo ""
+        return
+    fi
+    
+    # Try GNU date first, then BSD date
+    local result
+    result=$(date -d "$date_str" +%s 2>/dev/null) || \
+    result=$(date -j -f "%Y-%m-%d" "$date_str" +%s 2>/dev/null) || \
+    result=""
+    
+    echo "$result"
 }
 
 # Calculate days between two epoch timestamps

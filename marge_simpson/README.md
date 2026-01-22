@@ -17,6 +17,8 @@
 
 > **💡 Renamed the folder?** Replace `marge_simpson` with your folder name in prompts.
 
+> **🔄 Want iterative validation?** Add "loop until clean" to any prompt and Marge will automatically re-validate until zero issues remain.
+
 ---
 
 ## Prompt Templates

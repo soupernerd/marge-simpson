@@ -85,6 +85,50 @@ For each MS-#### item:
 
 Use `-SkipIfNoTests` / `--skip-if-no-tests` for repos without tests.
 
+### Iterative Loop Mode (Optional)
+
+When the user's message includes phrases like:
+- "loop until clean"
+- "iterate until done" 
+- "keep going until no issues"
+- "repeat until perfect"
+
+**Activate iterative validation for the requested work:**
+
+```
+┌─────────────────────────────────────┐
+│  1. COMPLETE THE REQUESTED WORK     │
+│     - Feature? Build it fully       │
+│     - Bug? Fix it completely        │
+│     - Audit? Scan thoroughly        │
+└──────────────┬──────────────────────┘
+               ▼
+┌─────────────────────────────────────┐
+│  2. VALIDATE AGAINST PROMPT INTENT  │
+│     - Does it fulfill the request?  │
+│     - Any edge cases missed?        │
+│     - Any regressions introduced?   │
+│     - Run verification if applicable│
+└──────────────┬──────────────────────┘
+               ▼
+┌─────────────────────────────────────┐
+│  3. LOOP OR EXIT                    │
+│     - Gaps/issues found? → Fix them │
+│     - Fully complete? → Done        │
+└─────────────────────────────────────┘
+```
+
+**Loop rules:**
+- The loop validates **the specific work requested** (not generic scanning)
+- Keep a short "Pass N" log of what was found/improved/completed
+- Continue until the work is **fully complete with zero remaining gaps**
+- Maximum 5 passes (ask user if more needed)
+
+**Examples:**
+- Feature request + loop → Keep refining until feature is complete and tested
+- Bug fix + loop → Keep fixing until bug is fully resolved with no regressions
+- Audit + loop → Keep scanning until zero new issues found
+
 ---
 
 ## D) Intent Router
