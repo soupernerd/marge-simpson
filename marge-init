@@ -1,37 +1,71 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# marge-init - Initialize marge_simpson in current project (hybrid mode)
-# Usage: marge-init [--force]
+# marge-init
+# Initialize marge_simpson/ in the current project directory.
+#
+# Creates a hybrid setup with:
+#   - Symlinks to global shared resources (AGENTS.md, experts, workflows, etc.)
+#   - Local per-project files (assessment.md, tasklist.md, verify_logs/)
+#
+# Usage: marge-init [OPTIONS]
+#
+# Options:
+#   -f, --force       Overwrite existing marge_simpson/ folder
+#   -n, --no-gitignore  Don't add marge_simpson/ to .gitignore
+#   -h, --help        Show this help message
 
 MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
 TARGET_DIR="./marge_simpson"
 FORCE=0
+UPDATE_GITIGNORE=1
+
+print_usage() {
+    sed -n '3,14p' "$0" | sed 's/^# //' | sed 's/^#//'
+}
 
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -f|--force) FORCE=1; shift ;;
-    -h|--help)
-      echo "Usage: marge-init [--force]"
-      echo "  Initializes marge_simpson/ in current directory"
-      echo "  --force: Overwrite existing marge_simpson folder"
-      exit 0
-      ;;
-    *) echo "Unknown option: $1"; exit 1 ;;
-  esac
+    case "$1" in
+        -f|--force)
+            FORCE=1
+            shift
+            ;;
+        -n|--no-gitignore)
+            UPDATE_GITIGNORE=0
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            print_usage
+            exit 1
+            ;;
+    esac
 done
 
+# Validate global installation
 if [[ ! -d "$MARGE_HOME/shared" ]]; then
-  echo "Error: $MARGE_HOME/shared not found. Is marge installed globally?" >&2
-  exit 1
+    echo "Error: Global marge installation not found at $MARGE_HOME" >&2
+    echo "" >&2
+    echo "Install marge globally first:" >&2
+    echo "  ./install-global.sh" >&2
+    echo "" >&2
+    echo "Or set MARGE_HOME to your installation directory:" >&2
+    echo "  export MARGE_HOME=/path/to/marge" >&2
+    exit 1
 fi
 
 if [[ -e "$TARGET_DIR" ]]; then
-  if [[ "$FORCE" -ne 1 ]]; then
-    echo "Error: $TARGET_DIR already exists. Use --force to overwrite." >&2
-    exit 1
-  fi
-  rm -rf "$TARGET_DIR"
+    if [[ "$FORCE" -ne 1 ]]; then
+        echo "Error: $TARGET_DIR already exists." >&2
+        echo "Use --force to overwrite, or remove it manually." >&2
+        exit 1
+    fi
+    echo "Removing existing $TARGET_DIR..."
+    rm -rf "$TARGET_DIR"
 fi
 
 echo "Initializing marge_simpson/..."
@@ -40,43 +74,74 @@ echo "Initializing marge_simpson/..."
 mkdir -p "$TARGET_DIR/verify_logs"
 
 # Symlink shared resources
-ln -s "$MARGE_HOME/shared/AGENTS.md" "$TARGET_DIR/AGENTS.md"
-ln -s "$MARGE_HOME/shared/experts" "$TARGET_DIR/experts"
-ln -s "$MARGE_HOME/shared/workflows" "$TARGET_DIR/workflows"
-ln -s "$MARGE_HOME/shared/scripts" "$TARGET_DIR/scripts"
-ln -s "$MARGE_HOME/shared/knowledge" "$TARGET_DIR/knowledge"
-ln -s "$MARGE_HOME/shared/assets" "$TARGET_DIR/assets"
-ln -s "$MARGE_HOME/shared/prompt_examples" "$TARGET_DIR/prompt_examples"
-ln -s "$MARGE_HOME/shared/model_pricing.json" "$TARGET_DIR/model_pricing.json"
-ln -s "$MARGE_HOME/shared/README.md" "$TARGET_DIR/README.md"
-ln -s "$MARGE_HOME/shared/VERSION" "$TARGET_DIR/VERSION"
+SHARED_LINKS=(
+    "AGENTS.md"
+    "assets"
+    "experts"
+    "knowledge"
+    "model_pricing.json"
+    "prompt_examples"
+    "README.md"
+    "scripts"
+    "VERSION"
+    "workflows"
+)
+
+for item in "${SHARED_LINKS[@]}"; do
+    if [[ -e "$MARGE_HOME/shared/$item" ]]; then
+        ln -s "$MARGE_HOME/shared/$item" "$TARGET_DIR/$item"
+    fi
+done
 
 # Copy per-project templates
-cp "$MARGE_HOME/templates/assessment.md" "$TARGET_DIR/"
-cp "$MARGE_HOME/templates/tasklist.md" "$TARGET_DIR/"
-cp "$MARGE_HOME/templates/verify.config.json" "$TARGET_DIR/"
-cp "$MARGE_HOME/templates/instructions_log.md" "$TARGET_DIR/"
+TEMPLATE_FILES=(
+    "assessment.md"
+    "instructions_log.md"
+    "tasklist.md"
+    "verify.config.json"
+)
 
-# Add to .gitignore if not already present
-if [[ -f ".gitignore" ]]; then
-  if ! grep -q "^marge_simpson/$" .gitignore 2>/dev/null; then
-    echo "marge_simpson/" >> .gitignore
-    echo "Added marge_simpson/ to .gitignore"
-  fi
-else
-  echo "marge_simpson/" > .gitignore
-  echo "Created .gitignore with marge_simpson/"
+for item in "${TEMPLATE_FILES[@]}"; do
+    if [[ -e "$MARGE_HOME/templates/$item" ]]; then
+        cp "$MARGE_HOME/templates/$item" "$TARGET_DIR/"
+    fi
+done
+
+# Update .gitignore
+if [[ "$UPDATE_GITIGNORE" -eq 1 ]]; then
+    if [[ -f ".gitignore" ]]; then
+        if ! grep -q "^marge_simpson/$" .gitignore 2>/dev/null; then
+            echo "" >> .gitignore
+            echo "# Marge workflow folder (local tooling)" >> .gitignore
+            echo "marge_simpson/" >> .gitignore
+            echo "Added marge_simpson/ to .gitignore"
+        fi
+    else
+        echo "# Marge workflow folder (local tooling)" > .gitignore
+        echo "marge_simpson/" >> .gitignore
+        echo "Created .gitignore with marge_simpson/"
+    fi
 fi
 
+echo ""
 echo "✓ marge_simpson/ initialized"
 echo ""
 echo "Structure:"
 echo "  marge_simpson/"
-echo "  ├── AGENTS.md        → ~/.marge/shared/ (symlink)"
-echo "  ├── experts/         → ~/.marge/shared/ (symlink)"
-echo "  ├── workflows/       → ~/.marge/shared/ (symlink)"
-echo "  ├── scripts/         → ~/.marge/shared/ (symlink)"
-echo "  ├── assessment.md    (local - per-project)"
-echo "  ├── tasklist.md      (local - per-project)"
-echo "  ├── verify.config.json (local - per-project)"
-echo "  └── verify_logs/     (local - per-project)"
+echo "  ├── AGENTS.md           → $MARGE_HOME/shared/ (symlink)"
+echo "  ├── experts/            → $MARGE_HOME/shared/ (symlink)"
+echo "  ├── workflows/          → $MARGE_HOME/shared/ (symlink)"
+echo "  ├── scripts/            → $MARGE_HOME/shared/ (symlink)"
+echo "  ├── knowledge/          → $MARGE_HOME/shared/ (symlink)"
+echo "  ├── assessment.md       (local - per-project)"
+echo "  ├── tasklist.md         (local - per-project)"
+echo "  ├── verify.config.json  (local - per-project)"
+echo "  ├── instructions_log.md (local - per-project)"
+echo "  └── verify_logs/        (local - per-project)"
+echo ""
+echo "Edit verify.config.json to configure your project's test commands."
+echo ""
+echo "Ready to use marge! Start with:"
+echo "  - Read marge_simpson/AGENTS.md for workflow rules"
+echo "  - Add tasks to marge_simpson/tasklist.md"
+echo "  - Run verification: ./marge_simpson/scripts/verify.sh fast"

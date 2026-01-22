@@ -12,10 +12,90 @@
 
 ## Install (30 seconds)
 
+### Option A: Drop-in (per-project)
+
 1. Copy just the **`marge_simpson/`** folder into your repo root
 2. Use a prompt template below
 
 > **💡 Renamed the folder?** Replace `marge_simpson` with your folder name in prompts.
+
+### Option B: Global Install (multi-project)
+
+For users working across multiple repos who want:
+- **Clean repos** — `marge_simpson/` is gitignored, not committed
+- **Shared resources** — experts, workflows, and knowledge shared globally
+- **Per-project tracking** — MS-IDs and logs isolated per project
+
+**Install globally:**
+```bash
+# macOS/Linux
+./install-global.sh
+
+# Windows
+.\install-global.ps1
+```
+
+**Use the CLI:**
+```bash
+marge "fix the login bug"           # Run a task with marge workflow
+marge "add dark mode" --model opus  # Use specific model
+marge "fix all bugs" --loop         # Loop until complete (max 20 iterations)
+marge "audit" --loop --auto         # Fully autonomous (no prompts)
+marge init                          # Initialize marge_simpson/ in current project
+marge status                        # Show marge status
+marge experts                       # List available experts
+```
+
+**CLI Options:**
+
+| Option | Description |
+|--------|-------------|
+| `--loop` | Keep iterating until task is complete |
+| `--auto` | Run without user input (skip permission prompts) |
+| `--model <model>` | Override model (sonnet, opus, haiku) |
+| `--fast` | Skip verification steps |
+| `--dry-run` | Preview prompt without launching claude |
+
+**Environment Variables:**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MAX_ITER` | 20 | Maximum loop iterations |
+| `MARGE_HOME` | `~/.marge` | Marge installation directory |
+
+The `marge` command:
+1. Auto-initializes `marge_simpson/` if not present
+2. Launches `claude` with your task + full marge workflow context
+3. Claude follows AGENTS.md rules, tracks work with MS-IDs, verifies changes
+
+**Loop mode features (`--loop`):**
+- **MAX_ITER guard** — Prevents infinite loops (configurable via `MAX_ITER` env var)
+- **Task completion detection** — Checks `tasklist.md` for unchecked boxes and `assessment.md` for completion indicators
+- **Auto-commit progress** — Creates git checkpoints after each iteration (`Marge auto iteration N`)
+
+This creates `marge_simpson/` with:
+- **Symlinks** to `~/.marge/shared/` (AGENTS.md, experts, workflows, scripts)
+- **Local copies** of tracking files (assessment.md, tasklist.md, verify.config.json)
+- Auto-adds `marge_simpson/` to `.gitignore`
+
+**Structure:**
+```
+~/.marge/
+├── shared/           # Symlinked to all projects
+│   ├── AGENTS.md
+│   ├── experts/      # Add custom experts here (shared across projects)
+│   ├── workflows/
+│   ├── scripts/
+│   └── knowledge/
+├── templates/        # Copied per-project
+│   ├── assessment.md
+│   ├── tasklist.md
+│   └── verify.config.json
+├── marge             # CLI wrapper (marge run, marge status, etc.)
+└── marge-init        # Project initialization script
+```
+
+> **💡 Custom experts:** Add domain-specific expert files to `~/.marge/shared/experts/` and they'll be available in all your projects.
 
 ---
 
@@ -23,9 +103,9 @@
 
 Add a loop phrase to any prompt and Marge will keep iterating until the work is complete.
 
-> **🔄 Quick start:** Add `loop until clean` to any prompt template below.
+> **🔄 Quick start:** Use `marge "your task" --loop` or add `loop until clean` to any prompt template below.
 >
-> **⚙️ Control iterations:** Add `min 3` or `max 10` to set bounds.
+> **⚙️ Control iterations:** Set `MAX_ITER=10` env var, or add `min 3` / `max 10` to prompts.
 >
 > See [prompt_examples/](marge_simpson/prompt_examples/) for ready-to-use templates with looping.
 
