@@ -141,7 +141,26 @@ When the user's message includes phrases like:
 - The loop validates **the specific work requested** (not generic scanning)
 - Keep a short "Pass N" log of what was found/improved/completed
 - Continue until the work is **fully complete with zero remaining gaps**
-- Maximum 5 passes (ask user if more needed)
+- Default maximum: 5 passes (ask user if more needed)
+
+**Min/Max loop counts (optional):**
+
+Users can specify iteration bounds in their prompt:
+
+| Phrase | Behavior |
+|--------|----------|
+| `min 3` or `minimum 3 times` | Run at least 3 passes, even if clean earlier |
+| `max 10` or `maximum 10 times` | Stop after 10 passes, even if not clean |
+| `min 2 max 8` | Run 2-8 passes |
+| `exactly 5` or `run 5 times` | Run exactly 5 passes |
+
+**Parsing rules:**
+- Look for `min/minimum` followed by a number
+- Look for `max/maximum` followed by a number
+- Look for `exactly` or `run X times` for fixed count
+- If no max specified, default max is 5
+- If min > max, treat as exactly min passes
+- Numbers can be digits (5) or words (five) for 1-10
 
 **Examples:**
 - Feature request + loop → Keep refining until feature is complete and tested

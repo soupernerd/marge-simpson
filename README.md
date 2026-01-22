@@ -19,6 +19,18 @@
 
 ---
 
+## Iterative Loop Mode (optional, for when you want to have some fun)
+
+Add a loop phrase to any prompt and Marge will keep iterating until the work is complete.
+
+> **🔄 Quick start:** Add `loop until clean` to any prompt template below.
+>
+> **⚙️ Control iterations:** Add `min 3` or `max 10` to set bounds.
+>
+> See [prompt_examples/](marge_simpson/prompt_examples/) for ready-to-use templates with looping.
+
+---
+
 ## Prompt Templates
 
 ### 🔍 System Audit
