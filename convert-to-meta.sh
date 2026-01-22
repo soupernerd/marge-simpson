@@ -314,8 +314,8 @@ if [[ $REMAINING_REFS -gt 0 ]]; then
   echo "  $REMAINING_REFS file(s) still contain '$SOURCE_NAME' references"
 fi
 
-# Run verification if verify script exists
-VERIFY_SCRIPT="$TARGET_FOLDER/verify.sh"
+# Run verification if verify script exists (scripts are in scripts/ subfolder)
+VERIFY_SCRIPT="$TARGET_FOLDER/scripts/verify.sh"
 if [[ -x "$VERIFY_SCRIPT" ]]; then
   VERIFY_EXIT=0
   "$VERIFY_SCRIPT" fast || VERIFY_EXIT=$?

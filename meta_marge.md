@@ -66,7 +66,7 @@ The script:
 
 5. **Test:**
    ```powershell
-   .\meta_marge\verify.ps1 fast
+   .\meta_marge\scripts\verify.ps1 fast
    ```
 
 ---
@@ -84,8 +84,8 @@ The `convert-to-meta.ps1` script is **fully dynamic**:
 
 | Pattern | Example Before | Example After |
 |---------|----------------|---------------|
-| Paths (forward slash) | `./marge_simpson/verify.ps1` | `./meta_marge/verify.ps1` |
-| Paths (backslash) | `.\marge_simpson\verify.ps1` | `.\meta_marge\verify.ps1` |
+| Paths (forward slash) | `./marge_simpson/scripts/verify.ps1` | `./meta_marge/scripts/verify.ps1` |
+| Paths (backslash) | `.\marge_simpson\scripts\verify.ps1` | `.\meta_marge\scripts\verify.ps1` |
 | Brackets | `[marge_simpson]` | `[meta_marge]` |
 | Single quotes | `'marge_simpson'` | `'meta_marge'` |
 | Double quotes | `"marge_simpson"` | `"meta_marge"` |
@@ -116,7 +116,7 @@ Binary files and `verify_logs/` are skipped.
 2. **Work in meta_marge:**
    - Make improvements to the Marge system
    - Use the standard Marge workflow (AGENTS.md, assessment.md, tasklist.md)
-   - Run verification: `.\meta_marge\verify.ps1 fast`
+   - Run verification: `.\meta_marge\scripts\verify.ps1 fast`
 
 3. **When done, copy changes back to marge_simpson:**
    - Manually copy the specific files you changed
@@ -167,7 +167,7 @@ The script found files that still contain the source folder name after transform
 
 ### Verification fails after conversion
 
-If `.\meta_marge\verify.ps1 fast` fails:
+If `.\meta_marge\scripts\verify.ps1 fast` fails:
 1. Check the error output
 2. Ensure all paths were transformed correctly
 3. Run the conversion again with `-Force`
@@ -183,7 +183,7 @@ By default, the script resets assessment.md, tasklist.md, and instructions_log.m
 
 ## Best Practices
 
-1. **Always test after conversion** — run `.\meta_marge\verify.ps1 fast`
+1. **Always test after conversion** — run `.\meta_marge\scripts\verify.ps1 fast`
 2. **Keep marge_simpson clean** — it's your source of truth for production
 3. **Don't mix work** — meta_marge is for improving Marge; marge_simpson is for using Marge in other repos
 4. **Regenerate often** — when marge_simpson changes significantly, regenerate meta_marge instead of manually syncing

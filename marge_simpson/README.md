@@ -181,7 +181,8 @@ Output using the Response Format (include IDs created).
 | `assessment.md` | Findings + root cause + verification |
 | `tasklist.md` | Prioritized tasks (backlog → done) |
 | `instructions_log.md` | Your standing instructions |
-| `verify.ps1` / `verify.sh` | Automated test runner |
+| `scripts/verify.ps1` / `verify.sh` | Automated test runner |
+| `scripts/test-marge.ps1` / `test-marge.sh` | Self-test suite |
 | `prompt_examples/` | Ready-to-copy templates |
 
 ---
@@ -267,7 +268,7 @@ Want to improve Marge itself? Use the **meta development workflow**:
 ### Workflow
 1. Run `convert-to-meta` to create/refresh `meta_marge/`
 2. Use prompts referencing `meta_marge` instead of `marge_simpson`
-3. Test with `./meta_marge/test-marge.ps1` (15 tests)
+3. Test with `./meta_marge/scripts/test-marge.ps1` (15 tests)
 4. Copy changes back to `marge_simpson/` when satisfied
 
 ### Versioning

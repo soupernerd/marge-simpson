@@ -381,8 +381,8 @@ if ($expectedRefs -gt 0) {
     Write-Host "  $expectedRefs file(s) have expected '$SourceName' references (dual-folder docs)" -ForegroundColor DarkGray
 }
 
-# Run verification if verify script exists
-$verifyScript = Join-Path $targetFolder "verify.ps1"
+# Run verification if verify script exists (scripts are in scripts/ subfolder)
+$verifyScript = Join-Path $targetFolder "scripts\verify.ps1"
 if (Test-Path $verifyScript) {
     $verifyResult = & powershell -ExecutionPolicy Bypass -File $verifyScript fast 2>&1
     $verifyExitCode = $LASTEXITCODE
