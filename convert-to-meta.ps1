@@ -331,18 +331,15 @@ $agentsPath = Join-Path $targetFolder "AGENTS.md"
 if (Test-Path $agentsPath) {
     $agentsContent = Get-Content -Path $agentsPath -Raw
     
-    # The source marge_simpson has only 1 CRITICAL RULE. For meta_marge, we need 2 rules:
-    # 1. Audit exclusion (meta_marge is the tooling, not the target)
-    # 2. Files stay within the folder
-    $singleRulePattern = "**CRITICAL RULES:** (REQUIRED)`n1. Marge NEVER creates $TargetName related files outside its own folder. All tracking docs, logs, and artifacts stay within ``$TargetName/``."
-    $twoRulesReplacement = "**CRITICAL RULES:** (REQUIRED)`n1. The ``$TargetName/`` folder itself is excluded from audits and issue scans - it is the tooling, not the target.`n2. Marge NEVER creates $TargetName related files outside its own folder. All tracking docs, logs, and artifacts stay within ``$TargetName/``."
-    
-    if ($agentsContent.Contains($singleRulePattern)) {
-        $agentsContent = $agentsContent.Replace($singleRulePattern, $twoRulesReplacement)
+    # The source marge_simpson has a conditional clause "unless meta_marge exists..."
+    # For meta_marge, we want the simpler rule without the conditional
+    $conditionalPattern = ", unless ``$TargetName/`` exists and is being used to update Marge"
+    if ($agentsContent.Contains($conditionalPattern)) {
+        $agentsContent = $agentsContent.Replace($conditionalPattern, "")
         Set-Content -Path $agentsPath -Value $agentsContent -NoNewline
-        Write-Host "  Updated: AGENTS.md (added audit exclusion rule for meta_marge)" -ForegroundColor Gray
-    } elseif ($agentsContent -match "excluded from audits and issue scans") {
-        Write-Host "  AGENTS.md already has audit exclusion rule" -ForegroundColor Gray
+        Write-Host "  Updated: AGENTS.md (removed conditional clause for meta_marge)" -ForegroundColor Gray
+    } elseif ($agentsContent -match "excluded from audits and issue scans - it is the tooling, not the target\.`n") {
+        Write-Host "  AGENTS.md already has correct audit exclusion rule" -ForegroundColor Gray
     } else {
         Write-Host "  WARNING: AGENTS.md has unexpected format - check manually" -ForegroundColor Yellow
     }

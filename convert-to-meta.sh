@@ -276,19 +276,24 @@ if [[ -d "$VERIFY_LOGS_PATH" ]]; then
   echo "  Cleared: verify_logs/"
 fi
 
-# Transform AGENTS.md for meta_marge (add audit exclusion rule)
+# Transform AGENTS.md for meta_marge (remove conditional clause)
 AGENTS_PATH="$TARGET_FOLDER/AGENTS.md"
 if [[ -f "$AGENTS_PATH" ]]; then
-  # The source marge_simpson has only 1 CRITICAL RULE. For meta_marge, we need 2 rules:
-  # 1. Audit exclusion (meta_marge is the tooling, not the target)
-  # 2. Files stay within the folder
-  if grep -q "1\. Marge NEVER creates $TARGET_NAME related files outside its own folder" "$AGENTS_PATH"; then
-    # Replace single rule with two rules using perl (portable across Linux/macOS)
-    # Note: sed -i behaves differently on macOS (BSD) vs Linux (GNU), so we use perl for portability
-    perl -i -0pe "s|\\*\\*CRITICAL RULES:\\*\\* \\(REQUIRED\\)\\n1\\. Marge NEVER creates ${TARGET_NAME} related files outside its own folder\\. All tracking docs, logs, and artifacts stay within \\\`${TARGET_NAME}/\\\`\\.|**CRITICAL RULES:** (REQUIRED)\\n1. The \\\`${TARGET_NAME}/\\\` folder itself is excluded from audits and issue scans - it is the tooling, not the target.\\n2. Marge NEVER creates ${TARGET_NAME} related files outside its own folder. All tracking docs, logs, and artifacts stay within \\\`${TARGET_NAME}/\\\`.|g" "$AGENTS_PATH" 2>/dev/null || true
-    echo "  Updated: AGENTS.md (added audit exclusion rule for meta_marge)"
-  elif grep -q "excluded from audits and issue scans" "$AGENTS_PATH"; then
-    echo "  AGENTS.md already has audit exclusion rule"
+  # The source marge_simpson has a conditional clause "unless meta_marge exists..."
+  # For meta_marge, we want the simpler rule without the conditional
+  CONDITIONAL_PATTERN=", unless \\\`${TARGET_NAME}/\\\` exists and is being used to update Marge"
+  if grep -q "unless \`${TARGET_NAME}/\` exists and is being used to update Marge" "$AGENTS_PATH"; then
+    # Remove the conditional clause using sed
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      # macOS BSD sed
+      sed -i '' "s/, unless \`${TARGET_NAME}\/\` exists and is being used to update Marge//g" "$AGENTS_PATH"
+    else
+      # GNU sed
+      sed -i "s/, unless \`${TARGET_NAME}\/\` exists and is being used to update Marge//g" "$AGENTS_PATH"
+    fi
+    echo "  Updated: AGENTS.md (removed conditional clause for meta_marge)"
+  elif grep -q "excluded from audits and issue scans - it is the tooling, not the target\." "$AGENTS_PATH"; then
+    echo "  AGENTS.md already has correct audit exclusion rule"
   else
     echo "  WARNING: AGENTS.md has unexpected format - check manually"
   fi
