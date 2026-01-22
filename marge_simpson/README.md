@@ -265,7 +265,7 @@ Want to improve Marge itself? Use the **meta development workflow**:
 ./convert-to-meta.sh
 ```
 
-### Workflow
+### To create a Meta Marge to make Marge better
 1. Run `convert-to-meta` to create/refresh `meta_marge/`
 2. Use prompts referencing `meta_marge` instead of `marge_simpson`
 3. Test with `./meta_marge/scripts/test-marge.ps1` (15 tests)

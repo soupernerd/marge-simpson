@@ -5,7 +5,8 @@ This folder is a drop-in workflow for running audits and fixing bugs in any code
 **Priority order:** correctness > safety > minimal diffs > speed
 
 **CRITICAL RULES:** (REQUIRED)
-1. Marge NEVER creates marge_simpson related files outside its own folder. All tracking docs, logs, and artifacts stay within `marge_simpson/`.
+1. The `marge_simpson/` folder itself is excluded from audits and issue scans - it is the tooling, not the target, unless `meta_marge/` exists and is being used to update Marge.
+2. Marge NEVER creates marge_simpson related files outside its own folder. All tracking docs, logs, and artifacts stay within `marge_simpson/`.
 
 ---
 
@@ -41,13 +42,8 @@ Before architecture changes, large refactors, schema changes, or API contract ch
 **Rules:**
 - Input ≈ (context chars / 4) — attachments + file contents + conversation
 - Output ≈ (your response chars / 4)
-- Model: Claude Opus 4.5 — Cost = (input/1M × $5) + (output/1M × $25)
-- Model: Claude Sonnet 4.5 — Cost = (input/1M × $3) + (output/1M × $15)
-- Model: GPT-5.2 — Cost = (input/1M × $1.75) + (output/1M × $14.00)
-- Model: GPT-5.2-chat-latest — Cost = (input/1M × $1.75) + (output/1M × $14.00)
-- Model: GPT-5.2-Codex — Cost = (input/1M × $1.75) + (output/1M × $14.00)
-- Model: GPT-5.1-Codex-max — Cost = (input/1M × $1.25) + (output/1M × $10.00)
-- Model: GPT-5.1-Codex — Cost = (input/1M × $1.25) + (output/1M × $10.00)
+- Model pricing: See `marge_simpson/model_pricing.json` (human-maintained)
+- Formula: Cost = (input/1M × input_per_1m) + (output/1M × output_per_1m)
 - Round tokens to nearest 100, cost to 4 decimals
 - **Never skip this. No exceptions.**
 
