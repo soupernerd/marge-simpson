@@ -1,0 +1,301 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# marge - CLI for marge workflow management
+# Usage: marge "<task>" [options] or marge <command> [options]
+
+MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
+VERSION="1.0.0"
+
+# Defaults
+DRY_RUN=0
+VERBOSE=0
+MODEL=""
+FAST=0
+LOOP=0
+AUTO=0
+MAX_ITER=${MAX_ITER:-20}  # Allow override via env var
+
+print_usage() {
+    cat <<EOF
+Usage: marge "<task>" [options] | marge <command> [options]
+
+Run a task:
+  marge "fix the login bug"
+  marge "add dark mode support" --model opus
+  marge "audit the codebase" --dry-run
+
+Options:
+  --auto             Run without user input (skip permission prompts)
+  --dry-run          Preview prompt without launching claude
+  --model <model>    Override model (sonnet, opus, haiku)
+  --fast             Skip verification steps
+  --loop             Keep iterating until task is complete (max $MAX_ITER iterations)
+  -v, --verbose      Show debug output
+  --version          Show version
+
+Environment:
+  MAX_ITER           Maximum loop iterations (default: 20)
+
+Commands:
+  init [--force]     Initialize marge_simpson/ in current project
+  status             Show marge status for current project
+  experts            List available experts
+  home               Print MARGE_HOME path
+  help               Show this help message
+
+Examples:
+  marge "fix the auth bug"
+  marge "refactor the API" --model opus --verbose
+  marge "full system audit" --loop
+  marge "fix bug" --auto          # Run autonomously without prompts
+  marge init
+EOF
+}
+
+log() {
+    if [[ "$VERBOSE" -eq 1 ]]; then
+        echo "[marge] $*" >&2
+    fi
+}
+
+# Check if tasks are complete by examining tasklist.md and assessment.md
+is_task_complete() {
+    local tasklist="./marge_simpson/tasklist.md"
+    local assessment="./marge_simpson/assessment.md"
+
+    # If tasklist has unchecked boxes, not complete
+    if [[ -f "$tasklist" ]] && grep -q "\[ \]" "$tasklist"; then
+        log "Found unchecked items in tasklist.md"
+        return 1
+    fi
+
+    # If assessment doesn't indicate completion, not complete
+    if [[ -f "$assessment" ]]; then
+        if grep -iqE "(clean|all tasks complete|no issues|completed successfully)" "$assessment"; then
+            log "Assessment indicates completion"
+            return 0
+        else
+            log "Assessment does not indicate completion"
+            return 1
+        fi
+    fi
+
+    # No assessment file and no unchecked boxes = assume complete
+    return 0
+}
+
+# Auto-commit progress checkpoint
+auto_commit_progress() {
+    local iteration="$1"
+    if git rev-parse --git-dir > /dev/null 2>&1; then
+        git add . 2>/dev/null || true
+        git commit -m "Marge auto iteration $iteration" 2>/dev/null || true
+        log "Committed progress for iteration $iteration"
+    fi
+}
+
+run_task() {
+    local TASK="$1"
+
+    log "Task: $TASK"
+    log "Model: ${MODEL:-default}"
+    log "Fast mode: $FAST"
+    log "Loop mode: $LOOP"
+    log "Auto mode: $AUTO"
+
+    # Auto-init if marge_simpson/ doesn't exist
+    if [[ ! -d "./marge_simpson" ]]; then
+        echo "marge_simpson/ not found, initializing..."
+        "$MARGE_HOME/marge-init"
+        echo ""
+    fi
+
+    # Build the prompt
+    local LOOP_PHRASE=""
+    if [[ "$LOOP" -eq 1 ]]; then
+        LOOP_PHRASE=" Loop until the task is fully complete."
+    fi
+
+    local FAST_PHRASE=""
+    if [[ "$FAST" -eq 1 ]]; then
+        FAST_PHRASE="
+
+Skip running verification tests for speed."
+    fi
+
+    local PROMPT="Read the AGENTS.md file in the marge_simpson folder and follow it.
+
+Instruction:
+- ${TASK}${LOOP_PHRASE}${FAST_PHRASE}
+
+After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+
+Output using the Response Format (include IDs created)."
+
+    log "Prompt length: ${#PROMPT} chars"
+
+    if [[ "$DRY_RUN" -eq 1 ]]; then
+        echo "=== DRY RUN - Prompt that would be sent ==="
+        echo ""
+        echo "$PROMPT"
+        echo ""
+        echo "=== End prompt ==="
+        echo ""
+        local dry_run_cmd="claude"
+        if [[ "$AUTO" -eq 1 ]]; then
+            dry_run_cmd+=" --dangerously-skip-permissions"
+        fi
+        dry_run_cmd+="${MODEL:+ --model $MODEL}"
+        echo "Would launch: $dry_run_cmd \"<prompt>\""
+        return 0
+    fi
+
+    # Build claude command args
+    local CLAUDE_ARGS=()
+    if [[ "$AUTO" -eq 1 ]]; then
+        CLAUDE_ARGS+=("--dangerously-skip-permissions")
+    fi
+    if [[ -n "$MODEL" ]]; then
+        CLAUDE_ARGS+=("--model" "$MODEL")
+    fi
+
+    # Non-loop mode: single execution
+    if [[ "$LOOP" -eq 0 ]]; then
+        log "Launching claude ${CLAUDE_ARGS[*]:-}"
+        exec claude "${CLAUDE_ARGS[@]}" "$PROMPT"
+    fi
+
+    # Loop mode: iterate until complete or max iterations
+    local iteration=0
+    echo "Starting loop mode (max $MAX_ITER iterations)..."
+    echo ""
+
+    while [ $iteration -lt $MAX_ITER ]; do
+        ((iteration++))
+        echo "========================================"
+        echo "Iteration $iteration / $MAX_ITER"
+        echo "========================================"
+        echo ""
+
+        log "Launching claude ${CLAUDE_ARGS[*]:-}"
+        claude "${CLAUDE_ARGS[@]}" "$PROMPT" || true
+
+        # Auto-commit progress
+        auto_commit_progress "$iteration"
+
+        # Check if tasks are complete
+        if is_task_complete; then
+            echo ""
+            echo "========================================"
+            echo "Tasks complete after $iteration iteration(s)"
+            echo "========================================"
+            return 0
+        fi
+
+        echo ""
+        echo "Tasks not yet complete, continuing..."
+        echo ""
+    done
+
+    echo ""
+    echo "========================================"
+    echo "WARNING: Reached max iterations ($MAX_ITER)"
+    echo "Task may not be fully complete."
+    echo "========================================"
+    return 1
+}
+
+# Parse arguments
+TASK=""
+POSITIONAL=()
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --auto)
+            AUTO=1
+            shift
+            ;;
+        --dry-run)
+            DRY_RUN=1
+            shift
+            ;;
+        --model)
+            MODEL="$2"
+            shift 2
+            ;;
+        --fast)
+            FAST=1
+            shift
+            ;;
+        --loop)
+            LOOP=1
+            shift
+            ;;
+        -v|--verbose)
+            VERBOSE=1
+            shift
+            ;;
+        --version)
+            echo "marge $VERSION"
+            exit 0
+            ;;
+        -h|--help|help)
+            print_usage
+            exit 0
+            ;;
+        init)
+            shift
+            exec "$MARGE_HOME/marge-init" "$@"
+            ;;
+        status)
+            if [[ -d "./marge_simpson" ]]; then
+                echo "marge_simpson/ exists in current directory"
+                if [[ -L "./marge_simpson/AGENTS.md" ]]; then
+                    echo "Mode: hybrid (symlinked to $MARGE_HOME)"
+                else
+                    echo "Mode: standalone"
+                fi
+                echo ""
+                echo "Local files:"
+                ls -1 ./marge_simpson/*.md 2>/dev/null | xargs -I{} basename {} | sed 's/^/  /'
+            else
+                echo "marge_simpson/ not found in current directory"
+                echo "Run 'marge init' to set up"
+            fi
+            exit 0
+            ;;
+        experts)
+            if [[ -d "$MARGE_HOME/shared/experts" ]]; then
+                echo "Available experts in $MARGE_HOME/shared/experts/:"
+                ls -1 "$MARGE_HOME/shared/experts/"*.md 2>/dev/null | xargs -I{} basename {} .md | grep -v "^_" | sed 's/^/  /'
+            else
+                echo "No experts directory found"
+            fi
+            exit 0
+            ;;
+        home)
+            echo "$MARGE_HOME"
+            exit 0
+            ;;
+        -*)
+            echo "Unknown option: $1" >&2
+            print_usage
+            exit 1
+            ;;
+        *)
+            POSITIONAL+=("$1")
+            shift
+            ;;
+    esac
+done
+
+# Handle positional arguments
+if [[ ${#POSITIONAL[@]} -eq 0 ]]; then
+    print_usage
+    exit 0
+fi
+
+# Join all positional args as the task
+TASK="${POSITIONAL[*]}"
+run_task "$TASK"

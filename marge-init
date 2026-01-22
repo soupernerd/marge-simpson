@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# marge-init - Initialize marge_simpson in current project (hybrid mode)
+# Usage: marge-init [--force]
+
+MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
+TARGET_DIR="./marge_simpson"
+FORCE=0
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -f|--force) FORCE=1; shift ;;
+    -h|--help)
+      echo "Usage: marge-init [--force]"
+      echo "  Initializes marge_simpson/ in current directory"
+      echo "  --force: Overwrite existing marge_simpson folder"
+      exit 0
+      ;;
+    *) echo "Unknown option: $1"; exit 1 ;;
+  esac
+done
+
+if [[ ! -d "$MARGE_HOME/shared" ]]; then
+  echo "Error: $MARGE_HOME/shared not found. Is marge installed globally?" >&2
+  exit 1
+fi
+
+if [[ -e "$TARGET_DIR" ]]; then
+  if [[ "$FORCE" -ne 1 ]]; then
+    echo "Error: $TARGET_DIR already exists. Use --force to overwrite." >&2
+    exit 1
+  fi
+  rm -rf "$TARGET_DIR"
+fi
+
+echo "Initializing marge_simpson/..."
+
+# Create directory structure
+mkdir -p "$TARGET_DIR/verify_logs"
+
+# Symlink shared resources
+ln -s "$MARGE_HOME/shared/AGENTS.md" "$TARGET_DIR/AGENTS.md"
+ln -s "$MARGE_HOME/shared/experts" "$TARGET_DIR/experts"
+ln -s "$MARGE_HOME/shared/workflows" "$TARGET_DIR/workflows"
+ln -s "$MARGE_HOME/shared/scripts" "$TARGET_DIR/scripts"
+ln -s "$MARGE_HOME/shared/knowledge" "$TARGET_DIR/knowledge"
+ln -s "$MARGE_HOME/shared/assets" "$TARGET_DIR/assets"
+ln -s "$MARGE_HOME/shared/prompt_examples" "$TARGET_DIR/prompt_examples"
+ln -s "$MARGE_HOME/shared/model_pricing.json" "$TARGET_DIR/model_pricing.json"
+ln -s "$MARGE_HOME/shared/README.md" "$TARGET_DIR/README.md"
+ln -s "$MARGE_HOME/shared/VERSION" "$TARGET_DIR/VERSION"
+
+# Copy per-project templates
+cp "$MARGE_HOME/templates/assessment.md" "$TARGET_DIR/"
+cp "$MARGE_HOME/templates/tasklist.md" "$TARGET_DIR/"
+cp "$MARGE_HOME/templates/verify.config.json" "$TARGET_DIR/"
+cp "$MARGE_HOME/templates/instructions_log.md" "$TARGET_DIR/"
+
+# Add to .gitignore if not already present
+if [[ -f ".gitignore" ]]; then
+  if ! grep -q "^marge_simpson/$" .gitignore 2>/dev/null; then
+    echo "marge_simpson/" >> .gitignore
+    echo "Added marge_simpson/ to .gitignore"
+  fi
+else
+  echo "marge_simpson/" > .gitignore
+  echo "Created .gitignore with marge_simpson/"
+fi
+
+echo "✓ marge_simpson/ initialized"
+echo ""
+echo "Structure:"
+echo "  marge_simpson/"
+echo "  ├── AGENTS.md        → ~/.marge/shared/ (symlink)"
+echo "  ├── experts/         → ~/.marge/shared/ (symlink)"
+echo "  ├── workflows/       → ~/.marge/shared/ (symlink)"
+echo "  ├── scripts/         → ~/.marge/shared/ (symlink)"
+echo "  ├── assessment.md    (local - per-project)"
+echo "  ├── tasklist.md      (local - per-project)"
+echo "  ├── verify.config.json (local - per-project)"
+echo "  └── verify_logs/     (local - per-project)"
