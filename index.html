@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Flowers</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #ffecd2 100%);
+            font-family: 'Georgia', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+
+        h1 {
+            color: #8b4557;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            font-size: 3rem;
+            text-align: center;
+        }
+
+        .garden {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .flower-card {
+            background: rgba(255,255,255,0.9);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .flower-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+
+        .flower {
+            font-size: 80px;
+            margin-bottom: 15px;
+            display: block;
+            animation: sway 3s ease-in-out infinite;
+        }
+
+        .flower-card:nth-child(2) .flower { animation-delay: 0.5s; }
+        .flower-card:nth-child(3) .flower { animation-delay: 1s; }
+        .flower-card:nth-child(4) .flower { animation-delay: 1.5s; }
+        .flower-card:nth-child(5) .flower { animation-delay: 2s; }
+        .flower-card:nth-child(6) .flower { animation-delay: 2.5s; }
+
+        @keyframes sway {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        .flower-name {
+            color: #5a3d4a;
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .flower-meaning {
+            color: #8b7355;
+            font-style: italic;
+            font-size: 0.95rem;
+        }
+
+        footer {
+            margin-top: 50px;
+            color: #8b4557;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>Beautiful Flowers Garden</h1>
+
+    <div class="garden">
+        <div class="flower-card">
+            <span class="flower">🌹</span>
+            <div class="flower-name">Rose</div>
+            <div class="flower-meaning">Love and passion</div>
+        </div>
+
+        <div class="flower-card">
+            <span class="flower">🌷</span>
+            <div class="flower-name">Tulip</div>
+            <div class="flower-meaning">Perfect love</div>
+        </div>
+
+        <div class="flower-card">
+            <span class="flower">🌻</span>
+            <div class="flower-name">Sunflower</div>
+            <div class="flower-meaning">Adoration and loyalty</div>
+        </div>
+
+        <div class="flower-card">
+            <span class="flower">🌸</span>
+            <div class="flower-name">Cherry Blossom</div>
+            <div class="flower-meaning">Renewal and hope</div>
+        </div>
+
+        <div class="flower-card">
+            <span class="flower">🌺</span>
+            <div class="flower-name">Hibiscus</div>
+            <div class="flower-meaning">Delicate beauty</div>
+        </div>
+
+        <div class="flower-card">
+            <span class="flower">💐</span>
+            <div class="flower-name">Bouquet</div>
+            <div class="flower-meaning">Gratitude and joy</div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Where flowers bloom, so does hope.</p>
+    </footer>
+</body>
+</html>
