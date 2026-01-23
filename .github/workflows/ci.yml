@@ -59,8 +59,17 @@ jobs:
       
       - name: Run ShellCheck on shell scripts
         run: |
-          shellcheck ./marge_simpson/scripts/verify.sh || true
-          shellcheck ./marge_simpson/scripts/cleanup.sh || true
-          shellcheck ./marge_simpson/scripts/test-marge.sh || true
-          shellcheck ./install.sh || true
-          shellcheck ./convert-to-meta.sh || true
+          # Run shellcheck on all shell scripts, exit with error if any fail
+          # Fix shellcheck warnings in scripts rather than suppressing them here
+          find . -name "*.sh" -type f | while read -r script; do
+            echo "Checking: $script"
+            shellcheck "$script" || exit 1
+          done
+          
+          # Also check bash scripts without .sh extension
+          for script in ./marge ./marge-init; do
+            if [ -f "$script" ]; then
+              echo "Checking: $script"
+              shellcheck "$script" || exit 1
+            fi
+          done

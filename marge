@@ -26,6 +26,7 @@ BASE_BRANCH=""
 PARALLEL=false
 MAX_PARALLEL=${MAX_PARALLEL:-3}
 PRD_FILE="PRD.md"
+MARGE_FOLDER="${MARGE_FOLDER:-marge_simpson}"
 
 # State
 iteration=0
@@ -60,10 +61,13 @@ ${BOLD}marge${RESET} v$VERSION - Autonomous AI coding loop
 ${BOLD}USAGE:${RESET}
   marge [options]              Run PRD tasks from PRD.md
   marge "<task>" [options]     Run a single task
+  marge meta "<task>"          Run task using meta_marge folder
 
 ${BOLD}EXAMPLES:${RESET}
   marge "fix the login bug"
   marge --loop --auto
+  marge --folder meta_marge "run audit"
+  marge meta "run self-improvement audit"
   marge --parallel --max-parallel 3
   marge --engine aider --loop
   marge --branch-per-task --create-pr
@@ -75,6 +79,7 @@ ${BOLD}OPTIONS:${RESET}
   --fast              Skip verification
   --loop              Loop until complete
   --engine <e>        Engine: claude, opencode, codex, aider
+  --folder <dir>      Target Marge folder (default: marge_simpson)
   --max-iterations N  Max iterations (default: $MAX_ITER)
   --max-retries N     Max retries per task (default: $MAX_RETRIES)
   --no-commit         Disable auto-commit
@@ -91,6 +96,7 @@ ${BOLD}COMMANDS:${RESET}
   status              Show current status and progress
   config              Show config file contents
   resume              Resume from saved progress
+  meta                Shortcut for --folder meta_marge
 
 ${BOLD}CONFIG FILE:${RESET}
   Place .marge/config.yaml in your project:
@@ -99,6 +105,11 @@ ${BOLD}CONFIG FILE:${RESET}
     max_iterations: 20
     max_retries: 3
     auto_commit: true
+    folder: marge_simpson
+
+${BOLD}ENVIRONMENT:${RESET}
+  MARGE_HOME          Installation directory (default: ~/.marge)
+  MARGE_FOLDER        Default folder (default: marge_simpson)
 
 ${BOLD}PRD FORMAT:${RESET}
   Tasks are parsed from PRD.md using "### Task N: Title" format.
@@ -180,6 +191,7 @@ load_config() {
             max_iterations) MAX_ITER="$value" ;;
             max_retries) MAX_RETRIES="$value" ;;
             auto_commit) AUTO_COMMIT="$value" ;;
+            folder) [[ -z "$MARGE_FOLDER" || "$MARGE_FOLDER" == "marge_simpson" ]] && MARGE_FOLDER="$value" ;;
         esac
     done < <(grep -v '^#' "$CONFIG_FILE" | tr ':' '=' 2>/dev/null)
 }
@@ -300,7 +312,7 @@ parse_token_usage() {
     local output_rate=15.00
 
     # Try to read from model_pricing.json if available
-    local pricing_file="./marge_simpson/model_pricing.json"
+    local pricing_file="./$MARGE_FOLDER/model_pricing.json"
     [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
 
     if [[ -f "$pricing_file" ]] && command -v jq &>/dev/null; then
@@ -361,8 +373,8 @@ auto_commit() {
 }
 
 is_task_complete() {
-    local tasklist="./marge_simpson/tasklist.md"
-    local assessment="./marge_simpson/assessment.md"
+    local tasklist="./$MARGE_FOLDER/tasklist.md"
+    local assessment="./$MARGE_FOLDER/assessment.md"
 
     [[ -f "$tasklist" ]] && grep -q "\[ \]" "$tasklist" && return 1
     [[ -f "$assessment" ]] && grep -iqE "(clean|complete|no issues)" "$assessment" && return 0
@@ -382,14 +394,14 @@ run_task() {
     log_info "Task $num: $task"
     save_progress "$num" "running"
 
-    [[ ! -d "$workdir/marge_simpson" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
+    [[ ! -d "$workdir/$MARGE_FOLDER" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
 
-    local prompt="Read the AGENTS.md file in the marge_simpson folder and follow it.
+    local prompt="Read the AGENTS.md file in the $MARGE_FOLDER folder and follow it.
 
 Instruction:
 - ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")
 
-After finished, list remaining unchecked items in marge_simpson/tasklist.md."
+After finished, list remaining unchecked items in $MARGE_FOLDER/tasklist.md."
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "${CYAN}Would run:${RESET} $(build_engine_cmd "$ENGINE") \"<prompt>\""
@@ -482,6 +494,7 @@ run_prd() {
     echo "${BOLD}Marge v$VERSION${RESET}"
     echo "Found ${CYAN}$count${RESET} tasks"
     echo "Engine: ${CYAN}$ENGINE${RESET}"
+    echo "Folder: ${CYAN}$MARGE_FOLDER${RESET}"
     [[ "$PARALLEL" == true ]] && echo "Mode: ${CYAN}parallel${RESET} (max $MAX_PARALLEL)"
     echo ""
 
@@ -555,7 +568,7 @@ print_session_summary() {
         local input_rate=3.00
         local output_rate=15.00
 
-        local pricing_file="./marge_simpson/model_pricing.json"
+        local pricing_file="./$MARGE_FOLDER/model_pricing.json"
         [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
 
         if [[ -f "$pricing_file" ]] && command -v jq &>/dev/null; then
@@ -585,6 +598,7 @@ run_single() {
     echo ""
     echo "${BOLD}Marge v$VERSION${RESET} - Single task"
     echo "Task: ${CYAN}$task${RESET}"
+    echo "Folder: ${CYAN}$MARGE_FOLDER${RESET}"
     echo ""
 
     if [[ "$LOOP" == true ]]; then
@@ -644,6 +658,7 @@ while [[ $# -gt 0 ]]; do
         --dry-run) DRY_RUN=true; shift ;;
         --model) MODEL="$2"; shift 2 ;;
         --engine) ENGINE="$2"; shift 2 ;;
+        --folder) MARGE_FOLDER="$2"; shift 2 ;;
         --fast) FAST=true; shift ;;
         --loop) LOOP=true; shift ;;
         --max-iterations) MAX_ITER="$2"; shift 2 ;;
@@ -657,9 +672,11 @@ while [[ $# -gt 0 ]]; do
         --version) echo "marge $VERSION"; exit 0 ;;
         -h|--help|help) print_usage; exit 0 ;;
         init) init_config; exit 0 ;;
+        meta) MARGE_FOLDER="meta_marge"; shift ;;
         status)
             echo "${BOLD}Marge Status${RESET}"
             echo "Project type: $(detect_project)"
+            echo "Folder: $MARGE_FOLDER"
             [[ -f "$PROGRESS_FILE" ]] && {
                 echo "Progress file: $PROGRESS_FILE"
                 cat "$PROGRESS_FILE"
