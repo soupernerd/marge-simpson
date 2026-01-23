@@ -5,225 +5,79 @@
 **Full Featured - Drop-in AI workflow for automated audits, bug fixes, new feature suggestion/implementation and testing - for any codebase.**
 
 <p float="none">
-  <img src="marge_simpson/assets/many_marge_experts.jpg" width="100%" />
+  <img src="./assets/many_marge_experts.jpg" width="100%" />
 </p>
 
 ---
 
-## Two Ways to Use Marge
+## Four Ways to Use Marge
 
 | Method | Best For | How |
 |--------|----------|-----|
-| 💬 **IDE Chat Prompts** | Interactive work, questions, debugging | Paste prompts into VS Code Copilot, Cursor, etc. |
-| 🖥️ **CLI (Terminal)** | Automation, batch tasks, headless runs | Run `marge "task"` from terminal |
+| 💬 **Chat Prompts** | Interactive work, questions, debugging | Paste prompts into VS Code Copilot, Cursor, etc. |
+| 🖥️ **CLI (Local)** | Automation in one project | Run `./cli/marge "task"` from repo |
+| 🌐 **CLI (Global)** | Multi-project automation | Install once, run `marge "task"` anywhere |
+| 🔧 **Meta Development** | Contributing to Marge | Use the meta/ tools to improve Marge itself |
 
 ---
 
-## Install (30 seconds)
+## Quick Start
 
-### Option A: Drop-in (per-project) — for 💬 Chat Prompts
+### Option A: Drop-in Folder (Simplest)
 
-1. Copy just the **`marge_simpson/`** folder into your repo root
-2. Use a prompt template from the [Chat Prompts](#-ide-chat-prompts) section below
-
-> **💡 Renamed the folder?** Replace `marge_simpson` with your folder name in prompts.
-
-### Option B: Global Install (multi-project) — for 🖥️ CLI
-
-For users working across multiple repos who want:
-- **Clean repos** — `marge_simpson/` is gitignored, not committed
-- **Shared resources** — experts, workflows, and knowledge shared globally
-- **Per-project tracking** — MS-IDs and logs isolated per project
+1. **Clone or copy this repo** into your project as `.marge/` (or any name)
+2. Use a [Chat Prompt](#-chat-prompt-templates) from below
 
 ```bash
-# macOS/Linux
-./install-global.sh
+# Example: copy into your project
+cp -r marge-simpson .marge
+```
 
-# Windows
-.\install-global.ps1
+> **💡 Using a different folder name?** Replace `.marge` with your folder name in prompts.
+
+### Option B: CLI (Local)
+
+```bash
+# From within this repo
+./cli/marge "fix the login bug"
+./cli/marge "add dark mode" --model opus
+```
+
+### Option C: CLI (Global Install)
+
+```bash
+# Install once, use everywhere
+./cli/install-global.sh      # macOS/Linux
+.\cli\install-global.ps1     # Windows
+
+# Then in any project:
+marge init                   # Initialize .marge/ in current project
+marge "fix the bug"          # Run task
 ```
 
 ---
 
-# 🖥️ CLI (Terminal Commands)
+# 💬 Chat Prompt Templates
 
-> **Use when:** You want headless automation, batch processing, or to run tasks without opening an IDE.
+> **Use when:** You're working interactively in VS Code, Cursor, or another IDE with AI chat.
 
-## Basic Usage
+## 🔄 Iterative Loop Mode (optional)
 
-```bash
-# Single task mode
-marge "fix the login bug"              # Run task with spinner + timer
-marge "add dark mode" --model opus     # Override model
-marge "audit codebase" --dry-run       # Preview without executing
-
-# Target different folders
-marge --folder meta_marge "run audit"  # Use meta_marge instead of marge_simpson
-marge meta "run self-improvement"      # Shortcut for --folder meta_marge
-
-# PRD mode (run tasks from PRD.md)
-marge                                  # Run all tasks from PRD.md
-marge --parallel --max-parallel 3      # Run tasks in parallel
-marge --branch-per-task --create-pr    # Git workflow automation
-
-# Loop mode
-marge "full cleanup" --loop            # Iterate until complete
-marge --loop --max-iterations 10       # Limit iterations
-
-# Utilities
-marge init                             # Initialize .marge/ config + PRD.md template
-marge status                           # Show project type, progress, PRD tasks
-marge resume                           # Resume from saved progress
-marge config                           # Show config file
-```
-
-## CLI Options
-
-| Flag | Description |
-|------|-------------|
-| `--folder <dir>` | Target Marge folder (default: marge_simpson) |
-| `--dry-run` | Preview prompt without launching claude |
-| `--model <model>` | Override model (sonnet, opus, haiku) |
-| `--engine <e>` | AI engine: claude, opencode, codex, aider |
-| `--fast` | Skip verification steps |
-| `--loop` | Keep iterating until task complete |
-| `--max-iterations N` | Max iterations (default: 20) |
-| `--max-retries N` | Max retries per task (default: 3) |
-| `--parallel` | Run tasks in parallel using git worktrees |
-| `--max-parallel N` | Max concurrent tasks (default: 3) |
-| `--branch-per-task` | Create separate git branch for each task |
-| `--create-pr` | Create PR when done (requires gh CLI) |
-| `--no-commit` | Disable auto-commit |
-| `-v, --verbose` | Debug output |
-| `--version` | Show version |
-
-**Environment Variables:**
-- `MARGE_HOME` — Installation directory (default: `~/.marge`)
-- `MARGE_FOLDER` — Default target folder (default: `marge_simpson`)
-
-## How the CLI Works
-
-The `marge` command:
-1. Auto-initializes `marge_simpson/` if not present
-2. Launches `claude` in non-interactive mode (`-p` flag)
-3. Shows a spinner with timer while working (Simpsons-themed colors!)
-4. Displays token usage and cost after completion
-5. Claude follows AGENTS.md rules, tracks work with MS-IDs, verifies changes
-
-## PRD Mode (Task Lists)
-
-Run multiple tasks from a `PRD.md` file:
-
-```markdown
-# PRD
-
-### Task 1: Setup
-- [ ] Initialize project structure
-
-### Task 2: Implementation
-- [ ] Build main features
-
-### Task 3: Testing
-- [ ] Write unit tests
-```
-
-```bash
-marge                    # Runs all tasks sequentially
-marge --parallel         # Runs tasks in parallel (git worktrees)
-marge --dry-run          # Preview tasks without executing
-```
-
-## CLI Config File
-
-Place `.marge/config.yaml` in your project to set defaults:
-
-```yaml
-engine: claude           # claude, opencode, codex, aider
-model: ""                # sonnet, opus, haiku (or leave empty)
-max_iterations: 20
-max_retries: 3
-auto_commit: true
-folder: marge_simpson    # default target folder
-```
-
-## Progress & Resume
-
-Marge saves progress to `.marge/progress.txt` so you can resume interrupted work:
-
-```bash
-marge status             # Check current progress
-marge resume             # Continue from where you left off
-```
-
-## CLI UX Features
-
-| Feature | Description |
-|---------|-------------|
-| **Spinner** | Animated progress indicator with Marge's hair blue 💙 |
-| **Timer** | Shows elapsed time `[MM:SS]` |
-| **Step Detection** | Working → Reading → Writing → Testing → Committing |
-| **Token Display** | Shows input/output tokens and cost after completion |
-| **Notifications** | Desktop notifications on completion (Linux/macOS) |
-
-## Smart Project Detection
-
-Marge auto-detects your project type:
-- **Node.js** — `package.json`
-- **Rust** — `Cargo.toml`
-- **Go** — `go.mod`
-- **Python** — `requirements.txt` or `pyproject.toml`
-- **Ruby** — `Gemfile`
-
-## Global Install Structure
-
-After `install-global.sh`, running `marge-init` in any project creates `marge_simpson/` with:
-- **Symlinks** to `~/.marge/shared/` (AGENTS.md, experts, workflows, scripts)
-- **Local copies** of tracking files (assessment.md, tasklist.md, verify.config.json)
-- Auto-adds `marge_simpson/` to `.gitignore`
-
-```
-~/.marge/
-├── shared/           # Symlinked to all projects
-│   ├── AGENTS.md
-│   ├── experts/      # Add custom experts here (shared across projects)
-│   ├── workflows/
-│   ├── scripts/
-│   └── knowledge/
-├── templates/        # Copied per-project
-│   ├── assessment.md
-│   ├── tasklist.md
-│   └── verify.config.json
-├── marge             # CLI wrapper
-└── marge-init        # Project initialization script
-```
-
-> **💡 Custom experts:** Add domain-specific expert files to `~/.marge/shared/experts/` and they'll be available in all your projects.
-
----
-
-# 💬 IDE Chat Prompts
-
-> **Use when:** You're working interactively in VS Code, Cursor, or another IDE with AI chat. Copy-paste these prompts into your chat window.
-
-## 💬 Iterative Loop Mode (optional)
-
-Add a loop phrase to any chat prompt and Marge will keep iterating until the work is complete.
+Add a loop phrase to any prompt and Marge will keep iterating until work is complete.
 
 > **🔄 Quick start:** Add `loop until clean` to any prompt template below.
 >
 > **⚙️ Control iterations:** Add `min 3` or `max 10` to set bounds.
 >
-> See [prompt_examples/](marge_simpson/prompt_examples/) for ready-to-use templates with looping.
+> See [prompt_examples/](./prompt_examples/) for ready-to-use templates.
 
 ---
 
-## 💬 Prompt Templates
-
-### 🔍 System Audit
+## 🔍 System Audit
 *Use first, or periodically to refresh the plan.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Run a system-wide audit of this workspace/repo (read-only).
 - Read and understand the architecture and major workflows.
@@ -231,56 +85,56 @@ Run a system-wide audit of this workspace/repo (read-only).
 - Do not break intended functionality.
 
 Update/create tracking docs:
-- marge_simpson/assessment.md (snapshot + findings + new MS issues)
-- marge_simpson/tasklist.md (prioritized tasks with DoD + verification)
+- .marge/assessment.md (snapshot + findings + new MS issues)
+- .marge/tasklist.md (prioritized tasks with DoD + verification)
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
 
 ---
 
-### 🐛 Features & Issues
+## 🐛 Features & Issues
 *Report bugs or request features. Each becomes tracked work.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 New Feature / Issues:
 - Example Feature: "Lets add a drop down next to search that allows for.."
 - Example / New Issue: "The right hand side nav is not expanding as expected"
 - Example / Existing issue not fixed: "MS-0046 is still exhibiting [insert issue here]"
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
 
 ---
 
-### 📝 Instructions
+## 📝 Instructions
 *Give direct instructions without needing a feature/issue format.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Instruction:
 - (your instruction here)
 - (another instruction here)
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
 
 ---
 
-### ❓ Questions & Confirmations
+## ❓ Questions & Confirmations
 *Ask questions or confirm fixes. Quick answers grounded in code.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)
@@ -288,18 +142,18 @@ Questions / Confirmations:
 3. Example Confirmation: "MS-00xx fixed"
 4. Example Question: "Are there alternatives to codemirror?"
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
 
 ---
 
-### 📝 Have MARGE Suggest Features
+## 📝 Have MARGE Suggest Features
 *Let Marge propose new features based on your codebase.*
 
 ```
-Read and follow the rules in `marge_simpson/AGENTS.md`.
+Read and follow the rules in `.marge/AGENTS.md`.
 
 MODE: PLANNING ONLY (no code changes, no patches, no execution).
 
@@ -323,18 +177,18 @@ Output format:
 2) A short "Top pick summary" (2–4 lines) explaining why the #1–#2 options win on UX/value
 
 Update/append/create tracking doc:
-- marge_simpson/recommended_features.md (with the bullet points created per feature)
+- .marge/recommended_features.md (with the bullet points created per feature)
 
 Minimize follow-up questions. If info is missing, make reasonable assumptions and state them briefly.
 ```
 
 ---
 
-### 🔀 Combined Prompts (mix and match at will)
+## 🔀 Combined Prompts (mix and match)
 *Mix questions and issues in one prompt for efficiency.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)
@@ -348,7 +202,7 @@ New Feature / Issues:
 - (New Feature or Issue here)
 - (New Feature or Issue here)
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -358,18 +212,104 @@ Output using the Response Format (include IDs created).
 ## 💬 Pro Tips for Chat
 
 ### Deep Reasoning ("Ultrathink")
-For complex problems, debugging, or architectural decisions, you can request extended reasoning:
+For complex problems, debugging, or architectural decisions:
 - "Think extra hard about this"
 - "Take your time reasoning through this"
 - "Use extended thinking for this problem"
 
-This prompts the model to reason more deeply before responding.
-
 ### Fresh Context for Long Sessions
-After very long conversations (50+ exchanges), reasoning quality may degrade due to context accumulation. Consider:
+After very long conversations (50+ exchanges), consider:
 - Starting a fresh conversation for new major features
 - Using session_end workflow to capture knowledge before restarting
 - Keeping focused conversations (one major topic per chat)
+
+---
+
+# 🖥️ CLI Reference
+
+## Basic Usage
+
+```bash
+# Single task mode
+marge "fix the login bug"              # Run task with spinner + timer
+marge "add dark mode" --model opus     # Override model
+marge "audit codebase" --dry-run       # Preview without executing
+
+# Target different folders
+marge --folder .marge "run audit"      # Explicit folder
+marge meta "run self-improvement"      # Shortcut for meta development
+
+# PRD mode (run tasks from PRD.md)
+marge                                  # Run all tasks from PRD.md
+marge --parallel --max-parallel 3      # Run tasks in parallel
+marge --branch-per-task --create-pr    # Git workflow automation
+
+# Loop mode
+marge "full cleanup" --loop            # Iterate until complete
+marge --loop --max-iterations 10       # Limit iterations
+
+# Utilities
+marge init                             # Initialize .marge/ in current project
+marge status                           # Show project type, progress, PRD tasks
+marge resume                           # Resume from saved progress
+marge config                           # Show config file
+```
+
+## CLI Options
+
+| Flag | Description |
+|------|-------------|
+| `--folder <dir>` | Target Marge folder (default: `.marge`) |
+| `--dry-run` | Preview prompt without launching claude |
+| `--model <model>` | Override model (sonnet, opus, haiku) |
+| `--engine <e>` | AI engine: claude, opencode, codex, aider |
+| `--fast` | Skip verification steps |
+| `--loop` | Keep iterating until task complete |
+| `--max-iterations N` | Max iterations (default: 20) |
+| `--max-retries N` | Max retries per task (default: 3) |
+| `--parallel` | Run tasks in parallel using git worktrees |
+| `--max-parallel N` | Max concurrent tasks (default: 3) |
+| `--branch-per-task` | Create separate git branch for each task |
+| `--create-pr` | Create PR when done (requires gh CLI) |
+| `--no-commit` | Disable auto-commit |
+| `-v, --verbose` | Debug output |
+| `--version` | Show version |
+
+**Environment Variables:**
+- `MARGE_HOME` — Global installation directory (default: `~/.marge`)
+- `MARGE_FOLDER` — Default target folder (default: `.marge`)
+
+## CLI Config File
+
+Place `.marge/config.yaml` in your project:
+
+```yaml
+engine: claude           # claude, opencode, codex, aider
+model: ""                # sonnet, opus, haiku (or leave empty)
+max_iterations: 20
+max_retries: 3
+auto_commit: true
+folder: .marge           # default target folder
+```
+
+## CLI UX Features
+
+| Feature | Description |
+|---------|-------------|
+| **Spinner** | Animated progress indicator with Marge's hair blue 💙 |
+| **Timer** | Shows elapsed time `[MM:SS]` |
+| **Step Detection** | Working → Reading → Writing → Testing → Committing |
+| **Token Display** | Shows input/output tokens and cost after completion |
+| **Notifications** | Desktop notifications on completion (Linux/macOS) |
+
+## Smart Project Detection
+
+Marge auto-detects your project type:
+- **Node.js** — `package.json`
+- **Rust** — `Cargo.toml`
+- **Go** — `go.mod`
+- **Python** — `requirements.txt` or `pyproject.toml`
+- **Ruby** — `Gemfile`
 
 ---
 
@@ -388,16 +328,21 @@ After very long conversations (50+ exchanges), reasoning quality may degrade due
 - `tasklist.md` — what's left / doing / done
 - `assessment.md` — root cause notes + verification evidence
 
-## What's Inside marge_simpson/
+## What's Inside
 
-| File | Purpose |
-|------|---------|
+| File/Folder | Purpose |
+|-------------|---------|
 | `AGENTS.md` | Rules the assistant follows |
 | `assessment.md` | Findings + root cause + verification |
 | `tasklist.md` | Prioritized tasks (backlog → done) |
-| `scripts/verify.ps1` / `verify.sh` | Automated test runner |
-| `scripts/test-marge.ps1` / `test-marge.sh` | Self-test suite |
+| `cli/` | CLI tools (marge, marge-init, install-global) |
+| `scripts/` | Verify scripts, test suite |
+| `workflows/` | Session start/end, planning, audit workflows |
+| `experts/` | Domain expert instructions |
+| `knowledge/` | Decisions, patterns, preferences |
+| `plans/` | Feature plan files |
 | `prompt_examples/` | Ready-to-copy templates |
+| `meta/` | Tools for contributing to Marge |
 
 ## Test Configuration
 
@@ -427,66 +372,19 @@ Custom test commands in `verify.config.json`:
 }
 ```
 
-**Multi-language / Monorepo:**
-```json
-{
-  "fast": ["npm test", "python -m pytest -q"],
-  "full": ["npm ci", "npm test", "pip install -r requirements.txt", "python -m pytest"]
-}
-```
-
 No config? Scripts auto-detect Node, Python, Go, Rust, .NET, Java.
-
----
-
-## Repository Architecture
-
-This repository has a **dual-folder architecture**:
-
-| Folder | Purpose | When to Use |
-|--------|---------|-------------|
-| `marge_simpson/` | **Production template** — copy this to your repos | End users installing Marge |
-| `meta_marge/` | **Development instance** — improve Marge here | Contributors developing Marge itself |
-
-**Key Points:**
-- `marge_simpson/` is the **source of truth** — this is what gets distributed
-- `meta_marge/` is a **working copy** with all paths/references transformed
-- The `convert-to-meta` scripts create `meta_marge/` from `marge_simpson/`
-- Changes flow: `marge_simpson/` → `meta_marge/` (via script) → test → manual copy back
-
-**Why two folders?**
-Marge tracks work using relative paths (e.g., `./marge_simpson/tasklist.md`). To develop Marge *using* Marge, we need a separate instance with different paths so the tooling doesn't overwrite itself.
 
 ---
 
 ## For Contributors
 
-Want to improve Marge itself? Use the **meta development workflow**:
+Want to improve Marge itself? See [meta/README.md](./meta/README.md) for the meta-development workflow.
 
-| Folder | Purpose |
-|--------|---------|
-| `marge_simpson/` | Template for end users (gets copied to other repos) |
-| `meta_marge/` | Development instance (improve Marge here) |
-
-### Quick Start
-```powershell
-# Windows
-.\convert-to-meta.ps1
-
-# macOS/Linux
-./convert-to-meta.sh
-```
-
-### To create a Meta Marge to make Marge better
-1. Run `convert-to-meta` to create/refresh `meta_marge/`
-2. Use prompts referencing `meta_marge` instead of `marge_simpson`
-3. Test with `./meta_marge/scripts/test-marge.ps1` (15 tests)
-4. Copy changes back to `marge_simpson/` when satisfied
-
-### Versioning
-- `marge_simpson/VERSION` — bump when releasing template changes
-- `meta_marge/VERSION` — auto-updated by convert script
-- Semantic: **major** (breaking) / **minor** (features) / **patch** (fixes)
+Quick version:
+1. Run `./meta/convert-to-meta.sh` (or `.ps1`) to create `.marge_meta/`
+2. Use prompts referencing `.marge_meta` instead of `.marge`
+3. Test with `./scripts/test-marge.sh` (or `.ps1`)
+4. Copy changes back when satisfied
 
 ---
 
