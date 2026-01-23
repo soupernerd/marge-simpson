@@ -19,8 +19,6 @@ set -euo pipefail
 # Dynamic folder detection
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 MS_DIR="$(cd "$SCRIPTS_DIR/.." && pwd)"
-MS_FOLDER_NAME="$(basename "$MS_DIR")"
-REPO_ROOT="$(cd "$MS_DIR/.." && pwd)"
 KNOWLEDGE_PATH="$MS_DIR/knowledge"
 
 # Defaults
@@ -148,7 +146,6 @@ scan_file() {
     local in_entry=false
     local current_id=""
     local current_title=""
-    local current_block=""
     local last_accessed=""
     local strength=""
     local verified=""
