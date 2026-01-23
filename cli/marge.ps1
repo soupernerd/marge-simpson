@@ -52,10 +52,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ============================================
-# Marge v1.2.2 - Autonomous AI Coding Loop
+# Marge v1.3.0 - Autonomous AI Coding Loop
 # ============================================
 
-$script:VERSION = "1.2.2"
+$script:VERSION = "1.3.0"
 $script:MARGE_HOME = if ($env:MARGE_HOME) { $env:MARGE_HOME } else { "$env:USERPROFILE\.marge" }
 
 # Defaults
@@ -65,6 +65,8 @@ $script:MODEL = ""
 $script:FAST = $false
 $script:LOOP = $false
 $script:AUTO = $false
+$script:FULL_MODE = $false
+$script:LITE_MODE = $false
 $script:MAX_ITER = if ($env:MAX_ITER) { [int]$env:MAX_ITER } else { 20 }
 $script:MAX_RETRIES = if ($env:MAX_RETRIES) { [int]$env:MAX_RETRIES } else { 3 }
 $script:RETRY_DELAY = if ($env:RETRY_DELAY) { [int]$env:RETRY_DELAY } else { 5 }
@@ -94,10 +96,13 @@ marge v$script:VERSION - Autonomous AI coding loop (PowerShell)
 USAGE:
   .\marge.ps1 [options]              Run PRD tasks from planning_docs/PRD.md
   .\marge.ps1 "<task>" [options]     Run a single task
+  .\marge.ps1 "<t1>" "<t2>" ...      Chain multiple tasks
   .\marge.ps1 meta "<task>"          Run task using .meta_marge folder
 
 EXAMPLES:
   .\marge.ps1 "fix the login bug"
+  .\marge.ps1 "fix bug" "add tests"  # Chain multiple tasks
+  .\marge.ps1 -Full "complex task"   # Force full AGENTS.md
   .\marge.ps1 -Loop -Auto
   .\marge.ps1 -Folder .meta_marge "run audit"
   .\marge.ps1 meta "run self-improvement audit"
@@ -108,6 +113,7 @@ OPTIONS:
   -DryRun            Preview without running
   -Model <model>     Model override
   -Fast              Skip verification
+  -Full              Force full AGENTS.md (even for one-off tasks)
   -Loop              Loop until complete
   -Engine <e>        Engine: claude, opencode, codex, aider
   -Folder <dir>      Target Marge folder (default: .marge)
@@ -120,6 +126,7 @@ OPTIONS:
 
 COMMANDS:
   init               Initialize .marge/ and planning_docs/PRD.md template
+  clean              Remove local .marge/ folder
   status             Show current status and progress
   config             Show config file contents
   meta               Shortcut for -Folder .meta_marge
@@ -289,18 +296,48 @@ function Invoke-Task {
     Write-Info "Task $Num`: $Task"
     Save-Progress $Num "running"
 
-    # Initialize marge folder if needed
+    # Determine mode: lite vs full
     $margeDir = Join-Path $WorkDir $script:MARGE_FOLDER
-    if (-not (Test-Path $margeDir)) {
-        $initScript = Join-Path $script:MARGE_HOME "marge-init"
-        if (Test-Path $initScript) {
-            & $initScript 2>$null
-        }
+    $useLiteMode = $false
+    
+    if (-not (Test-Path $margeDir) -and -not $script:FULL_MODE) {
+        $useLiteMode = $true
+        $script:LITE_MODE = $true
+        Write-Debug-Msg "Using lite mode (AGENTS-lite.md)"
     }
 
-    # Build prompt
-    $loopSuffix = if ($script:LOOP) { " Loop until complete." } else { "" }
-    $prompt = @"
+    if ($useLiteMode) {
+        # Lite mode - use AGENTS-lite.md content directly
+        $agentsLitePath = Join-Path $script:MARGE_HOME "shared\AGENTS-lite.md"
+        if (-not (Test-Path $agentsLitePath)) {
+            $agentsLitePath = Join-Path $script:MARGE_HOME "AGENTS-lite.md"
+        }
+        
+        $agentsContent = if (Test-Path $agentsLitePath) {
+            Get-Content $agentsLitePath -Raw
+        } else {
+            "Be concise. Do the task directly. List files modified."
+        }
+        
+        $prompt = @"
+Read and follow these rules:
+
+$agentsContent
+
+Task: $Task
+"@
+    } else {
+        # Full mode - ensure .marge folder exists
+        if (-not (Test-Path $margeDir)) {
+            $initScript = Join-Path $script:MARGE_HOME "marge-init.ps1"
+            if (Test-Path $initScript) {
+                & $initScript 2>$null
+            }
+        }
+
+        # Build prompt
+        $loopSuffix = if ($script:LOOP) { " Loop until complete." } else { "" }
+        $prompt = @"
 Read the AGENTS.md file in the $script:MARGE_FOLDER folder and follow it.
 
 Instruction:
@@ -308,9 +345,12 @@ Instruction:
 
 After finished, list remaining unchecked items in $script:MARGE_FOLDER/planning_docs/tasklist.md.
 "@
+    }
 
     if ($script:DRY_RUN) {
         $cmd = Build-EngineCmd $script:ENGINE
+        $modeDisplay = if ($useLiteMode) { "lite" } else { "full" }
+        Write-Host "Mode: $modeDisplay" -ForegroundColor Cyan
         Write-Host "Would run: $cmd `"<prompt>`"" -ForegroundColor Cyan
         return $true
     }
@@ -426,10 +466,17 @@ function Invoke-PrdMode {
 function Invoke-SingleTask {
     param([string]$Task)
 
+    # Pre-check mode for display
+    $margeDir = "./$script:MARGE_FOLDER"
+    $modeDisplay = if (-not (Test-Path $margeDir) -and -not $script:FULL_MODE) { "lite" } else { "full" }
+
     Write-Host ""
     Write-Host "Marge v$script:VERSION - Single task" -ForegroundColor White
     Write-Host "Task: " -NoNewline; Write-Host $Task -ForegroundColor Cyan
-    Write-Host "Folder: " -NoNewline; Write-Host $script:MARGE_FOLDER -ForegroundColor Cyan
+    Write-Host "Mode: " -NoNewline; Write-Host $modeDisplay -ForegroundColor Cyan
+    if ($modeDisplay -eq "full") {
+        Write-Host "Folder: " -NoNewline; Write-Host $script:MARGE_FOLDER -ForegroundColor Cyan
+    }
     Write-Host ""
 
     if ($script:LOOP) {
@@ -513,7 +560,15 @@ function Show-SessionSummary {
     Write-Host "  Folder: $script:MARGE_FOLDER"
 
     if ($script:total_input_tokens -gt 0 -or $script:total_output_tokens -gt 0) {
-        Write-Host "  Tokens: $script:total_input_tokens in / $script:total_output_tokens out" -ForegroundColor Cyan
+        # Calculate cost (default Claude Sonnet pricing)
+        $inputRate = 3.00
+        $outputRate = 15.00
+        $totalCost = (($script:total_input_tokens * $inputRate) + ($script:total_output_tokens * $outputRate)) / 1000000
+        
+        Write-Host "  Tokens: " -NoNewline
+        Write-Host "$script:total_input_tokens in / $script:total_output_tokens out" -ForegroundColor Cyan
+        Write-Host "  Cost: " -NoNewline
+        Write-Host "`$$([math]::Round($totalCost, 4))" -ForegroundColor Cyan
     }
 
     Write-Host "═══════════════════════════════════════════════════" -ForegroundColor White
@@ -539,6 +594,7 @@ while ($i -lt $Arguments.Count) {
     elseif ($arg -match '^(-Model|--model)$') { $i++; $script:MODEL = $Arguments[$i]; $matched = $true }
     elseif ($arg -match '^(-Engine|--engine)$') { $i++; $script:ENGINE = $Arguments[$i]; $matched = $true }
     elseif ($arg -match '^(-Fast|--fast)$') { $script:FAST = $true; $matched = $true }
+    elseif ($arg -match '^(-Full|--full)$') { $script:FULL_MODE = $true; $matched = $true }
     elseif ($arg -match '^(-Loop|--loop)$') { $script:LOOP = $true; $matched = $true }
     elseif ($arg -match '^(-MaxIterations|--max-iterations)$') { $i++; $script:MAX_ITER = [int]$Arguments[$i]; $matched = $true }
     elseif ($arg -match '^(-MaxRetries|--max-retries)$') { $i++; $script:MAX_RETRIES = [int]$Arguments[$i]; $matched = $true }
@@ -548,6 +604,20 @@ while ($i -lt $Arguments.Count) {
     elseif ($arg -match '^(-Version|--version)$') { Write-Host "marge $script:VERSION"; exit 0 }
     elseif ($arg -match '^(-Help|--help|-h|help)$') { Show-Usage; exit 0 }
     elseif ($arg -eq 'init') { Initialize-Config; exit 0 }
+    elseif ($arg -eq 'clean') {
+        if (Test-Path ".marge" -PathType Container) {
+            $response = Read-Host "Remove .marge/ folder? [y/N]"
+            if ($response -match '^[Yy]$') {
+                Remove-Item -Recurse -Force ".marge"
+                Write-Success "Removed .marge/"
+            } else {
+                Write-Info "Cancelled"
+            }
+        } else {
+            Write-Warn ".marge/ folder not found"
+        }
+        exit 0
+    }
     elseif ($arg -eq 'status') { Show-Status; exit 0 }
     elseif ($arg -eq 'config') { if (Test-Path ".marge\config.yaml") { Get-Content ".marge\config.yaml" }; exit 0 }
     elseif ($arg -eq 'meta') {
@@ -578,8 +648,31 @@ if (-not (Test-Engine $script:ENGINE)) { exit 1 }
 
 # Run
 if ($positional.Count -gt 0) {
-    $taskString = $positional -join " "
-    Invoke-SingleTask $taskString
+    # Task chaining: run each task sequentially
+    if ($positional.Count -gt 1) {
+        Write-Host ""
+        Write-Host "Marge v$script:VERSION - Task chain ($($positional.Count) tasks)" -ForegroundColor White
+        Write-Host "Folder: " -NoNewline; Write-Host $script:MARGE_FOLDER -ForegroundColor Cyan
+        Write-Host ""
+        
+        $taskNum = 0
+        foreach ($task in $positional) {
+            $taskNum++
+            Write-Host "━━━ Task $taskNum/$($positional.Count): $task ━━━" -ForegroundColor White
+            $script:iteration = 1
+            $result = Invoke-Task $task $taskNum
+            if (-not $result) {
+                Write-Err "Task $taskNum failed, stopping chain"
+                break
+            }
+            Write-Host ""
+        }
+        
+        Show-SessionSummary $taskNum
+    }
+    else {
+        Invoke-SingleTask $positional[0]
+    }
 }
 else {
     Invoke-PrdMode

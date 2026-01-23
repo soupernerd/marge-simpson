@@ -5,6 +5,25 @@ All notable changes to the Marge project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-01-23
+
+### Added
+- **Lite Mode** - One-off tasks use minimal `AGENTS-lite.md` (~35 lines vs full AGENTS.md) when no local `.marge/` folder exists
+- **`--full` flag** - Force full AGENTS.md workflow even for one-off tasks
+- **Task Chaining** - Run multiple tasks sequentially: `marge "task1" "task2" "task3"`
+- **`marge clean` command** - Remove local `.marge/` folder with safety confirmation
+- **Token totals with cost** - Session summary now shows accumulated tokens and estimated cost
+- **`AGENTS-lite.md`** - Lightweight agent rules for quick one-off tasks
+
+### Changed
+- CLI now auto-detects lite vs full mode based on local `.marge/` folder presence
+- Single task output now shows "Mode: lite" or "Mode: full" for clarity
+- Session summary enhanced with cost calculation (Claude Sonnet pricing)
+
+### Technical
+- Cherry-picked features from PR #13 (@arbuthnot-eth) with adaptations for v1.2.x architecture
+- Skipped: folder rename (keep `marge-simpson/` for repo), git-free file tracking (unnecessary complexity)
+
 ## [1.2.2] - 2026-01-23
 
 ### Changed

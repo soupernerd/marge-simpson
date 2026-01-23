@@ -6,11 +6,11 @@
 set -eo pipefail
 
 # ============================================
-# Marge v1.2.2 - Autonomous AI Coding Loop
+# Marge v1.3.0 - Autonomous AI Coding Loop
 # ============================================
 
 MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
-VERSION="1.2.2"
+VERSION="1.3.0"
 
 # Defaults
 DRY_RUN=false
@@ -19,6 +19,8 @@ MODEL=""
 FAST=false
 LOOP=false
 AUTO=false
+FULL_MODE=false
+LITE_MODE=false
 MAX_ITER=${MAX_ITER:-20}
 MAX_RETRIES=${MAX_RETRIES:-3}
 RETRY_DELAY=${RETRY_DELAY:-5}
@@ -64,10 +66,13 @@ ${BOLD}marge${RESET} v$VERSION - Autonomous AI coding loop
 ${BOLD}USAGE:${RESET}
   marge [options]              Run PRD tasks from planning_docs/PRD.md
   marge "<task>" [options]     Run a single task
+  marge "<t1>" "<t2>" ...      Chain multiple tasks
   marge meta "<task>"          Run task using .meta_marge folder
 
 ${BOLD}EXAMPLES:${RESET}
   marge "fix the login bug"
+  marge "fix bug" "add tests"  # Chain multiple tasks
+  marge --full "complex task"  # Force full AGENTS.md
   marge --loop --auto
   marge --folder .meta_marge "run audit"
   marge meta "run self-improvement audit"
@@ -80,6 +85,7 @@ ${BOLD}OPTIONS:${RESET}
   --dry-run           Preview without running
   --model <model>     Model override
   --fast              Skip verification
+  --full              Force full AGENTS.md (even for one-off tasks)
   --loop              Loop until complete
   --engine <e>        Engine: claude, opencode, codex, aider
   --folder <dir>      Target Marge folder (default: .marge)
@@ -96,6 +102,7 @@ ${BOLD}OPTIONS:${RESET}
 
 ${BOLD}COMMANDS:${RESET}
   init                Initialize .marge/ and planning_docs/PRD.md template
+  clean               Remove local .marge/ folder
   status              Show current status and progress
   config              Show config file contents
   resume              Resume from saved progress
@@ -394,22 +401,63 @@ parse_prd() {
     grep -E "^### " "$file" | sed 's/^### //' | sed 's/^Task [0-9]*: //'
 }
 
+# Determine which AGENTS file to use
+get_agents_file() {
+    local workdir="${1:-.}"
+    
+    # If local .marge folder exists, use full mode
+    if [[ -d "$workdir/$MARGE_FOLDER" ]]; then
+        echo "AGENTS.md"
+        return 0
+    fi
+    
+    # If --full flag specified, use full mode
+    if [[ "$FULL_MODE" == true ]]; then
+        echo "AGENTS.md"
+        return 0
+    fi
+    
+    # Otherwise, use lite mode
+    LITE_MODE=true
+    echo "AGENTS-lite.md"
+}
+
 run_task() {
     local task="$1" num="${2:-1}" workdir="${3:-.}"
 
     log_info "Task $num: $task"
     save_progress "$num" "running"
 
-    [[ ! -d "$workdir/$MARGE_FOLDER" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
+    # Determine mode: lite vs full
+    local agents_file
+    agents_file=$(get_agents_file "$workdir")
+    
+    # For lite mode, we don't need local .marge folder
+    if [[ "$LITE_MODE" == true ]]; then
+        log_debug "Using lite mode (AGENTS-lite.md)"
+        # Use global AGENTS-lite.md
+        local agents_path="$MARGE_HOME/shared/AGENTS-lite.md"
+        [[ ! -f "$agents_path" ]] && agents_path="$MARGE_HOME/AGENTS-lite.md"
+        
+        local prompt="Read and follow these rules:
 
-    local prompt="Read the AGENTS.md file in the $MARGE_FOLDER folder and follow it.
+$(cat "$agents_path" 2>/dev/null || echo "Be concise. Do the task directly. List files modified.")
+
+Task: ${task}"
+    else
+        # Full mode - ensure .marge folder exists
+        [[ ! -d "$workdir/$MARGE_FOLDER" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
+        
+        local prompt="Read the AGENTS.md file in the $MARGE_FOLDER folder and follow it.
 
 Instruction:
 - ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")
 
 After finished, list remaining unchecked items in $MARGE_FOLDER/planning_docs/tasklist.md."
+    fi
 
     if [[ "$DRY_RUN" == true ]]; then
+        echo "${CYAN}Mode:${RESET} $([ \"$LITE_MODE\" == true ] && echo 'lite' || echo 'full')"
         echo "${CYAN}Would run:${RESET} $(build_engine_cmd "$ENGINE") \"<prompt>\""
         return 0
     fi
@@ -600,11 +648,18 @@ print_session_summary() {
 
 run_single() {
     local task="$1"
+    
+    # Pre-check mode for display
+    local mode_display="full"
+    if [[ ! -d "./$MARGE_FOLDER" ]] && [[ "$FULL_MODE" != true ]]; then
+        mode_display="lite"
+    fi
 
     echo ""
     echo "${BOLD}Marge v$VERSION${RESET} - Single task"
     echo "Task: ${CYAN}$task${RESET}"
-    echo "Folder: ${CYAN}$MARGE_FOLDER${RESET}"
+    echo "Mode: ${CYAN}$mode_display${RESET}"
+    [[ "$mode_display" == "full" ]] && echo "Folder: ${CYAN}$MARGE_FOLDER${RESET}"
     echo ""
 
     if [[ "$LOOP" == true ]]; then
@@ -667,6 +722,7 @@ while [[ $# -gt 0 ]]; do
         --engine) ENGINE="$2"; shift 2 ;;
         --folder) MARGE_FOLDER="$2"; shift 2 ;;
         --fast) FAST=true; shift ;;
+        --full) FULL_MODE=true; shift ;;
         --loop) LOOP=true; shift ;;
         --max-iterations) MAX_ITER="$2"; shift 2 ;;
         --max-retries) MAX_RETRIES="$2"; shift 2 ;;
@@ -679,6 +735,21 @@ while [[ $# -gt 0 ]]; do
         --version) echo "marge $VERSION"; exit 0 ;;
         -h|--help|help) print_usage; exit 0 ;;
         init) init_config; exit 0 ;;
+        clean)
+            if [[ -d ".marge" ]]; then
+                read -p "Remove .marge/ folder? [y/N] " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
+                    rm -rf ".marge"
+                    log_success "Removed .marge/"
+                else
+                    log_info "Cancelled"
+                fi
+            else
+                log_warn ".marge/ folder not found"
+            fi
+            exit 0
+            ;;
         meta)
             # Try .meta_marge first (standardized), fall back to legacy names
             if [[ -d ".meta_marge" ]]; then
@@ -716,7 +787,30 @@ done
 check_engine "$ENGINE" || exit 1
 
 if [[ ${#POSITIONAL[@]} -gt 0 ]]; then
-    run_single "${POSITIONAL[*]}"
+    # Task chaining: run each task sequentially
+    if [[ ${#POSITIONAL[@]} -gt 1 ]]; then
+        echo ""
+        echo "${BOLD}Marge v$VERSION${RESET} - Task chain (${#POSITIONAL[@]} tasks)"
+        echo "Folder: ${CYAN}$MARGE_FOLDER${RESET}"
+        echo ""
+        
+        task_num=0
+        for task in "${POSITIONAL[@]}"; do
+            ((task_num++))
+            echo "${BOLD}━━━ Task $task_num/${#POSITIONAL[@]}: $task ━━━${RESET}"
+            iteration=1
+            run_task "$task" "$task_num" || {
+                log_error "Task $task_num failed, stopping chain"
+                break
+            }
+            echo ""
+        done
+        
+        print_session_summary "$task_num"
+        notify_done "Completed $task_num tasks"
+    else
+        run_single "${POSITIONAL[0]}"
+    fi
 else
     run_prd
 fi
