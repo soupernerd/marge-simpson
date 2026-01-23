@@ -2,7 +2,7 @@
 set -eo pipefail
 
 # ============================================
-# Marge v3.0.0 - Autonomous AI Coding Loop
+# Marge v1.1.0 - Autonomous AI Coding Loop
 # ============================================
 
 MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
@@ -254,26 +254,90 @@ parse_token_usage() {
 
     if [[ -f "$output_file" ]]; then
         # Parse stream-json output for token usage
-        local result_line=$(grep '"type":"result"' "$output_file" 2>/dev/null | tail -1)
+        # Claude outputs JSON lines, look for usage data in result or usage objects
+        # Try multiple patterns since format may vary
+
+        # Pattern 1: "type": "result" with usage nested
+        local result_line
+        result_line=$(grep -E '"type"\s*:\s*"result"' "$output_file" 2>/dev/null | tail -1) || true
+
         if [[ -n "$result_line" ]]; then
-            input_tokens=$(echo "$result_line" | grep -o '"input_tokens":[0-9]*' | grep -o '[0-9]*' || echo "0")
-            output_tokens=$(echo "$result_line" | grep -o '"output_tokens":[0-9]*' | grep -o '[0-9]*' || echo "0")
+            input_tokens=$(echo "$result_line" | grep -oE '"input_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || input_tokens=0
+            output_tokens=$(echo "$result_line" | grep -oE '"output_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || output_tokens=0
+        fi
+
+        # Pattern 2: Look for usage object directly if above failed
+        if [[ "$input_tokens" -eq 0 ]] && [[ "$output_tokens" -eq 0 ]]; then
+            local usage_line
+            usage_line=$(grep -E '"usage"\s*:' "$output_file" 2>/dev/null | tail -1) || true
+            if [[ -n "$usage_line" ]]; then
+                input_tokens=$(echo "$usage_line" | grep -oE '"input_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || input_tokens=0
+                output_tokens=$(echo "$usage_line" | grep -oE '"output_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || output_tokens=0
+            fi
+        fi
+
+        # Pattern 3: Check for total_tokens as fallback
+        if [[ "$input_tokens" -eq 0 ]] && [[ "$output_tokens" -eq 0 ]]; then
+            local total
+            total=$(grep -oE '"total_tokens"\s*:\s*[0-9]+' "$output_file" 2>/dev/null | tail -1 | grep -oE '[0-9]+') || total=0
+            if [[ "$total" -gt 0 ]]; then
+                # Estimate split if only total available
+                input_tokens=$((total * 7 / 10))
+                output_tokens=$((total * 3 / 10))
+            fi
         fi
     fi
 
-    # Calculate cost (Claude Sonnet pricing: $3/1M input, $15/1M output)
+    # Ensure values are numeric
+    input_tokens=${input_tokens:-0}
+    output_tokens=${output_tokens:-0}
+    [[ ! "$input_tokens" =~ ^[0-9]+$ ]] && input_tokens=0
+    [[ ! "$output_tokens" =~ ^[0-9]+$ ]] && output_tokens=0
+
+    # Calculate cost using model pricing
+    # Default to Claude Sonnet pricing: $3/1M input, $15/1M output
+    local input_rate=3.00
+    local output_rate=15.00
+
+    # Try to read from model_pricing.json if available
+    local pricing_file="./marge_simpson/model_pricing.json"
+    [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
+
+    if [[ -f "$pricing_file" ]] && command -v jq &>/dev/null; then
+        local model_name="Claude Sonnet"
+        [[ "$MODEL" == *"opus"* ]] && model_name="Claude Opus"
+        local rates
+        rates=$(jq -r --arg m "$model_name" '.models[] | select(.name | contains($m)) | "\(.input_per_1m) \(.output_per_1m)"' "$pricing_file" 2>/dev/null | head -1) || true
+        if [[ -n "$rates" ]]; then
+            input_rate=$(echo "$rates" | awk '{print $1}')
+            output_rate=$(echo "$rates" | awk '{print $2}')
+        fi
+    fi
+
     if [[ $input_tokens -gt 0 ]] || [[ $output_tokens -gt 0 ]]; then
-        local cost=$(awk "BEGIN {printf \"%.4f\", ($input_tokens * 0.003 + $output_tokens * 0.015) / 1000}")
-        echo "  Tokens: ${input_tokens} in / ${output_tokens} out · Cost: \$${cost}"
+        local cost
+        cost=$(awk -v it="$input_tokens" -v ot="$output_tokens" -v ir="$input_rate" -v or="$output_rate" \
+            'BEGIN {printf "%.4f", (it * ir + ot * or) / 1000000}')
+        echo "  ${CYAN}Tokens:${RESET} ${input_tokens} in / ${output_tokens} out · ${CYAN}Cost:${RESET} \$${cost}"
+
+        # Update totals for summary
+        total_input_tokens=$((total_input_tokens + input_tokens))
+        total_output_tokens=$((total_output_tokens + output_tokens))
+    else
+        echo "  ${YELLOW}Token usage not available${RESET}"
     fi
 }
 
 build_engine_cmd() {
     local engine="$1"
+    local prompt="$2"
     case "$engine" in
         claude)
-            echo -n "claude -p --dangerously-skip-permissions --output-format stream-json"
+            # -p requires prompt immediately after, other flags come before or after
+            # --output-format stream-json requires --verbose when using -p
+            echo -n "claude --dangerously-skip-permissions --verbose --output-format stream-json"
             [[ -n "$MODEL" ]] && echo -n " --model $MODEL"
+            echo -n " -p"
             ;;
         opencode)
             echo -n "opencode --approval-mode full-auto"
@@ -339,10 +403,13 @@ After finished, list remaining unchecked items in marge_simpson/tasklist.md."
 
     while [[ $retry -lt $MAX_RETRIES ]]; do
         log_debug "Attempt $((retry+1))/$MAX_RETRIES"
+        log_debug "Command: $cmd \"<prompt>\""
+        log_debug "Workdir: $workdir"
 
         # Run AI command in background
         (cd "$workdir" && eval "$cmd" '"$prompt"' > "$output_file" 2>&1) &
         ai_pid=$!
+        log_debug "Started PID: $ai_pid"
 
         # Show spinner while AI is running
         show_spinner "$output_file" "$task" "$ai_pid"
@@ -350,9 +417,15 @@ After finished, list remaining unchecked items in marge_simpson/tasklist.md."
         # Wait for AI and get exit status
         wait "$ai_pid"
         local exit_code=$?
+        log_debug "Exit code: $exit_code"
 
-        # Show output
-        [[ "$VERBOSE" == true ]] && cat "$output_file"
+        # Show output (always show if it exists and is non-empty, for debugging)
+        if [[ -f "$output_file" ]] && [[ -s "$output_file" ]]; then
+            [[ "$VERBOSE" == true ]] && cat "$output_file"
+            log_debug "Output file size: $(wc -c < "$output_file") bytes"
+        else
+            log_debug "Output file empty or missing"
+        fi
 
         if [[ $exit_code -eq 0 ]]; then
             log_success "Task $num completed"
@@ -467,8 +540,43 @@ run_prd() {
 
     clear_progress
     echo ""
-    echo "${BOLD}Summary:${RESET} $iteration iterations"
+    print_session_summary "$iteration"
     notify_done "Completed $iteration tasks"
+}
+
+print_session_summary() {
+    local iter_count="${1:-0}"
+    echo "${BOLD}═══════════════════════════════════════════════════${RESET}"
+    echo "${BOLD}Session Summary${RESET}"
+    echo "  Iterations: $iter_count"
+
+    if [[ $total_input_tokens -gt 0 ]] || [[ $total_output_tokens -gt 0 ]]; then
+        # Calculate total cost
+        local input_rate=3.00
+        local output_rate=15.00
+
+        local pricing_file="./marge_simpson/model_pricing.json"
+        [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
+
+        if [[ -f "$pricing_file" ]] && command -v jq &>/dev/null; then
+            local model_name="Claude Sonnet"
+            [[ "$MODEL" == *"opus"* ]] && model_name="Claude Opus"
+            local rates
+            rates=$(jq -r --arg m "$model_name" '.models[] | select(.name | contains($m)) | "\(.input_per_1m) \(.output_per_1m)"' "$pricing_file" 2>/dev/null | head -1) || true
+            if [[ -n "$rates" ]]; then
+                input_rate=$(echo "$rates" | awk '{print $1}')
+                output_rate=$(echo "$rates" | awk '{print $2}')
+            fi
+        fi
+
+        local total_cost
+        total_cost=$(awk -v it="$total_input_tokens" -v ot="$total_output_tokens" -v ir="$input_rate" -v or="$output_rate" \
+            'BEGIN {printf "%.4f", (it * ir + ot * or) / 1000000}')
+
+        echo "  ${CYAN}Total Tokens:${RESET} ${total_input_tokens} in / ${total_output_tokens} out"
+        echo "  ${CYAN}Total Cost:${RESET} \$${total_cost}"
+    fi
+    echo "${BOLD}═══════════════════════════════════════════════════${RESET}"
 }
 
 run_single() {
@@ -490,9 +598,12 @@ run_single() {
             sleep 1
         done
     else
+        iteration=1
         run_task "$task" 1
     fi
 
+    echo ""
+    print_session_summary "$iteration"
     notify_done "Task complete"
 }
 

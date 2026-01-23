@@ -54,9 +54,11 @@ New-Item -ItemType Directory -Force -Path "$InstallDir\templates" | Out-Null
 $SharedItems = @(
     "AGENTS.md",
     "assets",
+    "bak",
     "experts",
     "knowledge",
     "model_pricing.json",
+    "plans",
     "prompt_examples",
     "README.md",
     "scripts",
@@ -88,6 +90,12 @@ foreach ($item in $TemplateItems) {
 
 # Install marge-init script
 Copy-Item -Force (Join-Path $SrcDir "marge-init.ps1") "$InstallDir\marge-init.ps1"
+
+# Install marge CLI wrapper (bash script - works in WSL/Git Bash)
+$margeCli = Join-Path $SrcDir "marge"
+if (Test-Path $margeCli) {
+    Copy-Item -Force $margeCli "$InstallDir\marge"
+}
 
 # Validate installation
 Write-Host "Validating installation..."

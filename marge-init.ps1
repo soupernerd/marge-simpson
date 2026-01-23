@@ -71,9 +71,11 @@ New-Item -ItemType Directory -Force -Path "$TargetDir\verify_logs" | Out-Null
 $SharedLinks = @(
     "AGENTS.md",
     "assets",
+    "bak",
     "experts",
     "knowledge",
     "model_pricing.json",
+    "plans",
     "prompt_examples",
     "README.md",
     "scripts",
