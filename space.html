@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Space Explorer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, #0a0a1a 0%, #000005 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+        }
+
+        #universe {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.9) 0%, rgba(0, 10, 30, 0.8) 100%);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 10px;
+            padding: 15px 20px;
+            z-index: 100;
+            min-width: 200px;
+            box-shadow: 0 0 20px rgba(0, 100, 200, 0.2), inset 0 0 20px rgba(0, 50, 100, 0.1);
+        }
+
+        .hud h3 {
+            color: #00aaff;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 150, 255, 0.3);
+            padding-bottom: 5px;
+        }
+
+        .hud-item {
+            font-size: 13px;
+            margin: 5px 0;
+            color: #aaccff;
+        }
+
+        .hud-item span {
+            color: #00ffaa;
+            font-family: monospace;
+        }
+
+        .controls-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.9) 0%, rgba(0, 10, 30, 0.8) 100%);
+            padding: 15px 25px;
+            border-radius: 50px;
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 100, 200, 0.3);
+        }
+
+        .ctrl-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(0, 150, 255, 0.5);
+            background: radial-gradient(circle at 30% 30%, rgba(0, 100, 200, 0.3), rgba(0, 50, 100, 0.2));
+            color: #00ccff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .ctrl-btn:hover {
+            transform: scale(1.1);
+            border-color: #00ffff;
+            box-shadow: 0 0 20px rgba(0, 200, 255, 0.5);
+        }
+
+        .ctrl-btn.active {
+            background: radial-gradient(circle at 30% 30%, rgba(0, 200, 100, 0.5), rgba(0, 100, 50, 0.3));
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        .ctrl-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .tooltip {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 30, 60, 0.95);
+            color: #00ccff;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            border: 1px solid rgba(0, 150, 255, 0.4);
+        }
+
+        .ctrl-btn:hover .tooltip {
+            opacity: 1;
+        }
+
+        .object-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, rgba(0, 20, 40, 0.95) 0%, rgba(0, 10, 30, 0.9) 100%);
+            border: 1px solid rgba(0, 150, 255, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 280px;
+            max-width: 320px;
+            z-index: 100;
+            display: none;
+            box-shadow: 0 0 30px rgba(0, 100, 200, 0.3);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .object-info.visible {
+            display: block;
+        }
+
+        .object-info .close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #666;
+            font-size: 24px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .object-info .close:hover {
+            color: #ff6666;
+        }
+
+        .object-info h2 {
+            color: #00ddff;
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .object-info .type {
+            color: #00ff88;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 15px;
+        }
+
+        .object-info .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .object-info .stat {
+            background: rgba(0, 50, 100, 0.3);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .object-info .stat-label {
+            font-size: 10px;
+            color: #668;
+            text-transform: uppercase;
+        }
+
+        .object-info .stat-value {
+            font-size: 14px;
+            color: #aaddff;
+            font-family: monospace;
+        }
+
+        .object-info .description {
+            font-size: 13px;
+            line-height: 1.6;
+            color: #99aacc;
+        }
+
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, rgba(0, 20, 50, 0.95) 0%, rgba(0, 0, 10, 0.98) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 1s ease;
+        }
+
+        .welcome-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .welcome-overlay h1 {
+            font-size: 48px;
+            color: #00ccff;
+            text-shadow: 0 0 30px rgba(0, 150, 255, 0.8), 0 0 60px rgba(0, 100, 200, 0.5);
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .welcome-overlay p {
+            font-size: 16px;
+            color: #88aacc;
+            margin-bottom: 40px;
+            text-align: center;
+            max-width: 400px;
+            line-height: 1.6;
+        }
+
+        .welcome-overlay .start-btn {
+            padding: 15px 50px;
+            font-size: 18px;
+            background: linear-gradient(135deg, rgba(0, 100, 200, 0.5) 0%, rgba(0, 50, 150, 0.5) 100%);
+            border: 2px solid rgba(0, 150, 255, 0.6);
+            color: #00ddff;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .welcome-overlay .start-btn:hover {
+            transform: scale(1.05);
+            border-color: #00ffff;
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.5);
+            background: linear-gradient(135deg, rgba(0, 150, 255, 0.6) 0%, rgba(0, 100, 200, 0.5) 100%);
+        }
+
+        .constellation-lines {
+            pointer-events: none;
+        }
+
+        .minimap {
+            position: fixed;
+            bottom: 100px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background: rgba(0, 20, 40, 0.8);
+            border: 1px solid rgba(0, 150, 255, 0.3);
+            border-radius: 10px;
+            z-index: 100;
+            overflow: hidden;
+        }
+
+        .minimap canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .minimap-label {
+            position: absolute;
+            top: 5px;
+            left: 8px;
+            font-size: 9px;
+            color: #446;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        @keyframes glow {
+            0%, 100% { filter: drop-shadow(0 0 5px currentColor); }
+            50% { filter: drop-shadow(0 0 15px currentColor); }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="universe"></canvas>
+
+    <div class="welcome-overlay" id="welcome">
+        <h1>Deep Space Explorer</h1>
+        <p>Navigate through the cosmos. Discover distant galaxies, nebulae, black holes, and stellar phenomena. Click on celestial objects to learn more.</p>
+        <button class="start-btn" onclick="startExploration()">Begin Journey</button>
+    </div>
+
+    <div class="hud" id="hud">
+        <h3>Navigation</h3>
+        <div class="hud-item">Sector: <span id="sector">ALPHA-001</span></div>
+        <div class="hud-item">Coordinates: <span id="coords">0, 0</span></div>
+        <div class="hud-item">Zoom: <span id="zoom-level">1.0x</span></div>
+        <div class="hud-item">Objects: <span id="obj-count">0</span></div>
+        <div class="hud-item">Time Dilation: <span id="time-factor">1.0x</span></div>
+    </div>
+
+    <div class="object-info" id="object-info">
+        <button class="close" onclick="closeObjectInfo()">&times;</button>
+        <h2 id="obj-name">Object Name</h2>
+        <div class="type" id="obj-type">Type</div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-label">Distance</div>
+                <div class="stat-value" id="obj-distance">-- ly</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Mass</div>
+                <div class="stat-value" id="obj-mass">-- M</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Temperature</div>
+                <div class="stat-value" id="obj-temp">-- K</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Age</div>
+                <div class="stat-value" id="obj-age">-- Gyr</div>
+            </div>
+        </div>
+        <div class="description" id="obj-desc">Description</div>
+    </div>
+
+    <div class="minimap">
+        <div class="minimap-label">Sector Map</div>
+        <canvas id="minimap-canvas"></canvas>
+    </div>
+
+    <div class="controls-panel">
+        <button class="ctrl-btn" id="btn-time" onclick="toggleTimeFlow()" title="Time Flow">
+            <span class="tooltip">Toggle Time (T)</span>
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8zm.5-13H11v6l5.2 3.2.8-1.3-4.5-2.7V7z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-constellation" onclick="toggleConstellations()" title="Constellations">
+            <span class="tooltip">Constellations (C)</span>
+            <svg viewBox="0 0 24 24"><path d="M12 2L9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-hyperdrive" onclick="activateHyperdrive()" title="Hyperdrive">
+            <span class="tooltip">Hyperdrive (H)</span>
+            <svg viewBox="0 0 24 24"><path d="M12 16l-6-6h12l-6 6zm0-12l6 6H6l6-6z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-scan" onclick="scanArea()" title="Deep Scan">
+            <span class="tooltip">Scan Area (S)</span>
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-blackhole" onclick="createBlackHole()" title="Spawn Black Hole">
+            <span class="tooltip">Black Hole (B)</span>
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-supernova" onclick="triggerSupernova()" title="Supernova">
+            <span class="tooltip">Supernova (X)</span>
+            <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.4h7.6l-6 4.6 2.3 7-6.3-4.6-6.3 4.6 2.3-7-6-4.6h7.6z"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btn-reset" onclick="resetView()" title="Reset View">
+            <span class="tooltip">Reset (R)</span>
+            <svg viewBox="0 0 24 24"><path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/></svg>
+        </button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('universe');
+        const ctx = canvas.getContext('2d');
+        const minimapCanvas = document.getElementById('minimap-canvas');
+        const minimapCtx = minimapCanvas.getContext('2d');
+
+        let width, height;
+        let offsetX = 0, offsetY = 0;
+        let zoom = 1;
+        let targetZoom = 1;
+        let isDragging = false;
+        let lastX, lastY;
+        let timeFlow = true;
+        let timeFactor = 1;
+        let showConstellations = false;
+        let hyperdriveActive = false;
+        let hyperdriveProgress = 0;
+        let scanPulse = null;
+        let gameStarted = false;
+
+        // Celestial objects
+        let stars = [];
+        let galaxies = [];
+        let nebulae = [];
+        let blackHoles = [];
+        let supernovas = [];
+        let constellations = [];
+
+        // Galaxy types
+        const galaxyTypes = [
+            { name: 'Spiral Galaxy', type: 'spiral', baseColor: [100, 150, 255], description: 'A majestic spiral galaxy with rotating arms of young stars and dust lanes.' },
+            { name: 'Elliptical Galaxy', type: 'elliptical', baseColor: [255, 200, 150], description: 'An ancient elliptical galaxy dominated by old red and yellow stars.' },
+            { name: 'Irregular Galaxy', type: 'irregular', baseColor: [150, 200, 255], description: 'A chaotic irregular galaxy shaped by gravitational interactions.' },
+            { name: 'Barred Spiral', type: 'barred', baseColor: [200, 150, 255], description: 'A spiral galaxy with a prominent central bar structure.' },
+            { name: 'Ring Galaxy', type: 'ring', baseColor: [150, 255, 200], description: 'A rare ring galaxy formed by a cosmic collision.' }
+        ];
+
+        // Nebula types
+        const nebulaTypes = [
+            { name: 'Emission Nebula', colors: ['rgba(255, 50, 100, 0.15)', 'rgba(255, 100, 150, 0.1)'], description: 'Glowing clouds of ionized hydrogen gas birthing new stars.' },
+            { name: 'Reflection Nebula', colors: ['rgba(100, 150, 255, 0.12)', 'rgba(150, 200, 255, 0.08)'], description: 'Cosmic dust clouds reflecting the light of nearby stars.' },
+            { name: 'Planetary Nebula', colors: ['rgba(100, 255, 200, 0.15)', 'rgba(50, 200, 255, 0.1)'], description: 'The beautiful remnant of a dying star shedding its outer layers.' },
+            { name: 'Dark Nebula', colors: ['rgba(20, 20, 40, 0.5)', 'rgba(10, 10, 30, 0.3)'], description: 'Dense molecular clouds blocking light from stars behind.' },
+            { name: 'Supernova Remnant', colors: ['rgba(255, 150, 50, 0.15)', 'rgba(255, 100, 100, 0.12)'], description: 'The expanding shell of material from a stellar explosion.' }
+        ];
+
+        function init() {
+            resize();
+            generateUniverse();
+            generateConstellations();
+            animate();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            minimapCanvas.width = 150;
+            minimapCanvas.height = 150;
+        }
+
+        function generateUniverse() {
+            generateStars(3000);
+            generateGalaxies(25);
+            generateNebulae(15);
+            updateObjectCount();
+        }
+
+        function generateStars(count) {
+            stars = [];
+            const spaceSize = 8000;
+            const colors = ['#ffffff', '#fffae8', '#ffd4b0', '#b0d4ff', '#ffb0b0', '#b0ffb0'];
+
+            for (let i = 0; i < count; i++) {
+                const brightness = Math.random();
+                const colorIndex = Math.floor(Math.random() * colors.length);
+                stars.push({
+                    x: (Math.random() - 0.5) * spaceSize,
+                    y: (Math.random() - 0.5) * spaceSize,
+                    size: 0.3 + Math.random() * (brightness > 0.95 ? 3 : 1.5),
+                    color: colors[colorIndex],
+                    brightness: brightness,
+                    twinklePhase: Math.random() * Math.PI * 2,
+                    twinkleSpeed: 0.5 + Math.random() * 3,
+                    parallax: 0.5 + Math.random() * 0.5
+                });
+            }
+        }
+
+        function generateGalaxies(count) {
+            galaxies = [];
+            const spaceSize = 6000;
+
+            for (let i = 0; i < count; i++) {
+                const typeIndex = Math.floor(Math.random() * galaxyTypes.length);
+                const type = galaxyTypes[typeIndex];
+                const size = 40 + Math.random() * 80;
+
+                galaxies.push({
+                    x: (Math.random() - 0.5) * spaceSize,
+                    y: (Math.random() - 0.5) * spaceSize,
+                    size: size,
+                    type: type.type,
+                    name: type.name + ' ' + generateDesignation(),
+                    typeName: type.type,
+                    description: type.description,
+                    color: type.baseColor,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.002,
+                    tilt: 0.2 + Math.random() * 0.6,
+                    arms: 2 + Math.floor(Math.random() * 3),
+                    mass: (1 + Math.random() * 9).toFixed(1) + 'e11 M',
+                    age: (1 + Math.random() * 12).toFixed(1),
+                    distance: Math.floor(10 + Math.random() * 990),
+                    temperature: Math.floor(3000 + Math.random() * 7000),
+                    glowIntensity: 0
+                });
+            }
+        }
+
+        function generateNebulae(count) {
+            nebulae = [];
+            const spaceSize = 7000;
+
+            for (let i = 0; i < count; i++) {
+                const typeIndex = Math.floor(Math.random() * nebulaTypes.length);
+                const type = nebulaTypes[typeIndex];
+
+                nebulae.push({
+                    x: (Math.random() - 0.5) * spaceSize,
+                    y: (Math.random() - 0.5) * spaceSize,
+                    size: 150 + Math.random() * 300,
+                    name: type.name + ' ' + generateDesignation(),
+                    typeName: type.name,
+                    description: type.description,
+                    colors: type.colors,
+                    particles: generateNebulaParticles(20 + Math.floor(Math.random() * 30)),
+                    age: (0.001 + Math.random() * 0.5).toFixed(3),
+                    distance: Math.floor(100 + Math.random() * 5000),
+                    temperature: Math.floor(10 + Math.random() * 100),
+                    mass: (0.1 + Math.random() * 50).toFixed(1) + ' M'
+                });
+            }
+        }
+
+        function generateNebulaParticles(count) {
+            const particles = [];
+            for (let i = 0; i < count; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const dist = Math.random() * 0.8;
+                particles.push({
+                    offsetX: Math.cos(angle) * dist,
+                    offsetY: Math.sin(angle) * dist,
+                    size: 0.3 + Math.random() * 0.7,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+            return particles;
+        }
+
+        function generateConstellations() {
+            constellations = [];
+            const names = ['Andromeda', 'Orion', 'Cassiopeia', 'Draco', 'Phoenix', 'Cygnus', 'Lyra', 'Aquila'];
+
+            for (let i = 0; i < 8; i++) {
+                const centerX = (Math.random() - 0.5) * 4000;
+                const centerY = (Math.random() - 0.5) * 4000;
+                const pointCount = 4 + Math.floor(Math.random() * 5);
+                const points = [];
+
+                for (let j = 0; j < pointCount; j++) {
+                    points.push({
+                        x: centerX + (Math.random() - 0.5) * 400,
+                        y: centerY + (Math.random() - 0.5) * 400
+                    });
+                }
+
+                const connections = [];
+                for (let j = 0; j < points.length - 1; j++) {
+                    connections.push([j, j + 1]);
+                    if (Math.random() > 0.5 && j < points.length - 2) {
+                        connections.push([j, j + 2]);
+                    }
+                }
+
+                constellations.push({
+                    name: names[i],
+                    points: points,
+                    connections: connections
+                });
+            }
+        }
+
+        function generateDesignation() {
+            const letters = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
+            return letters[Math.floor(Math.random() * letters.length)] +
+                   letters[Math.floor(Math.random() * letters.length)] + '-' +
+                   Math.floor(Math.random() * 9999).toString().padStart(4, '0');
+        }
+
+        function updateObjectCount() {
+            const total = stars.length + galaxies.length + nebulae.length + blackHoles.length;
+            document.getElementById('obj-count').textContent = total;
+        }
+
+        function animate() {
+            if (!gameStarted) {
+                requestAnimationFrame(animate);
+                return;
+            }
+
+            ctx.fillStyle = '#000005';
+            ctx.fillRect(0, 0, width, height);
+
+            const time = Date.now() * 0.001 * timeFactor;
+
+            // Smooth zoom
+            zoom += (targetZoom - zoom) * 0.1;
+
+            // Handle hyperdrive
+            if (hyperdriveActive) {
+                hyperdriveProgress = Math.min(hyperdriveProgress + 0.02, 1);
+                offsetX += Math.cos(time) * 50 * hyperdriveProgress;
+                offsetY += Math.sin(time * 0.7) * 30 * hyperdriveProgress;
+                if (hyperdriveProgress >= 1) {
+                    setTimeout(() => {
+                        hyperdriveActive = false;
+                        hyperdriveProgress = 0;
+                        document.getElementById('btn-hyperdrive').classList.remove('active');
+                    }, 2000);
+                }
+            }
+
+            // Draw layers
+            drawNebulae(time);
+            drawStars(time);
+            drawGalaxies(time);
+            drawBlackHoles(time);
+            drawSupernovas(time);
+
+            if (showConstellations) {
+                drawConstellations();
+            }
+
+            // Draw scan pulse
+            if (scanPulse) {
+                drawScanPulse();
+            }
+
+            // Draw hyperdrive effect
+            if (hyperdriveProgress > 0) {
+                drawHyperdriveEffect();
+            }
+
+            // Update HUD
+            updateHUD();
+
+            // Draw minimap
+            drawMinimap();
+
+            requestAnimationFrame(animate);
+        }
+
+        function drawStars(time) {
+            for (const star of stars) {
+                const parallaxOffset = hyperdriveProgress * star.parallax * 100;
+                const screenX = (star.x - offsetX - parallaxOffset) * zoom + width / 2;
+                const screenY = (star.y - offsetY) * zoom + height / 2;
+
+                if (screenX < -20 || screenX > width + 20 || screenY < -20 || screenY > height + 20) continue;
+
+                const twinkle = 0.6 + 0.4 * Math.sin(time * star.twinkleSpeed + star.twinklePhase);
+                const size = star.size * zoom * twinkle;
+
+                ctx.globalAlpha = twinkle * (star.brightness > 0.8 ? 1 : 0.6 + star.brightness * 0.4);
+                ctx.fillStyle = star.color;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Glow for bright stars
+                if (star.brightness > 0.9 && star.size > 1.5) {
+                    const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, size * 6);
+                    gradient.addColorStop(0, star.color);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.globalAlpha = 0.15 * twinkle;
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(screenX - size * 6, screenY - size * 6, size * 12, size * 12);
+                }
+
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawGalaxies(time) {
+            for (const galaxy of galaxies) {
+                const screenX = (galaxy.x - offsetX) * zoom + width / 2;
+                const screenY = (galaxy.y - offsetY) * zoom + height / 2;
+                const screenSize = galaxy.size * zoom;
+
+                if (screenX + screenSize < -100 || screenX - screenSize > width + 100 ||
+                    screenY + screenSize < -100 || screenY - screenSize > height + 100) continue;
+
+                if (timeFlow) {
+                    galaxy.rotation += galaxy.rotationSpeed * timeFactor;
+                }
+
+                ctx.save();
+                ctx.translate(screenX, screenY);
+                ctx.rotate(galaxy.rotation);
+                ctx.scale(1, galaxy.tilt);
+
+                // Glow
+                const glowSize = screenSize * (1.5 + galaxy.glowIntensity);
+                const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, glowSize);
+                const [r, g, b] = galaxy.color;
+                glowGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
+                glowGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.1)`);
+                glowGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = glowGradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, glowSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw based on type
+                if (galaxy.type === 'spiral' || galaxy.type === 'barred') {
+                    drawSpiralGalaxy(galaxy, screenSize, time);
+                } else if (galaxy.type === 'elliptical') {
+                    drawEllipticalGalaxy(galaxy, screenSize);
+                } else if (galaxy.type === 'ring') {
+                    drawRingGalaxy(galaxy, screenSize);
+                } else {
+                    drawIrregularGalaxy(galaxy, screenSize, time);
+                }
+
+                ctx.restore();
+
+                galaxy.glowIntensity *= 0.95;
+            }
+        }
+
+        function drawSpiralGalaxy(galaxy, size, time) {
+            const [r, g, b] = galaxy.color;
+
+            // Core
+            const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.3);
+            coreGradient.addColorStop(0, `rgba(255, 255, 200, 0.8)`);
+            coreGradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, 0.5)`);
+            coreGradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Arms
+            for (let arm = 0; arm < galaxy.arms; arm++) {
+                const armOffset = (arm / galaxy.arms) * Math.PI * 2;
+                ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.4)`;
+                ctx.lineWidth = size * 0.08;
+                ctx.beginPath();
+                for (let i = 0; i <= 100; i++) {
+                    const t = i / 100;
+                    const angle = armOffset + t * Math.PI * 2.5;
+                    const radius = t * size * 0.9;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle) * radius;
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function drawEllipticalGalaxy(galaxy, size) {
+            const [r, g, b] = galaxy.color;
+            const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
+            gradient.addColorStop(0, `rgba(255, 230, 200, 0.7)`);
+            gradient.addColorStop(0.3, `rgba(${r}, ${g}, ${b}, 0.5)`);
+            gradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.2)`);
+            gradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, size, size * 0.6, 0, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawRingGalaxy(galaxy, size) {
+            const [r, g, b] = galaxy.color;
+
+            // Core
+            const coreGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 0.2);
+            coreGradient.addColorStop(0, `rgba(255, 255, 200, 0.6)`);
+            coreGradient.addColorStop(1, 'transparent');
+            ctx.fillStyle = coreGradient;
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Ring
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, 0.5)`;
+            ctx.lineWidth = size * 0.15;
+            ctx.beginPath();
+            ctx.arc(0, 0, size * 0.7, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawIrregularGalaxy(galaxy, size, time) {
+            const [r, g, b] = galaxy.color;
+
+            for (let i = 0; i < 8; i++) {
+                const angle = (i / 8) * Math.PI * 2 + Math.sin(time * 0.5 + i) * 0.2;
+                const dist = 0.3 + Math.random() * 0.5;
+                const x = Math.cos(angle) * size * dist;
+                const y = Math.sin(angle) * size * dist;
+                const blobSize = size * (0.2 + Math.random() * 0.3);
+
+                const gradient = ctx.createRadialGradient(x, y, 0, x, y, blobSize);
+                gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.5)`);
+                gradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(x, y, blobSize, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawNebulae(time) {
+            for (const nebula of nebulae) {
+                const screenX = (nebula.x - offsetX) * zoom + width / 2;
+                const screenY = (nebula.y - offsetY) * zoom + height / 2;
+                const screenSize = nebula.size * zoom;
+
+                if (screenX + screenSize < -200 || screenX - screenSize > width + 200 ||
+                    screenY + screenSize < -200 || screenY - screenSize > height + 200) continue;
+
+                for (const particle of nebula.particles) {
+                    const px = screenX + particle.offsetX * screenSize;
+                    const py = screenY + particle.offsetY * screenSize;
+                    const pSize = particle.size * screenSize;
+                    const pulse = 0.8 + 0.2 * Math.sin(time * 0.5 + particle.phase);
+
+                    const gradient = ctx.createRadialGradient(px, py, 0, px, py, pSize);
+                    gradient.addColorStop(0, nebula.colors[0]);
+                    gradient.addColorStop(0.6, nebula.colors[1]);
+                    gradient.addColorStop(1, 'transparent');
+
+                    ctx.globalAlpha = pulse;
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(px - pSize, py - pSize, pSize * 2, pSize * 2);
+                    ctx.globalAlpha = 1;
+                }
+            }
+        }
+
+        function drawBlackHoles(time) {
+            for (let i = blackHoles.length - 1; i >= 0; i--) {
+                const bh = blackHoles[i];
+                const screenX = (bh.x - offsetX) * zoom + width / 2;
+                const screenY = (bh.y - offsetY) * zoom + height / 2;
+                const screenSize = bh.size * zoom;
+
+                // Event horizon
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, screenSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Accretion disk
+                ctx.save();
+                ctx.translate(screenX, screenY);
+                ctx.rotate(time * 0.5);
+                ctx.scale(1, 0.3);
+
+                const diskGradient = ctx.createRadialGradient(0, 0, screenSize, 0, 0, screenSize * 3);
+                diskGradient.addColorStop(0, 'rgba(255, 150, 50, 0.8)');
+                diskGradient.addColorStop(0.3, 'rgba(255, 100, 50, 0.6)');
+                diskGradient.addColorStop(0.7, 'rgba(100, 50, 150, 0.3)');
+                diskGradient.addColorStop(1, 'transparent');
+                ctx.fillStyle = diskGradient;
+                ctx.beginPath();
+                ctx.arc(0, 0, screenSize * 3, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+
+                // Gravitational lensing ring
+                ctx.strokeStyle = 'rgba(255, 200, 100, 0.3)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, screenSize * 1.5, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Decay
+                bh.life -= 0.001;
+                if (bh.life <= 0) {
+                    blackHoles.splice(i, 1);
+                    updateObjectCount();
+                }
+            }
+        }
+
+        function drawSupernovas(time) {
+            for (let i = supernovas.length - 1; i >= 0; i--) {
+                const sn = supernovas[i];
+                sn.progress += 0.01;
+
+                const screenX = (sn.x - offsetX) * zoom + width / 2;
+                const screenY = (sn.y - offsetY) * zoom + height / 2;
+                const expandSize = sn.progress * 200 * zoom;
+                const alpha = Math.max(0, 1 - sn.progress);
+
+                // Explosion flash
+                if (sn.progress < 0.3) {
+                    const flashSize = expandSize * 3;
+                    const flashGradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, flashSize);
+                    flashGradient.addColorStop(0, `rgba(255, 255, 255, ${alpha})`);
+                    flashGradient.addColorStop(0.3, `rgba(255, 255, 200, ${alpha * 0.7})`);
+                    flashGradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = flashGradient;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, flashSize, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                // Expanding shell
+                const shellGradient = ctx.createRadialGradient(screenX, screenY, expandSize * 0.8, screenX, screenY, expandSize);
+                shellGradient.addColorStop(0, 'transparent');
+                shellGradient.addColorStop(0.5, `rgba(255, 100, 50, ${alpha * 0.5})`);
+                shellGradient.addColorStop(1, `rgba(100, 50, 200, ${alpha * 0.3})`);
+                ctx.fillStyle = shellGradient;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, expandSize, 0, Math.PI * 2);
+                ctx.fill();
+
+                if (sn.progress >= 1) {
+                    supernovas.splice(i, 1);
+                }
+            }
+        }
+
+        function drawConstellations() {
+            ctx.strokeStyle = 'rgba(100, 150, 255, 0.3)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+
+            for (const constellation of constellations) {
+                // Draw connections
+                for (const [a, b] of constellation.connections) {
+                    const p1 = constellation.points[a];
+                    const p2 = constellation.points[b];
+                    const x1 = (p1.x - offsetX) * zoom + width / 2;
+                    const y1 = (p1.y - offsetY) * zoom + height / 2;
+                    const x2 = (p2.x - offsetX) * zoom + width / 2;
+                    const y2 = (p2.y - offsetY) * zoom + height / 2;
+
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+
+                // Draw label at center
+                const centerX = constellation.points.reduce((sum, p) => sum + p.x, 0) / constellation.points.length;
+                const centerY = constellation.points.reduce((sum, p) => sum + p.y, 0) / constellation.points.length;
+                const labelX = (centerX - offsetX) * zoom + width / 2;
+                const labelY = (centerY - offsetY) * zoom + height / 2;
+
+                ctx.setLineDash([]);
+                ctx.fillStyle = 'rgba(100, 150, 255, 0.6)';
+                ctx.font = '12px monospace';
+                ctx.textAlign = 'center';
+                ctx.fillText(constellation.name, labelX, labelY - 20);
+            }
+
+            ctx.setLineDash([]);
+        }
+
+        function drawScanPulse() {
+            const progress = (Date.now() - scanPulse.start) / 2000;
+            if (progress >= 1) {
+                scanPulse = null;
+                return;
+            }
+
+            const radius = progress * 500 * zoom;
+            const alpha = 1 - progress;
+
+            ctx.strokeStyle = `rgba(0, 255, 150, ${alpha})`;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(width / 2, height / 2, radius, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Inner pulse
+            ctx.strokeStyle = `rgba(0, 200, 255, ${alpha * 0.5})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(width / 2, height / 2, radius * 0.8, 0, Math.PI * 2);
+            ctx.stroke();
+        }
+
+        function drawHyperdriveEffect() {
+            ctx.save();
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            for (let i = 0; i < 100; i++) {
+                const angle = (i / 100) * Math.PI * 2 + Date.now() * 0.001;
+                const length = 50 + hyperdriveProgress * 300;
+                const startDist = 20 + Math.random() * 50;
+
+                const x1 = centerX + Math.cos(angle) * startDist;
+                const y1 = centerY + Math.sin(angle) * startDist;
+                const x2 = centerX + Math.cos(angle) * (startDist + length);
+                const y2 = centerY + Math.sin(angle) * (startDist + length);
+
+                const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+                gradient.addColorStop(0, `rgba(100, 200, 255, ${hyperdriveProgress * 0.8})`);
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 1 + Math.random();
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawMinimap() {
+            minimapCtx.fillStyle = 'rgba(0, 10, 20, 0.9)';
+            minimapCtx.fillRect(0, 0, 150, 150);
+
+            const scale = 150 / 8000;
+            const centerX = 75;
+            const centerY = 75;
+
+            // Draw galaxies
+            minimapCtx.fillStyle = 'rgba(100, 150, 255, 0.5)';
+            for (const galaxy of galaxies) {
+                const x = centerX + (galaxy.x - offsetX) * scale;
+                const y = centerY + (galaxy.y - offsetY) * scale;
+                if (x >= 0 && x <= 150 && y >= 0 && y <= 150) {
+                    minimapCtx.beginPath();
+                    minimapCtx.arc(x, y, 2, 0, Math.PI * 2);
+                    minimapCtx.fill();
+                }
+            }
+
+            // Draw viewport
+            minimapCtx.strokeStyle = 'rgba(0, 255, 150, 0.8)';
+            minimapCtx.lineWidth = 1;
+            const viewWidth = (width / zoom) * scale;
+            const viewHeight = (height / zoom) * scale;
+            minimapCtx.strokeRect(centerX - viewWidth / 2, centerY - viewHeight / 2, viewWidth, viewHeight);
+
+            // Center dot
+            minimapCtx.fillStyle = '#00ff88';
+            minimapCtx.beginPath();
+            minimapCtx.arc(75, 75, 2, 0, Math.PI * 2);
+            minimapCtx.fill();
+        }
+
+        function updateHUD() {
+            const sectorX = Math.floor(offsetX / 1000);
+            const sectorY = Math.floor(offsetY / 1000);
+            const sectorLetter = String.fromCharCode(65 + ((sectorX + 10) % 26));
+            document.getElementById('sector').textContent = `${sectorLetter}-${String(Math.abs(sectorY)).padStart(3, '0')}`;
+            document.getElementById('coords').textContent = `${Math.round(offsetX)}, ${Math.round(offsetY)}`;
+            document.getElementById('zoom-level').textContent = `${zoom.toFixed(1)}x`;
+            document.getElementById('time-factor').textContent = `${timeFactor.toFixed(1)}x`;
+        }
+
+        // Interactive functions
+        function startExploration() {
+            gameStarted = true;
+            document.getElementById('welcome').classList.add('hidden');
+        }
+
+        function toggleTimeFlow() {
+            timeFlow = !timeFlow;
+            timeFactor = timeFlow ? 1 : 0;
+            document.getElementById('btn-time').classList.toggle('active', !timeFlow);
+        }
+
+        function toggleConstellations() {
+            showConstellations = !showConstellations;
+            document.getElementById('btn-constellation').classList.toggle('active', showConstellations);
+        }
+
+        function activateHyperdrive() {
+            if (!hyperdriveActive) {
+                hyperdriveActive = true;
+                hyperdriveProgress = 0;
+                document.getElementById('btn-hyperdrive').classList.add('active');
+            }
+        }
+
+        function scanArea() {
+            scanPulse = { start: Date.now() };
+
+            // Highlight nearby objects
+            const viewCenterX = offsetX;
+            const viewCenterY = offsetY;
+            const scanRadius = 500 / zoom;
+
+            for (const galaxy of galaxies) {
+                const dx = galaxy.x - viewCenterX;
+                const dy = galaxy.y - viewCenterY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < scanRadius) {
+                    galaxy.glowIntensity = 1;
+                }
+            }
+        }
+
+        function createBlackHole() {
+            blackHoles.push({
+                x: offsetX + (Math.random() - 0.5) * 200,
+                y: offsetY + (Math.random() - 0.5) * 200,
+                size: 15 + Math.random() * 15,
+                life: 1,
+                name: 'Black Hole ' + generateDesignation(),
+                typeName: 'Singularity',
+                description: 'A region of spacetime where gravity is so strong that nothing can escape.',
+                mass: (1 + Math.random() * 100).toFixed(1) + 'e6 M',
+                age: (0.01 + Math.random() * 10).toFixed(2),
+                distance: Math.floor(100 + Math.random() * 10000),
+                temperature: 0
+            });
+            updateObjectCount();
+        }
+
+        function triggerSupernova() {
+            supernovas.push({
+                x: offsetX + (Math.random() - 0.5) * 300,
+                y: offsetY + (Math.random() - 0.5) * 300,
+                progress: 0
+            });
+        }
+
+        function resetView() {
+            offsetX = 0;
+            offsetY = 0;
+            targetZoom = 1;
+            hyperdriveActive = false;
+            hyperdriveProgress = 0;
+            document.getElementById('btn-hyperdrive').classList.remove('active');
+        }
+
+        function showObjectInfo(obj) {
+            document.getElementById('obj-name').textContent = obj.name;
+            document.getElementById('obj-type').textContent = obj.typeName;
+            document.getElementById('obj-distance').textContent = obj.distance + ' ly';
+            document.getElementById('obj-mass').textContent = obj.mass;
+            document.getElementById('obj-temp').textContent = obj.temperature + ' K';
+            document.getElementById('obj-age').textContent = obj.age + ' Gyr';
+            document.getElementById('obj-desc').textContent = obj.description;
+            document.getElementById('object-info').classList.add('visible');
+
+            if (obj.glowIntensity !== undefined) {
+                obj.glowIntensity = 1;
+            }
+        }
+
+        function closeObjectInfo() {
+            document.getElementById('object-info').classList.remove('visible');
+        }
+
+        // Event listeners
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+            canvas.style.cursor = 'grabbing';
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                offsetX -= dx / zoom;
+                offsetY -= dy / zoom;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+
+        canvas.addEventListener('click', (e) => {
+            const clickX = (e.clientX - width / 2) / zoom + offsetX;
+            const clickY = (e.clientY - height / 2) / zoom + offsetY;
+
+            // Check galaxies
+            for (const galaxy of galaxies) {
+                const dx = clickX - galaxy.x;
+                const dy = clickY - galaxy.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < galaxy.size * 1.5) {
+                    showObjectInfo(galaxy);
+                    return;
+                }
+            }
+
+            // Check nebulae
+            for (const nebula of nebulae) {
+                const dx = clickX - nebula.x;
+                const dy = clickY - nebula.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < nebula.size * 0.5) {
+                    showObjectInfo(nebula);
+                    return;
+                }
+            }
+
+            // Check black holes
+            for (const bh of blackHoles) {
+                const dx = clickX - bh.x;
+                const dy = clickY - bh.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < bh.size * 3) {
+                    showObjectInfo(bh);
+                    return;
+                }
+            }
+
+            closeObjectInfo();
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            targetZoom = Math.max(0.2, Math.min(5, targetZoom * zoomFactor));
+
+            // Zoom toward mouse
+            const mouseX = (e.clientX - width / 2) / zoom + offsetX;
+            const mouseY = (e.clientY - height / 2) / zoom + offsetY;
+
+            offsetX = mouseX - (e.clientX - width / 2) / targetZoom;
+            offsetY = mouseY - (e.clientY - height / 2) / targetZoom;
+        });
+
+        // Touch support
+        let touchStartDist = 0;
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                touchStartDist = Math.sqrt(dx * dx + dy * dy);
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && isDragging) {
+                const dx = e.touches[0].clientX - lastX;
+                const dy = e.touches[0].clientY - lastY;
+                offsetX -= dx / zoom;
+                offsetY -= dy / zoom;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const currentDist = Math.sqrt(dx * dx + dy * dy);
+                const scale = currentDist / touchStartDist;
+                targetZoom = Math.max(0.2, Math.min(5, zoom * scale));
+                touchStartDist = currentDist;
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!gameStarted) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    startExploration();
+                }
+                return;
+            }
+
+            switch (e.key.toLowerCase()) {
+                case 't': toggleTimeFlow(); break;
+                case 'c': toggleConstellations(); break;
+                case 'h': activateHyperdrive(); break;
+                case 's': scanArea(); break;
+                case 'b': createBlackHole(); break;
+                case 'x': triggerSupernova(); break;
+                case 'r': resetView(); break;
+                case 'escape': closeObjectInfo(); break;
+                case '+':
+                case '=':
+                    targetZoom = Math.min(5, targetZoom * 1.2);
+                    break;
+                case '-':
+                    targetZoom = Math.max(0.2, targetZoom * 0.8);
+                    break;
+            }
+        });
+
+        window.addEventListener('resize', resize);
+
+        // Initialize
+        init();
+    </script>
+</body>
+</html>

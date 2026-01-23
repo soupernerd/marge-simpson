@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2space.html Tests</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: #1a1a2e;
+            color: #eee;
+        }
+        .test-suite {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #88ccff;
+            border-bottom: 2px solid #88ccff;
+            padding-bottom: 10px;
+        }
+        .test-result {
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .test-result.pass {
+            background: rgba(74, 255, 127, 0.2);
+            border-left: 4px solid #4aff7f;
+        }
+        .test-result.fail {
+            background: rgba(255, 107, 74, 0.2);
+            border-left: 4px solid #ff6b4a;
+        }
+        .test-name {
+            flex: 1;
+        }
+        .status {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+        .pass .status { color: #4aff7f; }
+        .fail .status { color: #ff6b4a; }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        .summary h2 {
+            margin-top: 0;
+        }
+        #test-iframe {
+            display: none;
+        }
+        .error-detail {
+            font-size: 12px;
+            color: #ff9999;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-suite">
+        <h1>2space.html Test Suite</h1>
+        <div id="results"></div>
+        <div class="summary" id="summary"></div>
+    </div>
+
+    <iframe id="test-iframe" src="2space.html" width="800" height="600"></iframe>
+
+    <script>
+        const results = [];
+        const resultsDiv = document.getElementById('results');
+        const summaryDiv = document.getElementById('summary');
+        const iframe = document.getElementById('test-iframe');
+
+        function addResult(name, passed, error = null) {
+            results.push({ name, passed, error });
+            const div = document.createElement('div');
+            div.className = `test-result ${passed ? 'pass' : 'fail'}`;
+            div.innerHTML = `
+                <span class="test-name">${name}</span>
+                <span class="status">${passed ? 'PASS' : 'FAIL'}</span>
+            `;
+            if (error) {
+                div.innerHTML += `<div class="error-detail">${error}</div>`;
+            }
+            resultsDiv.appendChild(div);
+        }
+
+        function updateSummary() {
+            const passed = results.filter(r => r.passed).length;
+            const failed = results.filter(r => !r.passed).length;
+            const total = results.length;
+
+            summaryDiv.innerHTML = `
+                <h2>Test Summary</h2>
+                <p><strong>Total:</strong> ${total}</p>
+                <p><strong>Passed:</strong> ${passed}</p>
+                <p><strong>Failed:</strong> ${failed}</p>
+                <p><strong>Status:</strong> ${failed === 0 ? '✅ All tests passed!' : '❌ Some tests failed'}</p>
+            `;
+        }
+
+        function runTests() {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            const win = iframe.contentWindow;
+
+            // Test 1: Canvas element exists
+            try {
+                const canvas = doc.getElementById('space-canvas');
+                addResult('Canvas element exists', canvas !== null);
+            } catch (e) {
+                addResult('Canvas element exists', false, e.message);
+            }
+
+            // Test 2: Canvas has correct dimensions
+            try {
+                const canvas = doc.getElementById('space-canvas');
+                addResult('Canvas has width', canvas.width > 0);
+            } catch (e) {
+                addResult('Canvas has width', false, e.message);
+            }
+
+            // Test 3: Control buttons exist
+            try {
+                const nebulaBtn = doc.getElementById('btn-nebula');
+                const shootingBtn = doc.getElementById('btn-shooting');
+                const warpBtn = doc.getElementById('btn-warp');
+                const resetBtn = doc.getElementById('btn-reset');
+                addResult('Control buttons exist',
+                    nebulaBtn !== null && shootingBtn !== null &&
+                    warpBtn !== null && resetBtn !== null);
+            } catch (e) {
+                addResult('Control buttons exist', false, e.message);
+            }
+
+            // Test 4: Info panel exists
+            try {
+                const infoPanel = doc.getElementById('info-panel');
+                addResult('Info panel exists', infoPanel !== null);
+            } catch (e) {
+                addResult('Info panel exists', false, e.message);
+            }
+
+            // Test 5: Stats display exists
+            try {
+                const coordDisplay = doc.getElementById('coord-display');
+                const zoomDisplay = doc.getElementById('zoom-display');
+                const objectCount = doc.getElementById('object-count');
+                addResult('Stats displays exist',
+                    coordDisplay !== null && zoomDisplay !== null && objectCount !== null);
+            } catch (e) {
+                addResult('Stats displays exist', false, e.message);
+            }
+
+            // Test 6: Stars array is populated
+            try {
+                const starsExist = win.stars && win.stars.length > 0;
+                addResult('Stars array is populated', starsExist);
+            } catch (e) {
+                addResult('Stars array is populated', false, e.message);
+            }
+
+            // Test 7: Planets array is populated
+            try {
+                const planetsExist = win.planets && win.planets.length > 0;
+                addResult('Planets array is populated', planetsExist);
+            } catch (e) {
+                addResult('Planets array is populated', false, e.message);
+            }
+
+            // Test 8: Toggle nebula function works
+            try {
+                const initialState = win.showNebula;
+                win.toggleNebula();
+                const toggledState = win.showNebula;
+                win.toggleNebula(); // Reset
+                addResult('Toggle nebula function works', initialState !== toggledState);
+            } catch (e) {
+                addResult('Toggle nebula function works', false, e.message);
+            }
+
+            // Test 9: Toggle warp function works
+            try {
+                const initialState = win.warpMode;
+                win.toggleWarp();
+                const toggledState = win.warpMode;
+                win.toggleWarp(); // Reset
+                addResult('Toggle warp function works', initialState !== toggledState);
+            } catch (e) {
+                addResult('Toggle warp function works', false, e.message);
+            }
+
+            // Test 10: Trigger shooting star adds to array
+            try {
+                const initialLength = win.shootingStars.length;
+                win.triggerShootingStar();
+                const newLength = win.shootingStars.length;
+                addResult('Shooting star can be triggered', newLength > initialLength);
+            } catch (e) {
+                addResult('Shooting star can be triggered', false, e.message);
+            }
+
+            // Test 11: Reset view function works
+            try {
+                win.offsetX = 100;
+                win.offsetY = 100;
+                win.zoom = 2;
+                win.resetView();
+                addResult('Reset view resets position and zoom',
+                    win.offsetX === 0 && win.offsetY === 0 && win.zoom === 1);
+            } catch (e) {
+                addResult('Reset view resets position and zoom', false, e.message);
+            }
+
+            // Test 12: Planet types are defined
+            try {
+                const typesExist = win.planetTypes && win.planetTypes.length >= 8;
+                addResult('Planet types array has entries', typesExist);
+            } catch (e) {
+                addResult('Planet types array has entries', false, e.message);
+            }
+
+            // Test 13: Star types are defined
+            try {
+                const typesExist = win.starTypes && win.starTypes.length >= 5;
+                addResult('Star types array has entries', typesExist);
+            } catch (e) {
+                addResult('Star types array has entries', false, e.message);
+            }
+
+            // Test 14: Planets have required properties
+            try {
+                const planet = win.planets[0];
+                const hasProps = planet.x !== undefined &&
+                                 planet.y !== undefined &&
+                                 planet.name !== undefined &&
+                                 planet.description !== undefined &&
+                                 planet.color !== undefined &&
+                                 planet.size !== undefined;
+                addResult('Planets have required properties', hasProps);
+            } catch (e) {
+                addResult('Planets have required properties', false, e.message);
+            }
+
+            // Test 15: Stars have required properties
+            try {
+                const star = win.stars[0];
+                const hasProps = star.x !== undefined &&
+                                 star.y !== undefined &&
+                                 star.color !== undefined &&
+                                 star.size !== undefined &&
+                                 star.twinkleOffset !== undefined;
+                addResult('Stars have required properties', hasProps);
+            } catch (e) {
+                addResult('Stars have required properties', false, e.message);
+            }
+
+            // Test 16: Nebula particles exist
+            try {
+                const nebulaExists = win.nebulaParticles && win.nebulaParticles.length > 0;
+                addResult('Nebula particles are generated', nebulaExists);
+            } catch (e) {
+                addResult('Nebula particles are generated', false, e.message);
+            }
+
+            // Test 17: Color helper functions work
+            try {
+                const lightened = win.lightenColor('#4a9eff', 20);
+                const darkened = win.darkenColor('#4a9eff', 20);
+                addResult('Color helper functions work',
+                    lightened.includes('rgb') && darkened.includes('rgb'));
+            } catch (e) {
+                addResult('Color helper functions work', false, e.message);
+            }
+
+            // Test 18: Info panel can be shown
+            try {
+                const planet = win.planets[0];
+                win.showInfoPanel(planet);
+                const panel = doc.getElementById('info-panel');
+                const isVisible = panel.classList.contains('visible');
+                win.closeInfoPanel();
+                addResult('Info panel can be shown', isVisible);
+            } catch (e) {
+                addResult('Info panel can be shown', false, e.message);
+            }
+
+            // Test 19: Info panel can be closed
+            try {
+                const planet = win.planets[0];
+                win.showInfoPanel(planet);
+                win.closeInfoPanel();
+                const panel = doc.getElementById('info-panel');
+                const isHidden = !panel.classList.contains('visible');
+                addResult('Info panel can be closed', isHidden);
+            } catch (e) {
+                addResult('Info panel can be closed', false, e.message);
+            }
+
+            // Test 20: Instructions element exists
+            try {
+                const instructions = doc.querySelector('.instructions');
+                addResult('Instructions element exists', instructions !== null);
+            } catch (e) {
+                addResult('Instructions element exists', false, e.message);
+            }
+
+            updateSummary();
+        }
+
+        // Wait for iframe to load
+        iframe.onload = function() {
+            // Give it a moment for scripts to initialize
+            setTimeout(runTests, 500);
+        };
+    </script>
+</body>
+</html>

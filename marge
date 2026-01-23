@@ -1,0 +1,688 @@
+#!/usr/bin/env bash
+set -eo pipefail
+
+# ============================================
+# Marge v1.1.0 - Autonomous AI Coding Loop
+# ============================================
+
+MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
+VERSION="1.1.0"
+
+# Defaults
+DRY_RUN=false
+VERBOSE=false
+MODEL=""
+FAST=false
+LOOP=false
+AUTO=false
+MAX_ITER=${MAX_ITER:-20}
+MAX_RETRIES=${MAX_RETRIES:-3}
+RETRY_DELAY=${RETRY_DELAY:-5}
+AUTO_COMMIT=true
+ENGINE="claude"
+BRANCH_PER_TASK=false
+CREATE_PR=false
+BASE_BRANCH=""
+PARALLEL=false
+MAX_PARALLEL=${MAX_PARALLEL:-3}
+PRD_FILE="PRD.md"
+
+# State
+iteration=0
+total_input_tokens=0
+total_output_tokens=0
+PROGRESS_FILE=".marge/progress.txt"
+CONFIG_FILE=".marge/config.yaml"
+
+# Colors
+if [[ -t 1 ]] && command -v tput &>/dev/null; then
+    RED=$(tput setaf 1 2>/dev/null) || RED=""
+    GREEN=$(tput setaf 2 2>/dev/null) || GREEN=""
+    YELLOW=$(tput setaf 3 2>/dev/null) || YELLOW=""
+    BLUE=$(tput setaf 4 2>/dev/null) || BLUE=""
+    CYAN=$(tput setaf 6 2>/dev/null) || CYAN=""
+    BOLD=$(tput bold 2>/dev/null) || BOLD=""
+    RESET=$(tput sgr0 2>/dev/null) || RESET=""
+else
+    RED="" GREEN="" YELLOW="" BLUE="" CYAN="" BOLD="" RESET=""
+fi
+
+log_info() { echo "${BLUE}[INFO]${RESET} $*"; }
+log_success() { echo "${GREEN}[OK]${RESET} $*"; }
+log_warn() { echo "${YELLOW}[WARN]${RESET} $*"; }
+log_error() { echo "${RED}[ERROR]${RESET} $*" >&2; }
+log_debug() { [[ "$VERBOSE" == true ]] && echo "[DEBUG] $*" || true; }
+
+print_usage() {
+    cat <<EOF
+${BOLD}marge${RESET} v$VERSION - Autonomous AI coding loop
+
+${BOLD}USAGE:${RESET}
+  marge [options]              Run PRD tasks from PRD.md
+  marge "<task>" [options]     Run a single task
+
+${BOLD}EXAMPLES:${RESET}
+  marge "fix the login bug"
+  marge --loop --auto
+  marge --parallel --max-parallel 3
+  marge --engine aider --loop
+  marge --branch-per-task --create-pr
+
+${BOLD}OPTIONS:${RESET}
+  --auto              Auto-approve for non-claude engines
+  --dry-run           Preview without running
+  --model <model>     Model override
+  --fast              Skip verification
+  --loop              Loop until complete
+  --engine <e>        Engine: claude, opencode, codex, aider
+  --max-iterations N  Max iterations (default: $MAX_ITER)
+  --max-retries N     Max retries per task (default: $MAX_RETRIES)
+  --no-commit         Disable auto-commit
+  --parallel          Run tasks in parallel using git worktrees
+  --max-parallel N    Max parallel agents (default: $MAX_PARALLEL)
+  --branch-per-task   Create branch per task
+  --create-pr         Create PR when done
+  -v, --verbose       Verbose output
+  --version           Show version
+  --help              Show help
+
+${BOLD}COMMANDS:${RESET}
+  init                Initialize .marge/ config and PRD.md template
+  status              Show current status and progress
+  config              Show config file contents
+  resume              Resume from saved progress
+
+${BOLD}CONFIG FILE:${RESET}
+  Place .marge/config.yaml in your project:
+    engine: claude
+    model: ""
+    max_iterations: 20
+    max_retries: 3
+    auto_commit: true
+
+${BOLD}PRD FORMAT:${RESET}
+  Tasks are parsed from PRD.md using "### Task N: Title" format.
+  See 'marge init' for a template.
+EOF
+}
+
+slugify() {
+    echo "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/-/g' | sed -E 's/^-|-$//g' | cut -c1-50
+}
+
+notify_done() {
+    local msg="${1:-Marge complete}"
+    command -v notify-send &>/dev/null && notify-send "Marge" "$msg" 2>/dev/null || true
+    [[ "$(uname)" == "Darwin" ]] && command -v osascript &>/dev/null && \
+        osascript -e "display notification \"$msg\" with title \"Marge\"" 2>/dev/null || true
+}
+
+show_spinner() {
+    local output_file="$1"
+    local task="$2"
+    local pid="$3"
+    local start_time=$(date +%s)
+    local spinstr='⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏'
+    local spin_idx=0
+    local current_step="Working"
+
+    task="${task:0:45}..."
+
+    while kill -0 "$pid" 2>/dev/null; do
+        local elapsed=$(($(date +%s) - start_time))
+        local mins=$((elapsed / 60))
+        local secs=$((elapsed % 60))
+
+        # Check output for step indicators
+        if [[ -f "$output_file" ]] && [[ -s "$output_file" ]]; then
+            local content
+            content=$(tail -c 3000 "$output_file" 2>/dev/null || true)
+
+            if echo "$content" | grep -qiE 'git commit'; then
+                current_step="Committing"
+            elif echo "$content" | grep -qiE 'git add'; then
+                current_step="Staging"
+            elif echo "$content" | grep -qiE 'lint|eslint|biome'; then
+                current_step="Linting"
+            elif echo "$content" | grep -qiE 'test|jest|vitest|pytest'; then
+                current_step="Testing"
+            elif echo "$content" | grep -qiE '"tool":"[Ww]rite"|"tool":"[Ee]dit"'; then
+                current_step="Writing"
+            elif echo "$content" | grep -qiE '"tool":"[Rr]ead"|"tool":"[Gg]lob"'; then
+                current_step="Reading"
+            elif echo "$content" | grep -qiE 'thinking\|Thinking'; then
+                current_step="Thinking"
+            fi
+        fi
+
+        local spinner_char="${spinstr:$spin_idx:1}"
+        printf "\r  \033[38;2;98;154;211m%s\033[0m \033[38;2;255;217;15m%s\033[0m [%02d:%02d] %s" "$spinner_char" "$current_step" "$mins" "$secs" "$task"
+
+        spin_idx=$(( (spin_idx + 1) % ${#spinstr} ))
+        sleep 0.1
+    done
+
+    # Clear spinner line
+    printf "\r%80s\r" ""
+}
+
+load_config() {
+    [[ ! -f "$CONFIG_FILE" ]] && return 0
+
+    while IFS='=' read -r key value; do
+        [[ -z "$key" || "$key" =~ ^# ]] && continue
+        key=$(echo "$key" | tr -d ' ')
+        value=$(echo "$value" | tr -d ' "' | sed 's/#.*//')
+
+        case "$key" in
+            engine) [[ -z "$ENGINE" || "$ENGINE" == "claude" ]] && ENGINE="$value" ;;
+            model) [[ -z "$MODEL" ]] && MODEL="$value" ;;
+            max_iterations) MAX_ITER="$value" ;;
+            max_retries) MAX_RETRIES="$value" ;;
+            auto_commit) AUTO_COMMIT="$value" ;;
+        esac
+    done < <(grep -v '^#' "$CONFIG_FILE" | tr ':' '=' 2>/dev/null)
+}
+
+save_progress() {
+    mkdir -p .marge
+    cat > "$PROGRESS_FILE" <<EOF
+iteration=$iteration
+task_index=${1:-0}
+timestamp=$(date +%s)
+status=${2:-running}
+EOF
+}
+
+load_progress() {
+    [[ ! -f "$PROGRESS_FILE" ]] && return 1
+    source "$PROGRESS_FILE" 2>/dev/null || return 1
+    return 0
+}
+
+clear_progress() {
+    rm -f "$PROGRESS_FILE" 2>/dev/null
+}
+
+detect_project() {
+    if [[ -f "package.json" ]]; then
+        echo "node"
+    elif [[ -f "Cargo.toml" ]]; then
+        echo "rust"
+    elif [[ -f "go.mod" ]]; then
+        echo "go"
+    elif [[ -f "requirements.txt" ]] || [[ -f "pyproject.toml" ]]; then
+        echo "python"
+    elif [[ -f "Gemfile" ]]; then
+        echo "ruby"
+    else
+        echo "unknown"
+    fi
+}
+
+setup_worktree() {
+    local task_slug="$1"
+    local worktree_dir=".marge/worktrees/$task_slug"
+
+    if [[ ! -d "$worktree_dir" ]]; then
+        git worktree add "$worktree_dir" -b "marge/$task_slug" 2>/dev/null || {
+            git worktree add "$worktree_dir" "marge/$task_slug" 2>/dev/null || return 1
+        }
+    fi
+    echo "$worktree_dir"
+}
+
+cleanup_worktrees() {
+    git worktree prune 2>/dev/null || true
+    rm -rf .marge/worktrees 2>/dev/null || true
+}
+
+check_engine() {
+    case "$1" in
+        claude) command -v claude &>/dev/null || { log_error "claude not found"; return 1; } ;;
+        opencode) command -v opencode &>/dev/null || { log_error "opencode not found"; return 1; } ;;
+        codex) command -v codex &>/dev/null || { log_error "codex not found"; return 1; } ;;
+        aider) command -v aider &>/dev/null || { log_error "aider not found"; return 1; } ;;
+        *) log_error "Unknown engine: $1"; return 1 ;;
+    esac
+}
+
+parse_token_usage() {
+    local output_file="$1"
+    local input_tokens=0
+    local output_tokens=0
+
+    if [[ -f "$output_file" ]]; then
+        # Parse stream-json output for token usage
+        # Claude outputs JSON lines, look for usage data in result or usage objects
+        # Try multiple patterns since format may vary
+
+        # Pattern 1: "type": "result" with usage nested
+        local result_line
+        result_line=$(grep -E '"type"\s*:\s*"result"' "$output_file" 2>/dev/null | tail -1) || true
+
+        if [[ -n "$result_line" ]]; then
+            input_tokens=$(echo "$result_line" | grep -oE '"input_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || input_tokens=0
+            output_tokens=$(echo "$result_line" | grep -oE '"output_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || output_tokens=0
+        fi
+
+        # Pattern 2: Look for usage object directly if above failed
+        if [[ "$input_tokens" -eq 0 ]] && [[ "$output_tokens" -eq 0 ]]; then
+            local usage_line
+            usage_line=$(grep -E '"usage"\s*:' "$output_file" 2>/dev/null | tail -1) || true
+            if [[ -n "$usage_line" ]]; then
+                input_tokens=$(echo "$usage_line" | grep -oE '"input_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || input_tokens=0
+                output_tokens=$(echo "$usage_line" | grep -oE '"output_tokens"\s*:\s*[0-9]+' | grep -oE '[0-9]+' | tail -1) || output_tokens=0
+            fi
+        fi
+
+        # Pattern 3: Check for total_tokens as fallback
+        if [[ "$input_tokens" -eq 0 ]] && [[ "$output_tokens" -eq 0 ]]; then
+            local total
+            total=$(grep -oE '"total_tokens"\s*:\s*[0-9]+' "$output_file" 2>/dev/null | tail -1 | grep -oE '[0-9]+') || total=0
+            if [[ "$total" -gt 0 ]]; then
+                # Estimate split if only total available
+                input_tokens=$((total * 7 / 10))
+                output_tokens=$((total * 3 / 10))
+            fi
+        fi
+    fi
+
+    # Ensure values are numeric
+    input_tokens=${input_tokens:-0}
+    output_tokens=${output_tokens:-0}
+    [[ ! "$input_tokens" =~ ^[0-9]+$ ]] && input_tokens=0
+    [[ ! "$output_tokens" =~ ^[0-9]+$ ]] && output_tokens=0
+
+    # Calculate cost using model pricing
+    # Default to Claude Sonnet pricing: $3/1M input, $15/1M output
+    local input_rate=3.00
+    local output_rate=15.00
+
+    # Try to read from model_pricing.json if available
+    local pricing_file="./marge_simpson/model_pricing.json"
+    [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
+
+    if [[ -f "$pricing_file" ]] && command -v jq &>/dev/null; then
+        local model_name="Claude Sonnet"
+        [[ "$MODEL" == *"opus"* ]] && model_name="Claude Opus"
+        local rates
+        rates=$(jq -r --arg m "$model_name" '.models[] | select(.name | contains($m)) | "\(.input_per_1m) \(.output_per_1m)"' "$pricing_file" 2>/dev/null | head -1) || true
+        if [[ -n "$rates" ]]; then
+            input_rate=$(echo "$rates" | awk '{print $1}')
+            output_rate=$(echo "$rates" | awk '{print $2}')
+        fi
+    fi
+
+    if [[ $input_tokens -gt 0 ]] || [[ $output_tokens -gt 0 ]]; then
+        local cost
+        cost=$(awk -v it="$input_tokens" -v ot="$output_tokens" -v ir="$input_rate" -v or="$output_rate" \
+            'BEGIN {printf "%.4f", (it * ir + ot * or) / 1000000}')
+        echo "  ${CYAN}Tokens:${RESET} ${input_tokens} in / ${output_tokens} out · ${CYAN}Cost:${RESET} \$${cost}"
+
+        # Update totals for summary
+        total_input_tokens=$((total_input_tokens + input_tokens))
+        total_output_tokens=$((total_output_tokens + output_tokens))
+    else
+        echo "  ${YELLOW}Token usage not available${RESET}"
+    fi
+}
+
+build_engine_cmd() {
+    local engine="$1"
+    local prompt="$2"
+    case "$engine" in
+        claude)
+            # -p requires prompt immediately after, other flags come before or after
+            # --output-format stream-json requires --verbose when using -p
+            echo -n "claude --dangerously-skip-permissions --verbose --output-format stream-json"
+            [[ -n "$MODEL" ]] && echo -n " --model $MODEL"
+            echo -n " -p"
+            ;;
+        opencode)
+            echo -n "opencode --approval-mode full-auto"
+            [[ -n "$MODEL" ]] && echo -n " --model $MODEL"
+            ;;
+        codex)
+            echo -n "codex exec --full-auto"
+            ;;
+        aider)
+            echo -n "aider --yes --message"
+            [[ -n "$MODEL" ]] && echo -n " --model $MODEL"
+            ;;
+    esac
+}
+
+auto_commit() {
+    [[ "$AUTO_COMMIT" != true ]] && return 0
+    git rev-parse --git-dir &>/dev/null || return 0
+    git add . 2>/dev/null || true
+    git commit -m "Marge auto iteration $1" 2>/dev/null || true
+}
+
+is_task_complete() {
+    local tasklist="./marge_simpson/tasklist.md"
+    local assessment="./marge_simpson/assessment.md"
+
+    [[ -f "$tasklist" ]] && grep -q "\[ \]" "$tasklist" && return 1
+    [[ -f "$assessment" ]] && grep -iqE "(clean|complete|no issues)" "$assessment" && return 0
+    return 0
+}
+
+parse_prd() {
+    local file="$1"
+    [[ ! -f "$file" ]] && return 1
+
+    grep -E "^### " "$file" | sed 's/^### //' | sed 's/^Task [0-9]*: //'
+}
+
+run_task() {
+    local task="$1" num="${2:-1}" workdir="${3:-.}"
+
+    log_info "Task $num: $task"
+    save_progress "$num" "running"
+
+    [[ ! -d "$workdir/marge_simpson" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
+
+    local prompt="Read the AGENTS.md file in the marge_simpson folder and follow it.
+
+Instruction:
+- ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")
+
+After finished, list remaining unchecked items in marge_simpson/tasklist.md."
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "${CYAN}Would run:${RESET} $(build_engine_cmd "$ENGINE") \"<prompt>\""
+        return 0
+    fi
+
+    local cmd=$(build_engine_cmd "$ENGINE")
+    local retry=0
+    local output_file="/tmp/marge_output_$$.txt"
+    local ai_pid
+
+    while [[ $retry -lt $MAX_RETRIES ]]; do
+        log_debug "Attempt $((retry+1))/$MAX_RETRIES"
+        log_debug "Command: $cmd \"<prompt>\""
+        log_debug "Workdir: $workdir"
+
+        # Run AI command in background
+        (cd "$workdir" && eval "$cmd" '"$prompt"' > "$output_file" 2>&1) &
+        ai_pid=$!
+        log_debug "Started PID: $ai_pid"
+
+        # Show spinner while AI is running
+        show_spinner "$output_file" "$task" "$ai_pid"
+
+        # Wait for AI and get exit status
+        wait "$ai_pid"
+        local exit_code=$?
+        log_debug "Exit code: $exit_code"
+
+        # Show output (always show if it exists and is non-empty, for debugging)
+        if [[ -f "$output_file" ]] && [[ -s "$output_file" ]]; then
+            [[ "$VERBOSE" == true ]] && cat "$output_file"
+            log_debug "Output file size: $(wc -c < "$output_file") bytes"
+        else
+            log_debug "Output file empty or missing"
+        fi
+
+        if [[ $exit_code -eq 0 ]]; then
+            log_success "Task $num completed"
+            parse_token_usage "$output_file"
+            auto_commit "$num"
+            save_progress "$num" "completed"
+            rm -f "$output_file"
+            return 0
+        fi
+
+        ((retry++))
+        [[ $retry -lt $MAX_RETRIES ]] && sleep "$RETRY_DELAY"
+    done
+
+    save_progress "$num" "failed"
+    log_error "Task failed after $MAX_RETRIES retries"
+    rm -f "$output_file"
+    return 1
+}
+
+run_task_parallel() {
+    local task="$1" num="$2" slug="$3"
+    local workdir
+
+    workdir=$(setup_worktree "$slug") || {
+        log_error "Failed to setup worktree for $slug"
+        return 1
+    }
+
+    log_info "Running task $num in worktree: $workdir"
+    run_task "$task" "$num" "$workdir"
+}
+
+run_prd() {
+    local tasks=()
+    local pids=()
+    local project_type
+
+    project_type=$(detect_project)
+    log_debug "Detected project type: $project_type"
+
+    while IFS= read -r task; do
+        [[ -n "$task" ]] && tasks+=("$task")
+    done < <(parse_prd "$PRD_FILE")
+
+    local count=${#tasks[@]}
+
+    if [[ $count -eq 0 ]]; then
+        log_warn "No tasks in $PRD_FILE"
+        return 0
+    fi
+
+    echo ""
+    echo "${BOLD}Marge v$VERSION${RESET}"
+    echo "Found ${CYAN}$count${RESET} tasks"
+    echo "Engine: ${CYAN}$ENGINE${RESET}"
+    [[ "$PARALLEL" == true ]] && echo "Mode: ${CYAN}parallel${RESET} (max $MAX_PARALLEL)"
+    echo ""
+
+    if [[ "$DRY_RUN" == true ]]; then
+        echo "${BOLD}Tasks:${RESET}"
+        for i in "${!tasks[@]}"; do
+            echo "  $((i+1)). ${tasks[$i]}"
+        done
+        return 0
+    fi
+
+    if [[ "$PARALLEL" == true ]]; then
+        local running=0
+        for i in "${!tasks[@]}"; do
+            local task="${tasks[$i]}"
+            local num=$((i+1))
+            local slug=$(slugify "$task")
+
+            while [[ $running -ge $MAX_PARALLEL ]]; do
+                wait -n 2>/dev/null || true
+                ((running--))
+            done
+
+            run_task_parallel "$task" "$num" "$slug" &
+            pids+=($!)
+            ((running++))
+        done
+
+        for pid in "${pids[@]}"; do
+            wait "$pid" 2>/dev/null || true
+        done
+
+        cleanup_worktrees
+    else
+        for task in "${tasks[@]}"; do
+            ((iteration++))
+
+            if [[ "$BRANCH_PER_TASK" == true ]]; then
+                local slug=$(slugify "$task")
+                git checkout -b "marge/$slug" 2>/dev/null || git checkout "marge/$slug" 2>/dev/null || true
+            fi
+
+            run_task "$task" "$iteration" || { [[ "$LOOP" != true ]] && break; }
+
+            is_task_complete && { log_success "All tasks complete!"; break; }
+            [[ $iteration -ge $MAX_ITER ]] && { log_warn "Max iterations"; break; }
+        done
+    fi
+
+    if [[ "$CREATE_PR" == true ]]; then
+        log_info "Creating PR..."
+        local pr_title="Marge: Completed $iteration tasks"
+        local pr_body="Automated PR by marge v$VERSION"
+        gh pr create --title "$pr_title" --body "$pr_body" 2>/dev/null || log_warn "PR creation failed"
+    fi
+
+    clear_progress
+    echo ""
+    print_session_summary "$iteration"
+    notify_done "Completed $iteration tasks"
+}
+
+print_session_summary() {
+    local iter_count="${1:-0}"
+    echo "${BOLD}═══════════════════════════════════════════════════${RESET}"
+    echo "${BOLD}Session Summary${RESET}"
+    echo "  Iterations: $iter_count"
+
+    if [[ $total_input_tokens -gt 0 ]] || [[ $total_output_tokens -gt 0 ]]; then
+        # Calculate total cost
+        local input_rate=3.00
+        local output_rate=15.00
+
+        local pricing_file="./marge_simpson/model_pricing.json"
+        [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
+
+        if [[ -f "$pricing_file" ]] && command -v jq &>/dev/null; then
+            local model_name="Claude Sonnet"
+            [[ "$MODEL" == *"opus"* ]] && model_name="Claude Opus"
+            local rates
+            rates=$(jq -r --arg m "$model_name" '.models[] | select(.name | contains($m)) | "\(.input_per_1m) \(.output_per_1m)"' "$pricing_file" 2>/dev/null | head -1) || true
+            if [[ -n "$rates" ]]; then
+                input_rate=$(echo "$rates" | awk '{print $1}')
+                output_rate=$(echo "$rates" | awk '{print $2}')
+            fi
+        fi
+
+        local total_cost
+        total_cost=$(awk -v it="$total_input_tokens" -v ot="$total_output_tokens" -v ir="$input_rate" -v or="$output_rate" \
+            'BEGIN {printf "%.4f", (it * ir + ot * or) / 1000000}')
+
+        echo "  ${CYAN}Total Tokens:${RESET} ${total_input_tokens} in / ${total_output_tokens} out"
+        echo "  ${CYAN}Total Cost:${RESET} \$${total_cost}"
+    fi
+    echo "${BOLD}═══════════════════════════════════════════════════${RESET}"
+}
+
+run_single() {
+    local task="$1"
+
+    echo ""
+    echo "${BOLD}Marge v$VERSION${RESET} - Single task"
+    echo "Task: ${CYAN}$task${RESET}"
+    echo ""
+
+    if [[ "$LOOP" == true ]]; then
+        while [[ $iteration -lt $MAX_ITER ]]; do
+            ((iteration++))
+            echo "${BOLD}=== Iteration $iteration / $MAX_ITER ===${RESET}"
+
+            run_task "$task" "$iteration" || true
+            is_task_complete && { log_success "Complete!"; break; }
+
+            sleep 1
+        done
+    else
+        iteration=1
+        run_task "$task" 1
+    fi
+
+    echo ""
+    print_session_summary "$iteration"
+    notify_done "Task complete"
+}
+
+init_config() {
+    mkdir -p .marge
+    cat > .marge/config.yaml <<EOF
+engine: claude
+model: ""
+max_iterations: 20
+max_retries: 3
+auto_commit: true
+EOF
+
+    [[ ! -f "PRD.md" ]] && cat > PRD.md <<'EOF'
+# PRD
+
+### Task 1: Setup
+- [ ] Initialize project
+
+### Task 2: Implementation
+- [ ] Build features
+
+### Task 3: Testing
+- [ ] Write tests
+EOF
+
+    log_success "Initialized .marge/"
+}
+
+# Load config before parsing args (CLI overrides config)
+load_config
+
+# Parse args
+POSITIONAL=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --auto) AUTO=true; shift ;;
+        --dry-run) DRY_RUN=true; shift ;;
+        --model) MODEL="$2"; shift 2 ;;
+        --engine) ENGINE="$2"; shift 2 ;;
+        --fast) FAST=true; shift ;;
+        --loop) LOOP=true; shift ;;
+        --max-iterations) MAX_ITER="$2"; shift 2 ;;
+        --max-retries) MAX_RETRIES="$2"; shift 2 ;;
+        --no-commit) AUTO_COMMIT=false; shift ;;
+        --parallel) PARALLEL=true; shift ;;
+        --max-parallel) MAX_PARALLEL="$2"; shift 2 ;;
+        --branch-per-task) BRANCH_PER_TASK=true; shift ;;
+        --create-pr) CREATE_PR=true; shift ;;
+        -v|--verbose) VERBOSE=true; shift ;;
+        --version) echo "marge $VERSION"; exit 0 ;;
+        -h|--help|help) print_usage; exit 0 ;;
+        init) init_config; exit 0 ;;
+        status)
+            echo "${BOLD}Marge Status${RESET}"
+            echo "Project type: $(detect_project)"
+            [[ -f "$PROGRESS_FILE" ]] && {
+                echo "Progress file: $PROGRESS_FILE"
+                cat "$PROGRESS_FILE"
+            } || echo "No active progress"
+            [[ -f "$PRD_FILE" ]] && echo "PRD tasks: $(parse_prd "$PRD_FILE" | wc -l)"
+            exit 0
+            ;;
+        config) [[ -f .marge/config.yaml ]] && cat .marge/config.yaml; exit 0 ;;
+        resume)
+            load_progress && {
+                log_info "Resuming from iteration $iteration"
+            } || log_warn "No progress to resume"
+            shift
+            ;;
+        -*) log_error "Unknown: $1"; exit 1 ;;
+        *) POSITIONAL+=("$1"); shift ;;
+    esac
+done
+
+check_engine "$ENGINE" || exit 1
+
+if [[ ${#POSITIONAL[@]} -gt 0 ]]; then
+    run_single "${POSITIONAL[*]}"
+else
+    run_prd
+fi

@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Space View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000011;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #space-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        #space-canvas:active {
+            cursor: grabbing;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .control-btn {
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+        }
+
+        .control-btn.active {
+            background: rgba(100, 150, 255, 0.4);
+            border-color: rgba(100, 150, 255, 0.8);
+        }
+
+        .info-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 20, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 20px;
+            color: #fff;
+            min-width: 250px;
+            backdrop-filter: blur(10px);
+            z-index: 100;
+            display: none;
+        }
+
+        .info-panel.visible {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .info-panel h3 {
+            margin-bottom: 10px;
+            color: #88ccff;
+            font-size: 18px;
+        }
+
+        .info-panel p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #ccc;
+        }
+
+        .info-panel .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .info-panel .close-btn:hover {
+            color: #fff;
+        }
+
+        .stats {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        .instructions {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            z-index: 50;
+            pointer-events: none;
+            animation: fadeOut 3s ease forwards;
+            animation-delay: 2s;
+        }
+
+        .instructions h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(100, 150, 255, 0.8);
+        }
+
+        .instructions p {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="space-canvas"></canvas>
+
+    <div class="instructions">
+        <h1>Welcome to Space</h1>
+        <p>Click and drag to explore | Click on celestial objects | Scroll to zoom</p>
+    </div>
+
+    <div class="stats">
+        <div id="coord-display">Position: 0, 0</div>
+        <div id="zoom-display">Zoom: 1.0x</div>
+        <div id="object-count">Objects: 0</div>
+    </div>
+
+    <div class="info-panel" id="info-panel">
+        <button type="button" class="close-btn" onclick="closeInfoPanel()">&times;</button>
+        <h3 id="info-title">Object Name</h3>
+        <p id="info-description">Object description...</p>
+    </div>
+
+    <div class="controls">
+        <button type="button" class="control-btn" id="btn-nebula" onclick="toggleNebula()">Toggle Nebula</button>
+        <button type="button" class="control-btn" id="btn-shooting" onclick="triggerShootingStar()">Shooting Star</button>
+        <button type="button" class="control-btn" id="btn-warp" onclick="toggleWarp()">Warp Speed</button>
+        <button type="button" class="control-btn" id="btn-reset" onclick="resetView()">Reset View</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('space-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // State
+        let width, height;
+        let offsetX = 0, offsetY = 0;
+        let zoom = 1;
+        let isDragging = false;
+        let lastX, lastY;
+        let showNebula = true;
+        let warpMode = false;
+        let warpSpeed = 0;
+
+        // Celestial objects
+        let stars = [];
+        let planets = [];
+        let shootingStars = [];
+        let nebulaParticles = [];
+
+        // Planet data
+        const planetTypes = [
+            { name: 'Terra Nova', color: '#4a9eff', size: 30, description: 'A blue terrestrial world with vast oceans and scattered continents. Potential for life.' },
+            { name: 'Crimson Giant', color: '#ff6b4a', size: 45, description: 'A massive gas giant with swirling crimson storms visible from orbit.' },
+            { name: 'Emerald Prime', color: '#4aff7f', size: 25, description: 'A lush green world covered in dense alien forests.' },
+            { name: 'Frozen Sentinel', color: '#a4d4ff', size: 20, description: 'An ice-covered moon orbiting a distant star, hiding secrets beneath its frozen surface.' },
+            { name: 'Golden Dunes', color: '#ffcc4a', size: 28, description: 'A desert planet with endless golden sand dunes and ancient ruins.' },
+            { name: 'Violet Storm', color: '#9b4aff', size: 50, description: 'A purple gas giant with violent electromagnetic storms.' },
+            { name: 'Azure Ring', color: '#4affef', size: 35, description: 'A ringed planet with beautiful cyan coloring and multiple moons.' },
+            { name: 'Obsidian Core', color: '#3a3a4a', size: 22, description: 'A dark, mysterious planet absorbing most light that reaches it.' }
+        ];
+
+        // Star types
+        const starTypes = [
+            { color: '#ffffff', probability: 0.7, minSize: 0.5, maxSize: 1.5 },
+            { color: '#fffae0', probability: 0.15, minSize: 1, maxSize: 2 },
+            { color: '#ffd4a3', probability: 0.08, minSize: 1.5, maxSize: 2.5 },
+            { color: '#a3c9ff', probability: 0.05, minSize: 2, maxSize: 3 },
+            { color: '#ff9999', probability: 0.02, minSize: 2.5, maxSize: 4 }
+        ];
+
+        function init() {
+            resize();
+            generateStars(2000);
+            generatePlanets(12);
+            generateNebulaParticles(100);
+            updateObjectCount();
+            animate();
+        }
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+
+        function generateStars(count) {
+            stars = [];
+            const spaceSize = 5000;
+            for (let i = 0; i < count; i++) {
+                const rand = Math.random();
+                let starType = starTypes[0];
+                let cumProb = 0;
+                for (const type of starTypes) {
+                    cumProb += type.probability;
+                    if (rand < cumProb) {
+                        starType = type;
+                        break;
+                    }
+                }
+                stars.push({
+                    x: (Math.random() - 0.5) * spaceSize,
+                    y: (Math.random() - 0.5) * spaceSize,
+                    size: starType.minSize + Math.random() * (starType.maxSize - starType.minSize),
+                    color: starType.color,
+                    twinkleOffset: Math.random() * Math.PI * 2,
+                    twinkleSpeed: 0.5 + Math.random() * 2
+                });
+            }
+        }
+
+        function generatePlanets(count) {
+            planets = [];
+            const spaceSize = 4000;
+            for (let i = 0; i < count; i++) {
+                const type = planetTypes[i % planetTypes.length];
+                const sizeVariation = 0.7 + Math.random() * 0.6;
+                planets.push({
+                    x: (Math.random() - 0.5) * spaceSize,
+                    y: (Math.random() - 0.5) * spaceSize,
+                    size: type.size * sizeVariation,
+                    color: type.color,
+                    name: type.name + (i >= planetTypes.length ? ` ${Math.floor(i / planetTypes.length) + 1}` : ''),
+                    description: type.description,
+                    rotation: Math.random() * Math.PI * 2,
+                    rotationSpeed: (Math.random() - 0.5) * 0.01,
+                    hasRings: Math.random() > 0.7,
+                    hasMoon: Math.random() > 0.5,
+                    moonAngle: Math.random() * Math.PI * 2,
+                    glowIntensity: 0
+                });
+            }
+        }
+
+        function generateNebulaParticles(count) {
+            nebulaParticles = [];
+            const colors = ['rgba(100, 50, 150, 0.03)', 'rgba(50, 100, 150, 0.03)', 'rgba(150, 50, 100, 0.03)', 'rgba(50, 150, 100, 0.03)'];
+            for (let i = 0; i < count; i++) {
+                nebulaParticles.push({
+                    x: (Math.random() - 0.5) * 6000,
+                    y: (Math.random() - 0.5) * 6000,
+                    size: 200 + Math.random() * 400,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    drift: { x: (Math.random() - 0.5) * 0.1, y: (Math.random() - 0.5) * 0.1 }
+                });
+            }
+        }
+
+        function updateObjectCount() {
+            document.getElementById('object-count').textContent = `Objects: ${stars.length + planets.length}`;
+        }
+
+        function animate() {
+            ctx.fillStyle = '#000011';
+            ctx.fillRect(0, 0, width, height);
+
+            const time = Date.now() * 0.001;
+
+            // Handle warp mode
+            if (warpMode) {
+                warpSpeed = Math.min(warpSpeed + 0.5, 20);
+                offsetX += warpSpeed;
+            } else {
+                warpSpeed = Math.max(warpSpeed - 0.3, 0);
+            }
+
+            // Draw nebula
+            if (showNebula) {
+                drawNebula(time);
+            }
+
+            // Draw stars
+            drawStars(time);
+
+            // Draw shooting stars
+            drawShootingStars();
+
+            // Draw planets
+            drawPlanets(time);
+
+            // Draw warp effect
+            if (warpSpeed > 0) {
+                drawWarpEffect();
+            }
+
+            // Update displays
+            document.getElementById('coord-display').textContent = `Position: ${Math.round(offsetX)}, ${Math.round(offsetY)}`;
+            document.getElementById('zoom-display').textContent = `Zoom: ${zoom.toFixed(1)}x`;
+
+            requestAnimationFrame(animate);
+        }
+
+        function drawNebula(time) {
+            for (const particle of nebulaParticles) {
+                const screenX = (particle.x - offsetX) * zoom + width / 2;
+                const screenY = (particle.y - offsetY) * zoom + height / 2;
+                const screenSize = particle.size * zoom;
+
+                if (screenX + screenSize > 0 && screenX - screenSize < width &&
+                    screenY + screenSize > 0 && screenY - screenSize < height) {
+                    const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, screenSize);
+                    gradient.addColorStop(0, particle.color);
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(screenX - screenSize, screenY - screenSize, screenSize * 2, screenSize * 2);
+                }
+
+                // Drift
+                particle.x += particle.drift.x;
+                particle.y += particle.drift.y;
+            }
+        }
+
+        function drawStars(time) {
+            for (const star of stars) {
+                const screenX = (star.x - offsetX) * zoom + width / 2;
+                const screenY = (star.y - offsetY) * zoom + height / 2;
+
+                if (screenX > -10 && screenX < width + 10 && screenY > -10 && screenY < height + 10) {
+                    const twinkle = 0.5 + 0.5 * Math.sin(time * star.twinkleSpeed + star.twinkleOffset);
+                    const size = star.size * zoom * (0.8 + twinkle * 0.4);
+
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+                    ctx.fillStyle = star.color;
+                    ctx.globalAlpha = 0.5 + twinkle * 0.5;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
+
+                    // Glow for larger stars
+                    if (star.size > 2) {
+                        const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, size * 4);
+                        gradient.addColorStop(0, star.color);
+                        gradient.addColorStop(1, 'transparent');
+                        ctx.fillStyle = gradient;
+                        ctx.globalAlpha = 0.3 * twinkle;
+                        ctx.fillRect(screenX - size * 4, screenY - size * 4, size * 8, size * 8);
+                        ctx.globalAlpha = 1;
+                    }
+                }
+            }
+        }
+
+        function drawPlanets(time) {
+            for (const planet of planets) {
+                const screenX = (planet.x - offsetX) * zoom + width / 2;
+                const screenY = (planet.y - offsetY) * zoom + height / 2;
+                const screenSize = planet.size * zoom;
+
+                if (screenX + screenSize > -50 && screenX - screenSize < width + 50 &&
+                    screenY + screenSize > -50 && screenY - screenSize < height + 50) {
+
+                    // Glow effect
+                    const glowSize = screenSize * (1.5 + planet.glowIntensity * 0.5);
+                    const gradient = ctx.createRadialGradient(screenX, screenY, screenSize * 0.8, screenX, screenY, glowSize);
+                    gradient.addColorStop(0, planet.color + '40');
+                    gradient.addColorStop(1, 'transparent');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, glowSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Rings
+                    if (planet.hasRings) {
+                        ctx.save();
+                        ctx.translate(screenX, screenY);
+                        ctx.rotate(planet.rotation);
+                        ctx.scale(1, 0.3);
+                        ctx.strokeStyle = planet.color + '60';
+                        ctx.lineWidth = screenSize * 0.15;
+                        ctx.beginPath();
+                        ctx.arc(0, 0, screenSize * 1.8, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.strokeStyle = planet.color + '30';
+                        ctx.beginPath();
+                        ctx.arc(0, 0, screenSize * 2.2, 0, Math.PI * 2);
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+
+                    // Planet body
+                    const planetGradient = ctx.createRadialGradient(
+                        screenX - screenSize * 0.3,
+                        screenY - screenSize * 0.3,
+                        0,
+                        screenX,
+                        screenY,
+                        screenSize
+                    );
+                    planetGradient.addColorStop(0, lightenColor(planet.color, 30));
+                    planetGradient.addColorStop(0.5, planet.color);
+                    planetGradient.addColorStop(1, darkenColor(planet.color, 40));
+                    ctx.fillStyle = planetGradient;
+                    ctx.beginPath();
+                    ctx.arc(screenX, screenY, screenSize, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    // Moon
+                    if (planet.hasMoon) {
+                        planet.moonAngle += 0.01;
+                        const moonX = screenX + Math.cos(planet.moonAngle) * screenSize * 2;
+                        const moonY = screenY + Math.sin(planet.moonAngle) * screenSize * 2 * 0.5;
+                        const moonSize = screenSize * 0.2;
+                        ctx.fillStyle = '#aaa';
+                        ctx.beginPath();
+                        ctx.arc(moonX, moonY, moonSize, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+
+                    planet.rotation += planet.rotationSpeed;
+
+                    // Decay glow
+                    planet.glowIntensity *= 0.95;
+                }
+            }
+        }
+
+        function drawShootingStars() {
+            for (let i = shootingStars.length - 1; i >= 0; i--) {
+                const star = shootingStars[i];
+                star.x += star.vx;
+                star.y += star.vy;
+                star.life -= 0.02;
+
+                if (star.life <= 0) {
+                    shootingStars.splice(i, 1);
+                    continue;
+                }
+
+                const screenX = (star.x - offsetX) * zoom + width / 2;
+                const screenY = (star.y - offsetY) * zoom + height / 2;
+
+                // Draw trail
+                const trailLength = 50;
+                const gradient = ctx.createLinearGradient(
+                    screenX, screenY,
+                    screenX - star.vx * trailLength * zoom,
+                    screenY - star.vy * trailLength * zoom
+                );
+                gradient.addColorStop(0, `rgba(255, 255, 255, ${star.life})`);
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2 * zoom;
+                ctx.beginPath();
+                ctx.moveTo(screenX, screenY);
+                ctx.lineTo(screenX - star.vx * trailLength * zoom, screenY - star.vy * trailLength * zoom);
+                ctx.stroke();
+
+                // Draw head
+                ctx.fillStyle = `rgba(255, 255, 255, ${star.life})`;
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, 3 * zoom, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function drawWarpEffect() {
+            ctx.save();
+            ctx.globalAlpha = Math.min(warpSpeed / 20, 0.5);
+            const centerX = width / 2;
+            const centerY = height / 2;
+
+            for (let i = 0; i < 50; i++) {
+                const angle = (i / 50) * Math.PI * 2;
+                const length = 100 + warpSpeed * 20;
+                const x1 = centerX + Math.cos(angle) * 50;
+                const y1 = centerY + Math.sin(angle) * 50;
+                const x2 = centerX + Math.cos(angle) * length;
+                const y2 = centerY + Math.sin(angle) * length;
+
+                const gradient = ctx.createLinearGradient(x1, y1, x2, y2);
+                gradient.addColorStop(0, 'rgba(100, 150, 255, 0.8)');
+                gradient.addColorStop(1, 'transparent');
+
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function lightenColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.min(255, (num >> 16) + amt);
+            const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+            const B = Math.min(255, (num & 0x0000FF) + amt);
+            return `rgb(${R}, ${G}, ${B})`;
+        }
+
+        function darkenColor(color, percent) {
+            const num = parseInt(color.replace('#', ''), 16);
+            const amt = Math.round(2.55 * percent);
+            const R = Math.max(0, (num >> 16) - amt);
+            const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+            const B = Math.max(0, (num & 0x0000FF) - amt);
+            return `rgb(${R}, ${G}, ${B})`;
+        }
+
+        // Interactive functions
+        function toggleNebula() {
+            showNebula = !showNebula;
+            document.getElementById('btn-nebula').classList.toggle('active', showNebula);
+        }
+
+        function triggerShootingStar() {
+            const viewCenterX = offsetX;
+            const viewCenterY = offsetY;
+            shootingStars.push({
+                x: viewCenterX + (Math.random() - 0.5) * width / zoom,
+                y: viewCenterY - height / (2 * zoom),
+                vx: (Math.random() - 0.3) * 10,
+                vy: 5 + Math.random() * 5,
+                life: 1
+            });
+        }
+
+        function toggleWarp() {
+            warpMode = !warpMode;
+            document.getElementById('btn-warp').classList.toggle('active', warpMode);
+        }
+
+        function resetView() {
+            offsetX = 0;
+            offsetY = 0;
+            zoom = 1;
+            warpMode = false;
+            warpSpeed = 0;
+            document.getElementById('btn-warp').classList.remove('active');
+        }
+
+        function showInfoPanel(planet) {
+            const panel = document.getElementById('info-panel');
+            document.getElementById('info-title').textContent = planet.name;
+            document.getElementById('info-description').textContent = planet.description;
+            panel.classList.add('visible');
+            planet.glowIntensity = 1;
+        }
+
+        function closeInfoPanel() {
+            document.getElementById('info-panel').classList.remove('visible');
+        }
+
+        // Event listeners
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastX = e.clientX;
+            lastY = e.clientY;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const dx = e.clientX - lastX;
+                const dy = e.clientY - lastY;
+                offsetX -= dx / zoom;
+                offsetY -= dy / zoom;
+                lastX = e.clientX;
+                lastY = e.clientY;
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (isDragging) return;
+
+            const clickX = (e.clientX - width / 2) / zoom + offsetX;
+            const clickY = (e.clientY - height / 2) / zoom + offsetY;
+
+            for (const planet of planets) {
+                const dx = clickX - planet.x;
+                const dy = clickY - planet.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                if (distance < planet.size * 1.5) {
+                    showInfoPanel(planet);
+                    return;
+                }
+            }
+            closeInfoPanel();
+        });
+
+        canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+            const newZoom = Math.max(0.2, Math.min(5, zoom * zoomFactor));
+
+            // Zoom toward mouse position
+            const mouseX = (e.clientX - width / 2) / zoom + offsetX;
+            const mouseY = (e.clientY - height / 2) / zoom + offsetY;
+
+            zoom = newZoom;
+
+            offsetX = mouseX - (e.clientX - width / 2) / zoom;
+            offsetY = mouseY - (e.clientY - height / 2) / zoom;
+        });
+
+        window.addEventListener('resize', resize);
+
+        // Touch support
+        let touchStartX, touchStartY, initialPinchDistance;
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                lastX = touchStartX;
+                lastY = touchStartY;
+            } else if (e.touches.length === 2) {
+                isDragging = false;
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                initialPinchDistance = Math.sqrt(dx * dx + dy * dy);
+            }
+        });
+
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (e.touches.length === 1 && isDragging) {
+                const dx = e.touches[0].clientX - lastX;
+                const dy = e.touches[0].clientY - lastY;
+                offsetX -= dx / zoom;
+                offsetY -= dy / zoom;
+                lastX = e.touches[0].clientX;
+                lastY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const currentDistance = Math.sqrt(dx * dx + dy * dy);
+                const scale = currentDistance / initialPinchDistance;
+                zoom = Math.max(0.2, Math.min(5, zoom * scale));
+                initialPinchDistance = currentDistance;
+            }
+        });
+
+        canvas.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch (e.key.toLowerCase()) {
+                case 'n':
+                    toggleNebula();
+                    break;
+                case 's':
+                    triggerShootingStar();
+                    break;
+                case 'w':
+                    toggleWarp();
+                    break;
+                case 'r':
+                    resetView();
+                    break;
+                case 'escape':
+                    closeInfoPanel();
+                    break;
+            }
+        });
+
+        // Initialize on load
+        init();
+        document.getElementById('btn-nebula').classList.add('active');
+    </script>
+</body>
+</html>

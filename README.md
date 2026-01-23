@@ -12,10 +12,173 @@
 
 ## Install (30 seconds)
 
+### Option A: Drop-in (per-project)
+
 1. Copy just the **`marge_simpson/`** folder into your repo root
 2. Use a prompt template below
 
 > **💡 Renamed the folder?** Replace `marge_simpson` with your folder name in prompts.
+
+### Option B: Global Install (multi-project)
+
+For users working across multiple repos who want:
+- **Clean repos** — `marge_simpson/` is gitignored, not committed
+- **Shared resources** — experts, workflows, and knowledge shared globally
+- **Per-project tracking** — MS-IDs and logs isolated per project
+
+**Install globally:**
+```bash
+# macOS/Linux
+./install-global.sh
+
+# Windows
+.\install-global.ps1
+```
+
+**Use the CLI:**
+```bash
+# Single task mode
+marge "fix the login bug"              # Run task with spinner + timer
+marge "add dark mode" --model opus     # Override model
+marge "audit codebase" --dry-run       # Preview without executing
+
+# PRD mode (run tasks from PRD.md)
+marge                                  # Run all tasks from PRD.md
+marge --parallel --max-parallel 3      # Run tasks in parallel
+marge --branch-per-task --create-pr    # Git workflow automation
+
+# Loop mode
+marge "full cleanup" --loop            # Iterate until complete
+marge --loop --max-iterations 10       # Limit iterations
+
+# Utilities
+marge init                             # Initialize .marge/ config + PRD.md template
+marge status                           # Show project type, progress, PRD tasks
+marge resume                           # Resume from saved progress
+marge config                           # Show config file
+```
+
+**Options:**
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | Preview prompt without launching claude |
+| `--model <model>` | Override model (sonnet, opus, haiku) |
+| `--engine <e>` | AI engine: claude, opencode, codex, aider |
+| `--fast` | Skip verification steps |
+| `--loop` | Keep iterating until task complete |
+| `--max-iterations N` | Max iterations (default: 20) |
+| `--max-retries N` | Max retries per task (default: 3) |
+| `--parallel` | Run tasks in parallel using git worktrees |
+| `--max-parallel N` | Max concurrent tasks (default: 3) |
+| `--branch-per-task` | Create separate git branch for each task |
+| `--create-pr` | Create PR when done (requires gh CLI) |
+| `--no-commit` | Disable auto-commit |
+| `-v, --verbose` | Debug output |
+| `--version` | Show version |
+
+The `marge` command:
+1. Auto-initializes `marge_simpson/` if not present
+2. Launches `claude` in non-interactive mode (`-p` flag)
+3. Shows a spinner with timer while working (Simpsons-themed colors!)
+4. Displays token usage and cost after completion
+5. Claude follows AGENTS.md rules, tracks work with MS-IDs, verifies changes
+
+---
+
+## PRD Mode (Task Lists)
+
+Run multiple tasks from a `PRD.md` file:
+
+```markdown
+# PRD
+
+### Task 1: Setup
+- [ ] Initialize project structure
+
+### Task 2: Implementation
+- [ ] Build main features
+
+### Task 3: Testing
+- [ ] Write unit tests
+```
+
+```bash
+marge                    # Runs all tasks sequentially
+marge --parallel         # Runs tasks in parallel (git worktrees)
+marge --dry-run          # Preview tasks without executing
+```
+
+---
+
+## Config File
+
+Place `.marge/config.yaml` in your project to set defaults:
+
+```yaml
+engine: claude           # claude, opencode, codex, aider
+model: ""                # sonnet, opus, haiku (or leave empty)
+max_iterations: 20
+max_retries: 3
+auto_commit: true
+```
+
+---
+
+## Progress & Resume
+
+Marge saves progress to `.marge/progress.txt` so you can resume interrupted work:
+
+```bash
+marge status             # Check current progress
+marge resume             # Continue from where you left off
+```
+
+---
+
+## Smart Project Detection
+
+Marge auto-detects your project type:
+- **Node.js** — `package.json`
+- **Rust** — `Cargo.toml`
+- **Go** — `go.mod`
+- **Python** — `requirements.txt` or `pyproject.toml`
+- **Ruby** — `Gemfile`
+
+---
+
+## UX Features
+
+| Feature | Description |
+|---------|-------------|
+| **Spinner** | Animated progress indicator with Marge's hair blue 💙 |
+| **Timer** | Shows elapsed time `[MM:SS]` |
+| **Step Detection** | Working → Reading → Writing → Testing → Committing |
+| **Token Display** | Shows input/output tokens and cost after completion |
+| **Notifications** | Desktop notifications on completion (Linux/macOS) |
+
+This creates `marge_simpson/` with:
+- **Symlinks** to `~/.marge/shared/` (AGENTS.md, experts, workflows, scripts)
+- **Local copies** of tracking files (assessment.md, tasklist.md, verify.config.json)
+- Auto-adds `marge_simpson/` to `.gitignore`
+
+**Structure:**
+```
+~/.marge/
+├── shared/           # Symlinked to all projects
+│   ├── AGENTS.md
+│   ├── experts/      # Add custom experts here (shared across projects)
+│   ├── workflows/
+│   ├── scripts/
+│   └── knowledge/
+├── templates/        # Copied per-project
+│   ├── assessment.md
+│   ├── tasklist.md
+│   └── verify.config.json
+├── marge             # CLI wrapper (marge run, marge status, etc.)
+└── marge-init        # Project initialization script
+```
+
+> **💡 Custom experts:** Add domain-specific expert files to `~/.marge/shared/experts/` and they'll be available in all your projects.
 
 ---
 
