@@ -173,7 +173,7 @@ while IFS= read -r -d '' file; do
   content="$original_content"
 
   # Skip meta/README.md - it documents meta-development and references should stay as original
-  relative_path="${file#$TARGET_FOLDER/}"
+  relative_path="${file#"$TARGET_FOLDER"/}"
   if [[ "$relative_path" == "meta/README.md" ]]; then
     continue
   fi
