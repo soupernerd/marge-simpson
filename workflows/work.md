@@ -32,7 +32,7 @@ Read `experts/_index.md` and scan for keywords matching your task:
 Grep `knowledge/decisions.md` for tags related to your task:
 
 ```powershell
-Select-String -Path "marge_simpson/knowledge/decisions.md" -Pattern "#auth|#api|#database"
+Select-String -Path "knowledge/decisions.md" -Pattern "#auth|#api|#database"
 ```
 
 **Apply any relevant decisions** — don't contradict prior architectural choices without explicit approval.
@@ -55,7 +55,7 @@ Select-String -Path "marge_simpson/knowledge/decisions.md" -Pattern "#auth|#api|
 ### For BUGS/IMPROVEMENTS/REFACTORS
 
 1. Create the next MS-#### ID
-2. Add entry to `marge_simpson/assessment.md`:
+2. Add entry to `assessment.md`:
    ```markdown
    ### [MS-####] Short description
    - **Type:** bug | feature | improvement | refactor
@@ -66,12 +66,12 @@ Select-String -Path "marge_simpson/knowledge/decisions.md" -Pattern "#auth|#api|
    - **Verification:** How to confirm it works
    - **Files:** (fill in as you work)
    ```
-3. Add task to `marge_simpson/tasklist.md`:
+3. Add task to `tasklist.md`:
    ```markdown
    ### [MS-####] Short description
    - **Type:** bug | feature | improvement
    - **DoD:** What "done" looks like
-   - **Verification:** `./marge_simpson/scripts/verify.ps1 fast`
+   - **Verification:** `./scripts/verify.ps1 fast`
    - **Status:** [ ] Not started
    ```
 4. Increment `Next ID` in BOTH files
@@ -102,7 +102,7 @@ Select-String -Path "marge_simpson/knowledge/decisions.md" -Pattern "#auth|#api|
                ▼
 ┌─────────────────────────────────────┐
 │  2. VERIFY                          │
-│     - Run: ./marge_simpson/scripts/verify.ps1 fast │
+│     - Run: ./scripts/verify.ps1 fast │
 │     - Run any item-specific tests   │
 │     - Capture raw output            │
 └──────────────┬──────────────────────┘

@@ -5,9 +5,9 @@ Runs repo verification commands (tests/lint/build) and writes a timestamped log.
 This script auto-detects its own folder name, so you can rename the folder if needed.
 
 Usage:
-  powershell -ExecutionPolicy Bypass -File .\marge_simpson\scripts\verify.ps1 fast
-  powershell -ExecutionPolicy Bypass -File .\marge_simpson\scripts\verify.ps1 full
-  powershell -ExecutionPolicy Bypass -File .\marge_simpson\scripts\verify.ps1 fast -SkipIfNoTests
+  powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1 fast
+  powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1 full
+  powershell -ExecutionPolicy Bypass -File .\scripts\verify.ps1 fast -SkipIfNoTests
 
 Options:
   -Profile       fast|full (default: fast)

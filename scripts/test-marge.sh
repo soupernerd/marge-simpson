@@ -10,7 +10,7 @@ set -euo pipefail
 # 4. Cleanup script runs in preview mode
 #
 # Usage:
-#   ./marge_simpson/scripts/test-marge.sh
+#   ./scripts/test-marge.sh
 
 # Dynamic folder detection (scripts are now in scripts/ subfolder)
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

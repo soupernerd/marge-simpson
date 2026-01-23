@@ -10,7 +10,7 @@ Validates core installation:
 6. Cleanup script runs in preview mode
 
 Usage:
-  powershell -ExecutionPolicy Bypass -File .\marge_simpson\scripts\test-marge.ps1
+  powershell -ExecutionPolicy Bypass -File .\scripts\test-marge.ps1
 #>
 
 $ErrorActionPreference = "Stop"

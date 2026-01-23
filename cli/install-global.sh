@@ -12,7 +12,7 @@ set -euo pipefail
 #   -h, --help        Show this help message
 #
 # After installation, use 'marge-init' in any project directory to set up
-# marge_simpson/ with symlinks to shared resources and local tracking files.
+# .marge/ with symlinks to shared resources and local tracking files.
 
 INSTALL_DIR="${HOME}/.marge"
 FORCE=0
@@ -44,10 +44,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SRC="$SRC_DIR/marge_simpson"
+REPO_ROOT="$(cd "$SRC_DIR/.." && pwd)"
 
-if [[ ! -d "$SRC" ]]; then
-    echo "Error: marge_simpson/ folder not found in $SRC_DIR" >&2
+if [[ ! -f "$REPO_ROOT/AGENTS.md" ]]; then
+    echo "Error: AGENTS.md not found in $REPO_ROOT" >&2
     exit 1
 fi
 
@@ -82,8 +82,8 @@ SHARED_FILES=(
 )
 
 for item in "${SHARED_FILES[@]}"; do
-    if [[ -e "$SRC/$item" ]]; then
-        cp -R "$SRC/$item" "$INSTALL_DIR/shared/"
+    if [[ -e "$REPO_ROOT/$item" ]]; then
+        cp -R "$REPO_ROOT/$item" "$INSTALL_DIR/shared/"
     fi
 done
 
@@ -96,8 +96,8 @@ TEMPLATE_FILES=(
 )
 
 for item in "${TEMPLATE_FILES[@]}"; do
-    if [[ -e "$SRC/$item" ]]; then
-        cp "$SRC/$item" "$INSTALL_DIR/templates/"
+    if [[ -e "$REPO_ROOT/$item" ]]; then
+        cp "$REPO_ROOT/$item" "$INSTALL_DIR/templates/"
     fi
 done
 
@@ -186,6 +186,6 @@ echo "  marge \"refactor\" --model opus    # Use specific model"
 echo "  marge \"audit\" --dry-run          # Preview prompt"
 echo "  marge \"cleanup\" --loop           # Iterate until done"
 echo "  marge \"hotfix\" --fast            # Skip verification"
-echo "  marge init                        # Initialize marge_simpson/"
+echo "  marge init                        # Initialize .marge/"
 echo "  marge status                      # Show marge status"
 echo "  marge --help                      # Show all commands"

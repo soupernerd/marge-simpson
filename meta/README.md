@@ -24,26 +24,26 @@ Meta-development means improving the Marge system while using it. This creates a
 ## How It Works
 
 ```
-marge_simpson/          ← Source of truth (committed to git)
+/                           ← Repo root (source of truth, committed to git)
       ↓
  convert-to-meta.sh
       ↓
-.marge_meta/            ← Working copy (gitignored)
+.marge_meta/                ← Working copy (gitignored)
       ↓
  (make improvements using AI)
       ↓
  convert-to-meta.sh --reverse
       ↓
-marge_simpson/          ← Updated with improvements
+/                           ← Updated with improvements
 ```
 
 ## The Conversion Process
 
 `convert-to-meta.sh` does:
 
-1. **Copies** all files from source to `.marge_meta/`
+1. **Copies** all files from repo root to `.marge_meta/`
 2. **Transforms** internal path references:
-   - `marge_simpson/` → `.marge_meta/`
+   - `.marge/` → `.marge_meta/`
    - Script paths updated
 3. **Resets** assessment.md and tasklist.md to clean state
 

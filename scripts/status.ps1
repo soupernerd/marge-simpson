@@ -11,7 +11,7 @@
     - Next task recommendation
 
 .EXAMPLE
-    .\marge_simpson\scripts\status.ps1
+    .\scripts\status.ps1
 #>
 
 $ErrorActionPreference = "SilentlyContinue"

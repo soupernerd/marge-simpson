@@ -28,10 +28,10 @@ param(
 $ErrorActionPreference = "Stop"
 
 $SrcDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$Src = Join-Path $SrcDir "marge_simpson"
+$RepoRoot = Split-Path -Parent $SrcDir
 
-if (-not (Test-Path $Src)) {
-    Write-Error "marge_simpson/ folder not found in $SrcDir"
+if (-not (Test-Path (Join-Path $RepoRoot "AGENTS.md"))) {
+    Write-Error "AGENTS.md not found in $RepoRoot"
     exit 1
 }
 
@@ -67,7 +67,7 @@ $SharedItems = @(
 )
 
 foreach ($item in $SharedItems) {
-    $srcPath = Join-Path $Src $item
+    $srcPath = Join-Path $RepoRoot $item
     if (Test-Path $srcPath) {
         Copy-Item -Recurse -Force $srcPath "$InstallDir\shared\"
     }
@@ -82,7 +82,7 @@ $TemplateItems = @(
 )
 
 foreach ($item in $TemplateItems) {
-    $srcPath = Join-Path $Src $item
+    $srcPath = Join-Path $RepoRoot $item
     if (Test-Path $srcPath) {
         Copy-Item -Force $srcPath "$InstallDir\templates\"
     }
@@ -147,5 +147,5 @@ Write-Host "Or add $InstallDir to your PATH."
 Write-Host ""
 Write-Host "Usage:"
 Write-Host "  cd your-project"
-Write-Host "  marge-init          # Initialize marge_simpson/ with symlinks"
+Write-Host "  marge-init          # Initialize .marge/ with symlinks"
 Write-Host "  marge-init -Force   # Reinitialize (overwrites existing)"

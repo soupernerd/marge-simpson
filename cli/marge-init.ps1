@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Initialize marge_simpson/ in the current project directory.
+    Initialize .marge/ in the current project directory.
 
 .DESCRIPTION
     Creates a hybrid setup with:
@@ -8,10 +8,10 @@
     - Local per-project files (assessment.md, tasklist.md, verify_logs/)
 
 .PARAMETER Force
-    Overwrite existing marge_simpson/ folder.
+    Overwrite existing .marge/ folder.
 
 .PARAMETER NoGitignore
-    Don't add marge_simpson/ to .gitignore.
+    Don't add .marge/ to .gitignore.
 
 .PARAMETER MargeHome
     Path to global marge installation. Default: $env:USERPROFILE\.marge
@@ -36,7 +36,7 @@ if (-not $MargeHome) {
     $MargeHome = if ($env:MARGE_HOME) { $env:MARGE_HOME } else { "$env:USERPROFILE\.marge" }
 }
 
-$TargetDir = ".\marge_simpson"
+$TargetDir = ".\.marge"
 
 # Validate global installation
 if (-not (Test-Path "$MargeHome\shared")) {
@@ -61,7 +61,7 @@ if (Test-Path $TargetDir) {
     Remove-Item -Recurse -Force $TargetDir
 }
 
-Write-Host "Initializing marge_simpson/..."
+Write-Host "Initializing .marge/..."
 
 # Create directory structure
 New-Item -ItemType Directory -Force -Path "$TargetDir\verify_logs" | Out-Null
@@ -124,22 +124,22 @@ foreach ($item in $TemplateFiles) {
 # Update .gitignore
 if (-not $NoGitignore) {
     $gitignorePath = ".\.gitignore"
-    $margeEntry = "marge_simpson/"
+    $margeEntry = ".marge/"
 
     if (Test-Path $gitignorePath) {
         $content = Get-Content $gitignorePath -Raw -ErrorAction SilentlyContinue
-        if ($content -notmatch "(?m)^marge_simpson/`$") {
-            Add-Content $gitignorePath "`n# Marge workflow folder (local tooling)`nmarge_simpson/"
-            Write-Host "Added marge_simpson/ to .gitignore"
+        if ($content -notmatch "(?m)^\.marge/`$") {
+            Add-Content $gitignorePath "`n# Marge workflow folder (local tooling)`n.marge/"
+            Write-Host "Added .marge/ to .gitignore"
         }
     } else {
-        Set-Content $gitignorePath "# Marge workflow folder (local tooling)`nmarge_simpson/"
-        Write-Host "Created .gitignore with marge_simpson/"
+        Set-Content $gitignorePath "# Marge workflow folder (local tooling)`n.marge/"
+        Write-Host "Created .gitignore with .marge/"
     }
 }
 
 Write-Host ""
-Write-Host "marge_simpson/ initialized" -ForegroundColor Green
+Write-Host ".marge/ initialized" -ForegroundColor Green
 Write-Host ""
 
 if ($SymlinkFailed) {
@@ -148,7 +148,7 @@ if ($SymlinkFailed) {
     Write-Host "Structure:"
 }
 
-Write-Host "  marge_simpson\"
+Write-Host "  .marge\"
 Write-Host "  ├── AGENTS.md           → $MargeHome\shared\ $(if($SymlinkFailed){'(copy)'}else{'(symlink)'})"
 Write-Host "  ├── experts\            → $MargeHome\shared\ $(if($SymlinkFailed){'(copy)'}else{'(symlink)'})"
 Write-Host "  ├── workflows\          → $MargeHome\shared\ $(if($SymlinkFailed){'(copy)'}else{'(symlink)'})"
@@ -163,6 +163,6 @@ Write-Host ""
 Write-Host "Edit verify.config.json to configure your project's test commands."
 Write-Host ""
 Write-Host "Ready to use marge! Start with:"
-Write-Host "  - Read marge_simpson\AGENTS.md for workflow rules"
-Write-Host "  - Add tasks to marge_simpson\tasklist.md"
-Write-Host "  - Run verification: .\marge_simpson\scripts\verify.ps1 fast"
+Write-Host "  - Read .marge\AGENTS.md for workflow rules"
+Write-Host "  - Add tasks to .marge\tasklist.md"
+Write-Host "  - Run verification: .\.marge\scripts\verify.ps1 fast"

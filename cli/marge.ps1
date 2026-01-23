@@ -10,7 +10,7 @@
     The task to perform, passed as a prompt to the AI
 
 .PARAMETER Folder
-    Target folder for Marge operations (default: marge_simpson)
+    Target folder for Marge operations (default: .marge)
 
 .PARAMETER Engine
     AI engine to use: claude, opencode, codex, aider (default: claude)
@@ -70,7 +70,7 @@ $script:MAX_RETRIES = if ($env:MAX_RETRIES) { [int]$env:MAX_RETRIES } else { 3 }
 $script:RETRY_DELAY = if ($env:RETRY_DELAY) { [int]$env:RETRY_DELAY } else { 5 }
 $script:AUTO_COMMIT = $true
 $script:ENGINE = "claude"
-$script:MARGE_FOLDER = if ($env:MARGE_FOLDER) { $env:MARGE_FOLDER } else { "marge_simpson" }
+$script:MARGE_FOLDER = if ($env:MARGE_FOLDER) { $env:MARGE_FOLDER } else { ".marge" }
 $script:PRD_FILE = "PRD.md"
 $script:CONFIG_FILE = ".marge\config.yaml"
 $script:PROGRESS_FILE = ".marge\progress.txt"
@@ -110,7 +110,7 @@ OPTIONS:
   -Fast              Skip verification
   -Loop              Loop until complete
   -Engine <e>        Engine: claude, opencode, codex, aider
-  -Folder <dir>      Target Marge folder (default: marge_simpson)
+  -Folder <dir>      Target Marge folder (default: .marge)
   -MaxIterations N   Max iterations (default: $script:MAX_ITER)
   -MaxRetries N      Max retries per task (default: $script:MAX_RETRIES)
   -NoCommit          Disable auto-commit
@@ -129,11 +129,11 @@ CONFIG FILE:
     engine: claude
     model: ""
     max_iterations: 20
-    folder: marge_simpson
+    folder: .marge
 
 ENVIRONMENT:
   MARGE_HOME         Installation directory (default: ~/.marge)
-  MARGE_FOLDER       Default folder (default: marge_simpson)
+  MARGE_FOLDER       Default folder (default: .marge)
 
 "@
     Write-Host $usage
@@ -464,7 +464,7 @@ model: ""
 max_iterations: 20
 max_retries: 3
 auto_commit: true
-folder: marge_simpson
+folder: .marge
 "@ | Out-File -FilePath ".marge\config.yaml" -Encoding utf8
 
     if (-not (Test-Path "PRD.md")) {

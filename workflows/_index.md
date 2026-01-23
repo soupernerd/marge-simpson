@@ -4,29 +4,29 @@
 
 ## Scope Inference
 
-When both `meta_marge/` and `marge_simpson/` exist, paths can be ambiguous.
+When both `.marge_meta/` and `.marge/` exist, paths can be ambiguous.
 
 ### Rule: Ask When Ambiguous
 
 If the user references a shared path (e.g., "fix prompt_examples/", "update README.md"):
 
-> "I noticed you have both `meta_marge/` and `marge_simpson/`. Which folder should I apply this to?
-> - `marge_simpson/` (source of truth)
-> - `meta_marge/` (working copy for meta-development)"
+> "I noticed you have both `.marge_meta/` and `.marge/`. Which folder should I apply this to?
+> - `.marge/` (source of truth)
+> - `.marge_meta/` (working copy for meta-development)"
 
 ### When NOT Ambiguous
 
 | Signal | Target |
 |--------|--------|
 | User explicitly names folder | Use that folder |
-| Only `marge_simpson/` exists | User's project (repo root) |
+| Only `.marge/` exists | User's project (repo root) |
 | Path only exists in one folder | Use that folder |
 
 ### Tracking Always Follows AGENTS.md
 
 Whichever AGENTS.md you read determines where IDs go:
-- Read `meta_marge/AGENTS.md` → IDs in `meta_marge/tasklist.md`
-- Read `marge_simpson/AGENTS.md` → IDs in `marge_simpson/tasklist.md`
+- Read `.marge_meta/AGENTS.md` → IDs in `.marge_meta/tasklist.md`
+- Read `.marge/AGENTS.md` → IDs in `.marge/tasklist.md`
 
 ## Quick Reference
 

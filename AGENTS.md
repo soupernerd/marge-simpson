@@ -3,9 +3,9 @@
 **Priority:** correctness > safety > minimal diffs > speed
 
 **Scope (CRITICAL):**
-1. The `marge_simpson/` folder is **excluded from audits** — it is the tooling, not the target, unless `meta_marge/` exists and is being used to update Marge.
+1. This Marge folder (`.marge/` or similar) is **excluded from audits** — it is the tooling, not the target, unless `.marge_meta/` exists and is being used to update Marge.
 2. Audit the workspace/repo OUTSIDE this folder. Track findings HERE in `assessment.md` and `tasklist.md`.
-3. Never create marge_simpson files outside this folder.
+3. Never create Marge files outside this folder.
 
 ---
 
@@ -37,10 +37,10 @@ IMPLEMENT → VERIFY → RECORD → COMPLETE
 
 ```bash
 # Windows
-./marge_simpson/scripts/verify.ps1 fast -SkipIfNoTests
+./scripts/verify.ps1 fast -SkipIfNoTests
 
 # macOS/Linux
-./marge_simpson/scripts/verify.sh fast --skip-if-no-tests
+./scripts/verify.sh fast --skip-if-no-tests
 ```
 
 **Never claim "tests passed" without raw output or log path.**
@@ -78,7 +78,7 @@ End every response with:
 
 `📊 ~In: X,XXX | Out: X,XXX | Est: $X.XXXX`
 
-Pricing in `marge_simpson/model_pricing.json`.
+Pricing in `model_pricing.json`.
 
 ---
 

@@ -29,7 +29,7 @@ CREATE_PR=false
 PARALLEL=false
 MAX_PARALLEL=${MAX_PARALLEL:-3}
 PRD_FILE="PRD.md"
-MARGE_FOLDER="${MARGE_FOLDER:-marge_simpson}"
+MARGE_FOLDER="${MARGE_FOLDER:-.marge}"
 
 # State
 iteration=0
@@ -82,7 +82,7 @@ ${BOLD}OPTIONS:${RESET}
   --fast              Skip verification
   --loop              Loop until complete
   --engine <e>        Engine: claude, opencode, codex, aider
-  --folder <dir>      Target Marge folder (default: marge_simpson)
+  --folder <dir>      Target Marge folder (default: .marge)
   --max-iterations N  Max iterations (default: $MAX_ITER)
   --max-retries N     Max retries per task (default: $MAX_RETRIES)
   --no-commit         Disable auto-commit
@@ -108,11 +108,11 @@ ${BOLD}CONFIG FILE:${RESET}
     max_iterations: 20
     max_retries: 3
     auto_commit: true
-    folder: marge_simpson
+    folder: .marge
 
 ${BOLD}ENVIRONMENT:${RESET}
   MARGE_HOME          Installation directory (default: ~/.marge)
-  MARGE_FOLDER        Default folder (default: marge_simpson)
+  MARGE_FOLDER        Default folder (default: .marge)
 
 ${BOLD}PRD FORMAT:${RESET}
   Tasks are parsed from PRD.md using "### Task N: Title" format.
@@ -197,7 +197,7 @@ load_config() {
             max_iterations) MAX_ITER="$value" ;;
             max_retries) MAX_RETRIES="$value" ;;
             auto_commit) AUTO_COMMIT="$value" ;;
-            folder) [[ -z "$MARGE_FOLDER" || "$MARGE_FOLDER" == "marge_simpson" ]] && MARGE_FOLDER="$value" ;;
+            folder) [[ -z "$MARGE_FOLDER" || "$MARGE_FOLDER" == ".marge" ]] && MARGE_FOLDER="$value" ;;
         esac
     done < <(grep -v '^#' "$CONFIG_FILE" | tr ':' '=' 2>/dev/null)
 }
