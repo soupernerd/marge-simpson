@@ -11,14 +11,14 @@ Meta-development means improving the Marge system while using it. This creates a
 ```bash
 # 1. Create meta working copy
 ./meta/convert-to-meta.sh
-# Creates: .marge_meta/
+# Creates: .marge_meta/ (or meta_marge/ if in marge_simpson/)
 
 # 2. Work on Marge using Marge
 ./cli/marge --folder .marge_meta "run self-audit"
 # OR in chat: "Read AGENTS.md in .marge_meta and run a self-audit"
 
-# 3. When satisfied, copy changes back
-./meta/convert-to-meta.sh --reverse
+# 3. When satisfied, manually copy specific changed files back
+#    Review changes carefully before committing
 ```
 
 ## How It Works
@@ -32,7 +32,7 @@ Meta-development means improving the Marge system while using it. This creates a
       ↓
  (make improvements using AI)
       ↓
- convert-to-meta.sh --reverse
+ (manually copy specific changes back)
       ↓
 /                           ← Updated with improvements
 ```
@@ -57,14 +57,16 @@ Meta-development means improving the Marge system while using it. This creates a
 
 ### Copy Changes Back
 ```bash
-./meta/convert-to-meta.sh --reverse    # Copy .marge_meta/ back to source
+# Manual process - review what changed and copy specific files
+# There's no automatic reverse to encourage careful review
+diff -r .marge_meta/ ./                # Compare changes
+cp .marge_meta/AGENTS.md ./AGENTS.md   # Copy specific improved files
 ```
 
 ### PowerShell
 ```powershell
 .\meta\convert-to-meta.ps1
 .\meta\convert-to-meta.ps1 -Force
-.\meta\convert-to-meta.ps1 -Reverse
 ```
 
 ## Best Practices

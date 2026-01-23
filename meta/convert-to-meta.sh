@@ -1,64 +1,83 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# convert-to-meta.sh — Converts marge_simpson folder into meta_marge for meta-development
+# convert-to-meta.sh — Creates .marge_meta/ for meta-development
 #
-# This script copies marge_simpson to meta_marge (or updates existing meta_marge)
-# and transforms ALL internal paths and references from marge_simpson to meta_marge.
+# This script copies the current Marge folder to a sibling .marge_meta/ folder
+# and transforms internal references from .marge to .marge_meta.
 #
-# It dynamically discovers all files in the source folder - no hardcoded file lists.
-# This ensures the script works even when marge_simpson changes (files added, removed, renamed).
+# Run this from inside a .marge folder (or any Marge folder at repo root).
+# It creates a meta-development copy for testing changes to Marge itself.
 #
 # Usage:
-#   ./convert-to-meta.sh
-#   ./convert-to-meta.sh -f                    # Force overwrite
-#   ./convert-to-meta.sh -s marge_simpson -t my_meta_marge
+#   ./meta/convert-to-meta.sh              # From repo root
+#   ../meta/convert-to-meta.sh             # From within a .marge folder
+#   ./meta/convert-to-meta.sh -f           # Force overwrite
 
 # Defaults
-SOURCE_NAME="marge_simpson"
-TARGET_NAME="meta_marge"
 FORCE=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
   case "$1" in
     -f|--force) FORCE=true; shift ;;
-    -s|--source) SOURCE_NAME="$2"; shift 2 ;;
-    -t|--target) TARGET_NAME="$2"; shift 2 ;;
     -h|--help)
-      echo "Usage: $0 [-f|--force] [-s|--source NAME] [-t|--target NAME]"
+      echo "Usage: $0 [-f|--force]"
+      echo ""
+      echo "Creates .marge_meta/ folder for meta-development."
+      echo "Run from within a Marge folder or repo root."
       echo ""
       echo "Options:"
-      echo "  -f, --force     Overwrite existing target folder without prompting"
-      echo "  -s, --source    Source folder name (default: marge_simpson)"
-      echo "  -t, --target    Target folder name (default: meta_marge)"
+      echo "  -f, --force     Overwrite existing .marge_meta/ without prompting"
       exit 0
       ;;
     *) shift ;;
   esac
 done
 
-# Paths
+# Determine source folder (where the Marge files are)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$SCRIPT_DIR"
-SOURCE_FOLDER="$REPO_ROOT/$SOURCE_NAME"
-TARGET_FOLDER="$REPO_ROOT/$TARGET_NAME"
+
+# If script is in meta/, go up one level to find the Marge root
+if [[ "$(basename "$SCRIPT_DIR")" == "meta" ]]; then
+  SOURCE_FOLDER="$(dirname "$SCRIPT_DIR")"
+else
+  SOURCE_FOLDER="$SCRIPT_DIR"
+fi
+
+# Detect source folder name
+SOURCE_NAME=$(basename "$SOURCE_FOLDER")
+
+# Handle common folder names
+if [[ "$SOURCE_NAME" == ".marge" ]]; then
+  TARGET_NAME=".marge_meta"
+elif [[ "$SOURCE_NAME" == "marge_simpson" ]]; then
+  TARGET_NAME="meta_marge"
+elif [[ "$SOURCE_NAME" == ".marge_meta" ]] || [[ "$SOURCE_NAME" == "meta_marge" ]]; then
+  echo "ERROR: Already in a meta-development folder ($SOURCE_NAME)"
+  echo "This script creates the meta folder - you're already in one."
+  exit 1
+else
+  # Generic case: append _meta
+  TARGET_NAME="${SOURCE_NAME}_meta"
+fi
+
+# Target is a sibling folder
+TARGET_FOLDER="$(dirname "$SOURCE_FOLDER")/$TARGET_NAME"
 
 echo ""
 echo "============================================================"
 echo " Convert $SOURCE_NAME -> $TARGET_NAME"
 echo "============================================================"
 echo ""
+echo "Source: $SOURCE_FOLDER"
+echo "Target: $TARGET_FOLDER"
+echo ""
 
-# Validate source exists
-if [[ ! -d "$SOURCE_FOLDER" ]]; then
-  echo "ERROR: Source folder not found: $SOURCE_FOLDER"
-  exit 1
-fi
-
-# Prevent converting to itself
-if [[ "$SOURCE_NAME" == "$TARGET_NAME" ]]; then
-  echo "ERROR: Source and target names cannot be the same."
+# Validate source has AGENTS.md (confirms it's a Marge folder)
+if [[ ! -f "$SOURCE_FOLDER/AGENTS.md" ]]; then
+  echo "ERROR: Not a valid Marge folder (no AGENTS.md found)"
+  echo "Run this script from inside a Marge folder or repo root."
   exit 1
 fi
 
@@ -77,14 +96,23 @@ else
   echo "[1/5] Target folder does not exist, will create fresh."
 fi
 
-# Copy folder
+# Copy folder (excluding .git, node_modules, etc.)
 echo "[2/5] Copying $SOURCE_NAME -> $TARGET_NAME..."
-cp -r "$SOURCE_FOLDER" "$TARGET_FOLDER"
+mkdir -p "$TARGET_FOLDER"
+
+# Use rsync if available for better exclusion, otherwise cp
+if command -v rsync &>/dev/null; then
+  rsync -a --exclude='.git' --exclude='node_modules' --exclude='.marge_meta' --exclude='meta_marge' "$SOURCE_FOLDER/" "$TARGET_FOLDER/"
+else
+  cp -r "$SOURCE_FOLDER/." "$TARGET_FOLDER/"
+  # Remove any nested meta folders that got copied
+  rm -rf "$TARGET_FOLDER/.git" "$TARGET_FOLDER/node_modules" "$TARGET_FOLDER/.marge_meta" "$TARGET_FOLDER/meta_marge" 2>/dev/null || true
+fi
 
 # Text file extensions to transform
 TEXT_EXTENSIONS="md|txt|json|yml|yaml|toml|ps1|sh|bash|zsh|py|js|ts|jsx|tsx|html|css|scss|less|xml|config|cfg|ini|env|gitignore|dockerignore|sql|graphql|prisma"
 
-echo "[3/5] Transforming file contents (dynamic discovery)..."
+echo "[3/5] Transforming file contents..."
 
 TRANSFORMED_COUNT=0
 SKIPPED_COUNT=0
@@ -121,43 +149,7 @@ while IFS= read -r -d '' file; do
   original_content=$(cat "$file" 2>/dev/null) || continue
   content="$original_content"
 
-  # Protect contextual patterns where both folder names should appear together
-  # (documentation explaining the dual-folder architecture)
-  PLACEHOLDER1="###BOTH_FOLDERS_1###"
-  PLACEHOLDER2="###BOTH_FOLDERS_2###"
-  PLACEHOLDER3="###SOURCE_TRUTH###"
-  PLACEHOLDER5="###READ_SOURCE_AGENTS###"
-  PLACEHOLDER6="###IDS_SOURCE_TASKLIST###"
-  # README.md Repository Architecture section placeholders
-  PLACEHOLDER7="###README_PROD_TEMPLATE###"
-  PLACEHOLDER8="###README_SOURCE_TRUTH###"
-  PLACEHOLDER9="###README_CREATE_FROM###"
-  PLACEHOLDER10="###README_CHANGES_FLOW###"
-  PLACEHOLDER11="###README_CONTRIB_TEMPLATE###"
-  PLACEHOLDER12="###README_COPY_BACK###"
-  PLACEHOLDER13="###README_VERSION_SOURCE###"
-  
-  content=${content//"both \`$SOURCE_NAME/\` and \`$TARGET_NAME/\`"/"$PLACEHOLDER1"}
-  content=${content//"both \`$TARGET_NAME/\` and \`$SOURCE_NAME/\`"/"$PLACEHOLDER2"}
-  content=${content//"$SOURCE_NAME/\` (source of truth)"/"$PLACEHOLDER3"}
-  content=${content//"Read \`$SOURCE_NAME/AGENTS.md\`"/"$PLACEHOLDER5"}
-  content=${content//"IDs in \`$SOURCE_NAME/tasklist.md\`"/"$PLACEHOLDER6"}
-  # README.md Repository Architecture section protections
-  content=${content//"| \`$SOURCE_NAME/\` | **Production template**"/"$PLACEHOLDER7"}
-  content=${content//"- \`$SOURCE_NAME/\` is the **source of truth**"/"$PLACEHOLDER8"}
-  content=${content//"create \`$TARGET_NAME/\` from \`$SOURCE_NAME/\`"/"$PLACEHOLDER9"}
-  content=${content//"Changes flow: \`$SOURCE_NAME/\`"/"$PLACEHOLDER10"}
-  content=${content//"| \`$SOURCE_NAME/\` | Template for end users"/"$PLACEHOLDER11"}
-  content=${content//"Copy changes back to \`$SOURCE_NAME/\`"/"$PLACEHOLDER12"}
-  content=${content//"\`$SOURCE_NAME/VERSION\`"/"$PLACEHOLDER13"}
-
-  # Replace Windows-style backslash paths
-  content=${content//".\\$SOURCE_NAME\\"/".\\$TARGET_NAME\\"}
-  content=${content//"$SOURCE_NAME\\"/"$TARGET_NAME\\"}
-  
-  # Apply replacements - using bash parameter expansion where possible
-  # shellcheck disable=SC2001  # sed needed for complex pattern escaping
-  content=$(echo "$content" | sed "s|\\./$SOURCE_NAME/|./$TARGET_NAME/|g")
+  # Apply replacements
   content=${content//"$SOURCE_NAME/"/"$TARGET_NAME/"}
   content=${content//"[$SOURCE_NAME]"/"[$TARGET_NAME]"}
   content=${content//"'$SOURCE_NAME'"/"'$TARGET_NAME'"}
@@ -172,24 +164,9 @@ while IFS= read -r -d '' file; do
   content=${content//"# $SOURCE_NAME"/"# $TARGET_NAME"}
   content=${content//"=$SOURCE_NAME"/"=$TARGET_NAME"}
   
-  # Final word-boundary replacement for any remaining instances (portable sed)
+  # Final word-boundary replacement for any remaining instances
   # shellcheck disable=SC2001  # sed needed for regex word boundaries
-  content=$(echo "$content" | sed -E "s/(^|[^[:alnum:]_])$SOURCE_NAME([^[:alnum:]_]|$)/\\1$TARGET_NAME\\2/g")
-  
-  # Restore protected contextual patterns
-  content=${content//"$PLACEHOLDER1"/"both \`$SOURCE_NAME/\` and \`$TARGET_NAME/\`"}
-  content=${content//"$PLACEHOLDER2"/"both \`$TARGET_NAME/\` and \`$SOURCE_NAME/\`"}
-  content=${content//"$PLACEHOLDER3"/"$SOURCE_NAME/\` (source of truth)"}
-  content=${content//"$PLACEHOLDER5"/"Read \`$SOURCE_NAME/AGENTS.md\`"}
-  content=${content//"$PLACEHOLDER6"/"IDs in \`$SOURCE_NAME/tasklist.md\`"}
-  # Restore README.md Repository Architecture section
-  content=${content//"$PLACEHOLDER7"/"| \`$SOURCE_NAME/\` | **Production template**"}
-  content=${content//"$PLACEHOLDER8"/"- \`$SOURCE_NAME/\` is the **source of truth**"}
-  content=${content//"$PLACEHOLDER9"/"create \`$TARGET_NAME/\` from \`$SOURCE_NAME/\`"}
-  content=${content//"$PLACEHOLDER10"/"Changes flow: \`$SOURCE_NAME/\`"}
-  content=${content//"$PLACEHOLDER11"/"| \`$SOURCE_NAME/\` | Template for end users"}
-  content=${content//"$PLACEHOLDER12"/"Copy changes back to \`$SOURCE_NAME/\`"}
-  content=${content//"$PLACEHOLDER13"/"\`$SOURCE_NAME/VERSION\`"}
+  content=$(echo "$content" | sed -E "s/(^|[^[:alnum:]_])${SOURCE_NAME}([^[:alnum:]_]|$)/\\1${TARGET_NAME}\\2/g")
   
   if [[ "$content" != "$original_content" ]]; then
     echo "$content" > "$file"
@@ -202,7 +179,7 @@ done < <(find "$TARGET_FOLDER" -type f -print0)
 echo "  $TRANSFORMED_COUNT files transformed, $SKIPPED_COUNT skipped (binary/non-text)"
 
 # Reset work queues for fresh meta-development
-echo "[4/5] Resetting work queues for meta-development..."
+echo "[4/5] Resetting work queues..."
 
 # Reset assessment.md
 ASSESSMENT_PATH="$TARGET_FOLDER/assessment.md"
@@ -211,7 +188,7 @@ if [[ -f "$ASSESSMENT_PATH" ]]; then
 # $TARGET_NAME Assessment
 
 > This file tracks issues found in the Marge system itself (meta-development).
-> Use this to improve the production Marge before copying it to other repos.
+> Use this to improve the production Marge before copying changes back.
 
 **Next ID:** MS-0001
 
@@ -273,25 +250,17 @@ EOF
   echo "  Reset: tasklist.md"
 fi
 
-# Transform AGENTS.md for meta_marge (remove conditional clause)
+# Remove the conditional clause from AGENTS.md if present
 AGENTS_PATH="$TARGET_FOLDER/AGENTS.md"
 if [[ -f "$AGENTS_PATH" ]]; then
-  # The source marge_simpson has a conditional clause "unless meta_marge exists..."
-  # For meta_marge, we want the simpler rule without the conditional
-  if grep -q "unless \`${TARGET_NAME}/\` exists and is being used to update Marge" "$AGENTS_PATH"; then
-    # Remove the conditional clause using sed
+  # For meta folders, the folder IS the target, not excluded from audits
+  if grep -q "unless \`$TARGET_NAME/\` exists" "$AGENTS_PATH"; then
     if [[ "$OSTYPE" == "darwin"* ]]; then
-      # macOS BSD sed
       sed -i '' "s/, unless \`${TARGET_NAME}\/\` exists and is being used to update Marge//g" "$AGENTS_PATH"
     else
-      # GNU sed
       sed -i "s/, unless \`${TARGET_NAME}\/\` exists and is being used to update Marge//g" "$AGENTS_PATH"
     fi
-    echo "  Updated: AGENTS.md (removed conditional clause for meta_marge)"
-  elif grep -q "\*\*excluded from audits\*\*.*it is the tooling, not the target\." "$AGENTS_PATH"; then
-    echo "  AGENTS.md has correct audit exclusion rule (no conditional needed for meta_marge)"
-  else
-    echo "  WARNING: AGENTS.md has unexpected format - check manually"
+    echo "  Updated: AGENTS.md (removed conditional clause)"
   fi
 fi
 
@@ -303,35 +272,26 @@ REMAINING_REFS=0
 while IFS= read -r -d '' file; do
   if grep -q "\\b$SOURCE_NAME\\b" "$file" 2>/dev/null; then
     rel_path="${file#"$TARGET_FOLDER"/}"
-    echo "  WARNING: '$SOURCE_NAME' still found in: $rel_path"
+    echo "  Note: '$SOURCE_NAME' still found in: $rel_path (may be intentional)"
     ((REMAINING_REFS++)) || true
   fi
 done < <(find "$TARGET_FOLDER" -type f -print0)
 
-if [[ $REMAINING_REFS -gt 0 ]]; then
-  echo "  $REMAINING_REFS file(s) still contain '$SOURCE_NAME' references"
-fi
-
-# Run verification if verify script exists (scripts are in scripts/ subfolder)
+# Run verification if verify script exists
 VERIFY_SCRIPT="$TARGET_FOLDER/scripts/verify.sh"
 if [[ -x "$VERIFY_SCRIPT" ]]; then
+  echo ""
   VERIFY_EXIT=0
   "$VERIFY_SCRIPT" fast || VERIFY_EXIT=$?
   
-  if [[ $VERIFY_EXIT -eq 0 && $REMAINING_REFS -eq 0 ]]; then
+  if [[ $VERIFY_EXIT -eq 0 ]]; then
     echo ""
     echo "============================================================"
     echo " SUCCESS: $TARGET_NAME created and verified!"
     echo "============================================================"
     echo ""
     echo "You can now use $TARGET_NAME for meta-development."
-    echo "Run: ./$TARGET_NAME/verify.sh fast"
-  elif [[ $VERIFY_EXIT -eq 0 ]]; then
-    echo ""
-    echo "============================================================"
-    echo " PARTIAL: $TARGET_NAME created but has residual references"
-    echo "============================================================"
-    echo "Review the warnings above and manually fix remaining references."
+    echo "Changes made there can be tested before copying back to $SOURCE_NAME."
   else
     echo ""
     echo "============================================================"
@@ -343,7 +303,9 @@ if [[ -x "$VERIFY_SCRIPT" ]]; then
 else
   echo ""
   echo "============================================================"
-  echo " DONE: $TARGET_NAME created (no verify.sh found to run)"
+  echo " DONE: $TARGET_NAME created"
   echo "============================================================"
+  echo ""
+  echo "Run: $TARGET_NAME/scripts/verify.sh fast"
   exit 0
 fi
