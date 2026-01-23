@@ -51,7 +51,7 @@ function Show-Help {
     Write-Host "  audit                Run a codebase audit"
     Write-Host "  status               Show current task status"
     Write-Host "  verify [fast|full]   Run verification (default: fast)"
-    Write-Host "  init                 Initialize marge_simpson folder"
+    Write-Host "  init                 Initialize .marge folder"
     Write-Host "  help                 Show this help message"
     Write-Host ""
     Write-Host "Examples:"
@@ -67,7 +67,7 @@ function Show-Help {
 function Find-ProjectRoot {
     $dir = Get-Location
     while ($dir -and $dir.Path -ne [System.IO.Path]::GetPathRoot($dir.Path)) {
-        if (Test-Path "$($dir.Path)\marge_simpson") {
+        if (Test-Path "$($dir.Path)\.marge") {
             return $dir.Path
         }
         if (Test-Path "$($dir.Path)\.git") {
@@ -82,8 +82,8 @@ function Find-ProjectRoot {
 function Test-MargeFolder {
     param([string]$ProjectRoot)
 
-    if (-not (Test-Path "$ProjectRoot\marge_simpson")) {
-        Write-Host "Warning: marge_simpson folder not found in project." -ForegroundColor Yellow
+    if (-not (Test-Path "$ProjectRoot\.marge")) {
+        Write-Host "Warning: .marge folder not found in project." -ForegroundColor Yellow
         Write-Host "Run " -NoNewline
         Write-Host "marge init" -ForegroundColor Green -NoNewline
         Write-Host " to set up Marge in this project."
@@ -94,10 +94,10 @@ function Test-MargeFolder {
 
 function Invoke-Init {
     $projectRoot = Find-ProjectRoot
-    $margeDir = "$projectRoot\marge_simpson"
+    $margeDir = "$projectRoot\.marge"
 
     if (Test-Path $margeDir) {
-        Write-Host "marge_simpson folder already exists at $margeDir" -ForegroundColor Yellow
+        Write-Host ".marge folder already exists at $margeDir" -ForegroundColor Yellow
         return
     }
 
@@ -217,10 +217,10 @@ function Invoke-Init {
     Write-Host "  - $margeDir\verify.config.json"
     Write-Host ""
     Write-Host "Add " -NoNewline
-    Write-Host "marge_simpson/" -ForegroundColor Yellow -NoNewline
+    Write-Host ".marge/" -ForegroundColor Yellow -NoNewline
     Write-Host " to your .gitignore (tracking files are internal)."
     Write-Host "Tell your AI: " -NoNewline
-    Write-Host "`"Use the marge_simpson folder for audits and fixes.`"" -ForegroundColor Green
+    Write-Host "`"Use the .marge folder for audits and fixes.`"" -ForegroundColor Green
 }
 
 function Invoke-Fix {
@@ -239,7 +239,7 @@ function Invoke-Fix {
     Write-Host ""
     Write-Host "Instruction for AI assistant:"
     Write-Host "---"
-    Write-Host "Use the marge_simpson folder. Fix this bug: $desc"
+    Write-Host "Use the .marge folder. Fix this bug: $desc"
     Write-Host "Follow AGENTS.md workflow. Create MS-#### tracking ID."
     Write-Host "---"
 }
@@ -260,7 +260,7 @@ function Invoke-Add {
     Write-Host ""
     Write-Host "Instruction for AI assistant:"
     Write-Host "---"
-    Write-Host "Use the marge_simpson folder. Add this feature: $desc"
+    Write-Host "Use the .marge folder. Add this feature: $desc"
     Write-Host "Follow AGENTS.md workflow. Create MS-#### tracking ID."
     Write-Host "---"
 }
@@ -271,7 +271,7 @@ function Invoke-Audit {
     Write-Host ""
     Write-Host "Instruction for AI assistant:"
     Write-Host "---"
-    Write-Host "Use the marge_simpson folder. Run a full codebase audit."
+    Write-Host "Use the .marge folder. Run a full codebase audit."
     Write-Host "Follow workflows/audit.md process. Create MS-#### for each finding."
     Write-Host "---"
 }
@@ -285,8 +285,8 @@ function Invoke-Status {
 
     Write-Banner
 
-    $statusScript = "$projectRoot\marge_simpson\scripts\status.ps1"
-    $taskList = "$projectRoot\marge_simpson\tasklist.md"
+    $statusScript = "$projectRoot\.marge\scripts\status.ps1"
+    $taskList = "$projectRoot\.marge\tasklist.md"
 
     if (Test-Path $statusScript) {
         & $statusScript
@@ -312,7 +312,7 @@ function Invoke-Verify {
     Write-Banner
     Write-Host "Running verification (mode: $Mode)..." -ForegroundColor Blue
 
-    $verifyScript = "$projectRoot\marge_simpson\scripts\verify.ps1"
+    $verifyScript = "$projectRoot\.marge\scripts\verify.ps1"
     if (Test-Path $verifyScript) {
         & $verifyScript $Mode
     }

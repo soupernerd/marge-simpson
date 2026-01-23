@@ -1,8 +1,8 @@
-﻿# marge_simpson/assessment.md
+﻿# .marge/assessment.md
 Purpose: Periodic, point-in-time assessments of repo/system status.
 
 ## Read First (REQUIRED)
-AI/Agents must read `marge_simpson/AGENTS.md` before working.
+AI/Agents must read `.marge/AGENTS.md` before working.
 
 ---
 
@@ -57,7 +57,7 @@ AI/Agents must read `marge_simpson/AGENTS.md` before working.
 - **Verification:**
   - Test(s) added/changed: ...
   - Commands executed:
-    - `./marge_simpson/scripts/verify.sh fast` (or `./marge_simpson/scripts/verify.ps1 fast`)
+    - `./.marge/scripts/verify.sh fast` (or `./.marge/scripts/verify.ps1 fast`)
     - (any targeted command)
   - Evidence: paste raw output
 - **Notes / follow-ups:** Any remaining risk or cleanup

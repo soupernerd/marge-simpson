@@ -12,7 +12,7 @@
 
 ## Install (30 seconds)
 
-1. Copy just the **`marge_simpson/`** folder into your repo root
+1. Copy just the **`.marge/`** folder into your repo root
 2. Use a prompt template from the [Chat Prompts](#-ide-chat-prompts) section below
 
 > ** Renamed the folder?** Replace `marge_simpson` with your folder name in prompts.
@@ -41,7 +41,7 @@ Add a loop phrase to any chat prompt and Marge will keep iterating until the wor
 *Use first, or periodically to refresh the plan.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Run a system-wide audit of this workspace/repo (read-only).
 - Read and understand the architecture and major workflows.
@@ -49,10 +49,10 @@ Run a system-wide audit of this workspace/repo (read-only).
 - Do not break intended functionality.
 
 Update/create tracking docs:
-- marge_simpson/assessment.md (snapshot + findings + new MS issues)
-- marge_simpson/tasklist.md (prioritized tasks with DoD + verification)
+- .marge/assessment.md (snapshot + findings + new MS issues)
+- .marge/tasklist.md (prioritized tasks with DoD + verification)
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0  P1  P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0  P1  P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -63,14 +63,14 @@ Output using the Response Format (include IDs created).
 *Report bugs or request features. Each becomes tracked work.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 New Feature / Issues:
 - Example Feature: "Lets add a drop down next to search that allows for.."
 - Example / New Issue: "The right hand side nav is not expanding as expected"
 - Example / Existing issue not fixed: "MS-0046 is still exhibiting [insert issue here]"
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0  P1  P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0  P1  P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -81,13 +81,13 @@ Output using the Response Format (include IDs created).
 *Give direct instructions without needing a feature/issue format.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Instruction:
 - (your instruction here)
 - (another instruction here)
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0  P1  P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0  P1  P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -98,7 +98,7 @@ Output using the Response Format (include IDs created).
 *Ask questions or confirm fixes. Quick answers grounded in code.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)
@@ -106,7 +106,7 @@ Questions / Confirmations:
 3. Example Confirmation: "MS-00xx fixed"
 4. Example Question: "Are there alternatives to codemirror?"
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0  P1  P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0  P1  P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -117,7 +117,7 @@ Output using the Response Format (include IDs created).
 *Let Marge propose new features based on your codebase.*
 
 ```
-Read and follow the rules in `marge_simpson/AGENTS.md`.
+Read and follow the rules in `.marge/AGENTS.md`.
 
 MODE: PLANNING ONLY (no code changes, no patches, no execution).
 
@@ -141,7 +141,7 @@ Output format:
 2) A short "Top pick summary" (24 lines) explaining why the #1#2 options win on UX/value
 
 Update/append/create tracking doc:
-- marge_simpson/recommended_features.md (with the bullet points created per feature)
+- .marge/recommended_features.md (with the bullet points created per feature)
 
 Minimize follow-up questions. If info is missing, make reasonable assumptions and state them briefly.
 ```
@@ -152,7 +152,7 @@ Minimize follow-up questions. If info is missing, make reasonable assumptions an
 *Mix questions and issues in one prompt for efficiency.*
 
 ```
-Read the AGENTS.md file in the marge_simpson folder and follow it.
+Read the AGENTS.md file in the .marge folder and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)
@@ -166,7 +166,7 @@ New Feature / Issues:
 - (New Feature or Issue here)
 - (New Feature or Issue here)
 
-After finished above, search for and list remaining unchecked items (if any exist) in marge_simpson/tasklist.md (P0  P1  P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in .marge/tasklist.md (P0  P1  P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -268,17 +268,17 @@ This repository has a **dual-folder architecture**:
 
 | Folder | Purpose | When to Use |
 |--------|---------|-------------|
-| `marge_simpson/` | **Production template**  copy this to your repos | End users installing Marge |
+| `.marge/` | **Production template**  copy this to your repos | End users installing Marge |
 | `meta_marge/` | **Development instance**  improve Marge here | Contributors developing Marge itself |
 
 **Key Points:**
-- `marge_simpson/` is the **source of truth**  this is what gets distributed
+- `.marge/` is the **source of truth**  this is what gets distributed
 - `meta_marge/` is a **working copy** with all paths/references transformed
-- The `convert-to-meta` scripts create `meta_marge/` from `marge_simpson/`
-- Changes flow: `marge_simpson/`  `meta_marge/` (via script)  test  manual copy back
+- The `convert-to-meta` scripts create `meta_marge/` from `.marge/`
+- Changes flow: `.marge/`  `meta_marge/` (via script)  test  manual copy back
 
 **Why two folders?**
-Marge tracks work using relative paths (e.g., `./marge_simpson/tasklist.md`). To develop Marge *using* Marge, we need a separate instance with different paths so the tooling doesn't overwrite itself.
+Marge tracks work using relative paths (e.g., `./.marge/tasklist.md`). To develop Marge *using* Marge, we need a separate instance with different paths so the tooling doesn't overwrite itself.
 
 ---
 
@@ -288,7 +288,7 @@ Want to improve Marge itself? Use the **meta development workflow**:
 
 | Folder | Purpose |
 |--------|---------|
-| `marge_simpson/` | Template for end users (gets copied to other repos) |
+| `.marge/` | Template for end users (gets copied to other repos) |
 | `meta_marge/` | Development instance (improve Marge here) |
 
 ### Quick Start
@@ -304,10 +304,10 @@ Want to improve Marge itself? Use the **meta development workflow**:
 1. Run `convert-to-meta` to create/refresh `meta_marge/`
 2. Use prompts referencing `meta_marge` instead of `marge_simpson`
 3. Test with `./meta_marge/scripts/test-marge.ps1` (15 tests)
-4. Copy changes back to `marge_simpson/` when satisfied
+4. Copy changes back to `.marge/` when satisfied
 
 ### Versioning
-- `marge_simpson/VERSION`  bump when releasing template changes
+- `.marge/VERSION`  bump when releasing template changes
 - `meta_marge/VERSION`  auto-updated by convert script
 - Semantic: **major** (breaking) / **minor** (features) / **patch** (fixes)
 

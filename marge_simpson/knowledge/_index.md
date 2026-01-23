@@ -11,10 +11,10 @@
 **Example:**
 ```powershell
 # Find decisions about authentication
-Select-String -Path "marge_simpson/knowledge/decisions.md" -Pattern "#auth"
+Select-String -Path ".marge/knowledge/decisions.md" -Pattern "#auth"
 
 # Find all entries tagged with typescript
-Select-String -Path "marge_simpson/knowledge/*.md" -Pattern "#typescript"
+Select-String -Path ".marge/knowledge/*.md" -Pattern "#typescript"
 ```
 
 ---

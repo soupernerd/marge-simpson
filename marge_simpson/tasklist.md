@@ -1,9 +1,9 @@
-# marge_simpson/tasklist.md
+# .marge/tasklist.md
 Purpose: Single source of truth for active work. Keep this current as tasks are added/closed.
 Rule: If it’s being worked on, it must be here.
 
 ## Read First (REQUIRED)
-AI/Agents must read `marge_simpson/AGENTS.md` before working.
+AI/Agents must read `.marge/AGENTS.md` before working.
 
 ---
 
@@ -31,8 +31,8 @@ AI/Agents must read `marge_simpson/AGENTS.md` before working.
   - **Definition of Done:** …
   - **Verification:**
     - Run automated verification:
-      - macOS/Linux: `./marge_simpson/scripts/verify.sh fast`
-      - Windows: `./marge_simpson/scripts/verify.ps1 fast`
+      - macOS/Linux: `./.marge/scripts/verify.sh fast`
+      - Windows: `./.marge/scripts/verify.ps1 fast`
     - Add/adjust a regression test or deterministic repro for this MS item.
     - Record evidence in `assessment.md` (raw output or verify log path).
   - **Files likely involved:** …

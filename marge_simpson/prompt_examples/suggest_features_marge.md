@@ -1,4 +1,4 @@
-Read and follow the rules in `marge_simpson/AGENTS.md`.
+Read and follow the rules in `.marge/AGENTS.md`.
 
 MODE: PLANNING ONLY (no code changes, no patches, no execution).
 
@@ -22,6 +22,6 @@ Output format:
 2) A short “Top pick summary” (2–4 lines) explaining why the #1–#2 options win on UX/value
 
 Update/append/create tracking doc:
-- marge_simpson/recommended_features.md (with the bullet points created per feature)
+- .marge/recommended_features.md (with the bullet points created per feature)
 
 Minimize follow-up questions. If info is missing, make reasonable assumptions and state them briefly.

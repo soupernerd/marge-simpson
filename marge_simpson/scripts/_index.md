@@ -16,18 +16,18 @@
 
 ```powershell
 # Windows
-.\marge_simpson\scripts\verify.ps1 fast -SkipIfNoTests
-.\marge_simpson\scripts\cleanup.ps1 -Preview
-.\marge_simpson\scripts\status.ps1
-.\marge_simpson\scripts\decay.ps1 -Preview
+.\.marge\scripts\verify.ps1 fast -SkipIfNoTests
+.\.marge\scripts\cleanup.ps1 -Preview
+.\.marge\scripts\status.ps1
+.\.marge\scripts\decay.ps1 -Preview
 ```
 
 ```bash
 # macOS/Linux
-./marge_simpson/scripts/verify.sh fast --skip-if-no-tests
-./marge_simpson/scripts/cleanup.sh --preview
-./marge_simpson/scripts/status.sh
-./marge_simpson/scripts/decay.sh --preview
+./.marge/scripts/verify.sh fast --skip-if-no-tests
+./.marge/scripts/cleanup.sh --preview
+./.marge/scripts/status.sh
+./.marge/scripts/decay.sh --preview
 ```
 
 ## Script Details

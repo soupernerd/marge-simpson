@@ -11,7 +11,7 @@ set -euo pipefail
 # - Next task recommendation
 #
 # Usage:
-#   ./marge_simpson/scripts/status.sh
+#   ./.marge/scripts/status.sh
 
 # Dynamic folder detection
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

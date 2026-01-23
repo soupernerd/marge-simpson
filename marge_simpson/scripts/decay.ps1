@@ -21,9 +21,9 @@
     Show what would be archived without making changes.
 
 .EXAMPLE
-    .\marge_simpson\scripts\decay.ps1
-    .\marge_simpson\scripts\decay.ps1 -AutoArchive
-    .\marge_simpson\scripts\decay.ps1 -DaysThreshold 60 -Preview
+    .\.marge\scripts\decay.ps1
+    .\.marge\scripts\decay.ps1 -AutoArchive
+    .\.marge\scripts\decay.ps1 -DaysThreshold 60 -Preview
 #>
 
 param(

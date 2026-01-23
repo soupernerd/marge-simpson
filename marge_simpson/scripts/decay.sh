@@ -12,9 +12,9 @@ set -euo pipefail
 # - Pattern not observed recently → Flag for review
 #
 # Usage:
-#   ./marge_simpson/scripts/decay.sh
-#   ./marge_simpson/scripts/decay.sh --auto-archive
-#   ./marge_simpson/scripts/decay.sh --days-threshold 60 --preview
+#   ./.marge/scripts/decay.sh
+#   ./.marge/scripts/decay.sh --auto-archive
+#   ./.marge/scripts/decay.sh --days-threshold 60 --preview
 
 # Dynamic folder detection
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

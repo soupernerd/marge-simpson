@@ -43,7 +43,7 @@ Before adding new facts, **check if they conflict with existing entries**:
 
 ```powershell
 # Quick search for potential conflicts
-Select-String -Path "marge_simpson/knowledge/*.md" -Pattern "keyword1|keyword2"
+Select-String -Path ".marge/knowledge/*.md" -Pattern "keyword1|keyword2"
 ```
 
 ### Conflict Resolution Rules

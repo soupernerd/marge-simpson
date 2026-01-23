@@ -11,7 +11,7 @@ set -euo pipefail
 # 2. tasklist.md    - Suggest archiving if large (no auto-modification)
 #
 # Usage:
-#   ./marge_simpson/scripts/cleanup.sh                    # Analyze and report
+#   ./.marge/scripts/cleanup.sh                    # Analyze and report
 
 # Dynamic folder detection (scripts are now in scripts/ subfolder)
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

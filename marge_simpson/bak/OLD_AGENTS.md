@@ -13,8 +13,8 @@ This folder is a drop-in workflow for running audits and fixing bugs in any code
 ## How to use this folder
 
 1. Copy this folder into the root of any project.
-2. Add `marge_simpson/` to your `.gitignore` (tracking files are internal).
-3. Tell the AI: "Use the marge_simpson folder for audits and fixes."
+2. Add `.marge/` to your `.gitignore` (tracking files are internal).
+3. Tell the AI: "Use the .marge folder for audits and fixes."
 
 ## A) Universal Rules
 
@@ -132,8 +132,8 @@ Domain-specific knowledge in `experts/` folder:
 
 ## G) Critical Rules
 
-1. The `marge_simpson/` folder is excluded from audits (it's the tooling, not the target)
-2. Marge NEVER creates files outside the marge_simpson folder
+1. The `.marge/` folder is excluded from audits (it's the tooling, not the target)
+2. Marge NEVER creates files outside the .marge folder
 3. Always verify before claiming completion
 4. Track all work with MS-#### IDs
 

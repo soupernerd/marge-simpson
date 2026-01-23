@@ -7,9 +7,9 @@ set -euo pipefail
 # This script auto-detects its own folder name, so you can rename the folder if needed.
 #
 # Usage:
-#   ./marge_simpson/scripts/verify.sh fast
-#   ./marge_simpson/scripts/verify.sh full
-#   ./marge_simpson/scripts/verify.sh fast --skip-if-no-tests
+#   ./.marge/scripts/verify.sh fast
+#   ./.marge/scripts/verify.sh full
+#   ./.marge/scripts/verify.sh fast --skip-if-no-tests
 #
 # Options:
 #   fast|full (default: fast)

@@ -6,11 +6,11 @@
 set -eo pipefail
 
 # ============================================
-# Marge v1.1.0 - Autonomous AI Coding Loop
+# Marge v1.1.2 - Autonomous AI Coding Loop
 # ============================================
 
 MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
-VERSION="1.1.0"
+VERSION="1.1.2"
 
 # Defaults
 DRY_RUN=false
@@ -22,19 +22,20 @@ AUTO=false
 MAX_ITER=${MAX_ITER:-20}
 MAX_RETRIES=${MAX_RETRIES:-3}
 RETRY_DELAY=${RETRY_DELAY:-5}
-AUTO_COMMIT=true
+AUTO_COMMIT=false
 ENGINE="claude"
 BRANCH_PER_TASK=false
 CREATE_PR=false
 PARALLEL=false
 MAX_PARALLEL=${MAX_PARALLEL:-3}
 PRD_FILE="PRD.md"
-MARGE_FOLDER="${MARGE_FOLDER:-marge_simpson}"
+MARGE_FOLDER="${MARGE_FOLDER:-.marge}"
 
 # State
 iteration=0
 total_input_tokens=0
 total_output_tokens=0
+session_start_time=$(date +%s)
 PROGRESS_FILE=".marge/progress.txt"
 CONFIG_FILE=".marge/config.yaml"
 
@@ -64,13 +65,10 @@ ${BOLD}marge${RESET} v$VERSION - Autonomous AI coding loop
 ${BOLD}USAGE:${RESET}
   marge [options]              Run PRD tasks from PRD.md
   marge "<task>" [options]     Run a single task
-  marge meta "<task>"          Run task using meta_marge folder
 
 ${BOLD}EXAMPLES:${RESET}
   marge "fix the login bug"
   marge --loop --auto
-  marge --folder meta_marge "run audit"
-  marge meta "run self-improvement audit"
   marge --parallel --max-parallel 3
   marge --engine aider --loop
   marge --branch-per-task --create-pr
@@ -82,24 +80,25 @@ ${BOLD}OPTIONS:${RESET}
   --fast              Skip verification
   --loop              Loop until complete
   --engine <e>        Engine: claude, opencode, codex, aider
-  --folder <dir>      Target Marge folder (default: marge_simpson)
   --max-iterations N  Max iterations (default: $MAX_ITER)
   --max-retries N     Max retries per task (default: $MAX_RETRIES)
-  --no-commit         Disable auto-commit
+  --commit            Auto-commit changes after task
+  --no-commit         Disable auto-commit (default)
   --parallel          Run tasks in parallel using git worktrees
   --max-parallel N    Max parallel agents (default: $MAX_PARALLEL)
   --branch-per-task   Create branch per task
   --create-pr         Create PR when done
+  --folder <dir>      Target folder (default: .marge)
   -v, --verbose       Verbose output
   --version           Show version
   --help              Show help
 
 ${BOLD}COMMANDS:${RESET}
-  init                Initialize .marge/ config and PRD.md template
+  init [--force]      Initialize .marge/ folder (--force to overwrite)
+  meta "<task>"       Run task using .marge/meta folder (for self-development)
   status              Show current status and progress
   config              Show config file contents
   resume              Resume from saved progress
-  meta                Shortcut for --folder meta_marge
 
 ${BOLD}CONFIG FILE:${RESET}
   Place .marge/config.yaml in your project:
@@ -107,12 +106,7 @@ ${BOLD}CONFIG FILE:${RESET}
     model: ""
     max_iterations: 20
     max_retries: 3
-    auto_commit: true
-    folder: marge_simpson
-
-${BOLD}ENVIRONMENT:${RESET}
-  MARGE_HOME          Installation directory (default: ~/.marge)
-  MARGE_FOLDER        Default folder (default: marge_simpson)
+    auto_commit: false
 
 ${BOLD}PRD FORMAT:${RESET}
   Tasks are parsed from PRD.md using "### Task N: Title" format.
@@ -141,44 +135,57 @@ show_spinner() {
     local spin_idx=0
     local current_step="Working"
 
+    # Marge hair blue and Simpsons yellow (24-bit color)
+    local MARGE_BLUE=$'\033[38;2;98;154;211m'
+    local SIMPSONS_YELLOW=$'\033[38;2;255;217;15m'
+    local RESET_COLOR=$'\033[0m'
+
     task="${task:0:45}..."
+
+    # Ensure we have a TTY
+    [[ -t 1 ]] || return 0
 
     while kill -0 "$pid" 2>/dev/null; do
         local elapsed=$(($(date +%s) - start_time))
         local mins=$((elapsed / 60))
         local secs=$((elapsed % 60))
 
-        # Check output for step indicators
-        if [[ -f "$output_file" ]] && [[ -s "$output_file" ]]; then
+        # Check output for step indicators (less frequently to reduce overhead)
+        if (( spin_idx % 5 == 0 )) && [[ -f "$output_file" ]] && [[ -s "$output_file" ]]; then
             local content
-            content=$(tail -c 3000 "$output_file" 2>/dev/null || true)
+            content=$(tail -c 3000 "$output_file" 2>/dev/null) || true
 
-            if echo "$content" | grep -qiE 'git commit'; then
+            if [[ "$content" == *"git commit"* ]]; then
                 current_step="Committing"
-            elif echo "$content" | grep -qiE 'git add'; then
+            elif [[ "$content" == *"git add"* ]]; then
                 current_step="Staging"
-            elif echo "$content" | grep -qiE 'lint|eslint|biome'; then
+            elif [[ "$content" == *lint* ]] || [[ "$content" == *eslint* ]] || [[ "$content" == *biome* ]]; then
                 current_step="Linting"
-            elif echo "$content" | grep -qiE 'test|jest|vitest|pytest'; then
+            elif [[ "$content" == *'"tool":"Bash"'* ]] && [[ "$content" == *test* ]]; then
                 current_step="Testing"
-            elif echo "$content" | grep -qiE '"tool":"[Ww]rite"|"tool":"[Ee]dit"'; then
+            elif [[ "$content" == *'"tool":"Write"'* ]] || [[ "$content" == *'"tool":"Edit"'* ]]; then
                 current_step="Writing"
-            elif echo "$content" | grep -qiE '"tool":"[Rr]ead"|"tool":"[Gg]lob"'; then
+            elif [[ "$content" == *'"tool":"Read"'* ]] || [[ "$content" == *'"tool":"Glob"'* ]]; then
                 current_step="Reading"
-            elif echo "$content" | grep -qiE 'thinking\|Thinking'; then
+            elif [[ "$content" == *hinking* ]]; then
                 current_step="Thinking"
             fi
         fi
 
         local spinner_char="${spinstr:$spin_idx:1}"
-        printf "\r  \033[38;2;98;154;211m%s\033[0m \033[38;2;255;217;15m%s\033[0m [%02d:%02d] %s" "$spinner_char" "$current_step" "$mins" "$secs" "$task"
+
+        # Clear line and print - use \r for carriage return, \033[K for clear to end
+        printf '\r\033[K  %s%s%s %s%s%s [%02d:%02d] %s' \
+            "$MARGE_BLUE" "$spinner_char" "$RESET_COLOR" \
+            "$SIMPSONS_YELLOW" "$current_step" "$RESET_COLOR" \
+            "$mins" "$secs" "$task"
 
         spin_idx=$(( (spin_idx + 1) % ${#spinstr} ))
         sleep 0.1
     done
 
-    # Clear spinner line
-    printf "\r%80s\r" ""
+    # Clear line
+    printf '\r\033[K' 2>/dev/null
 }
 
 load_config() {
@@ -197,7 +204,6 @@ load_config() {
             max_iterations) MAX_ITER="$value" ;;
             max_retries) MAX_RETRIES="$value" ;;
             auto_commit) AUTO_COMMIT="$value" ;;
-            folder) [[ -z "$MARGE_FOLDER" || "$MARGE_FOLDER" == "marge_simpson" ]] && MARGE_FOLDER="$value" ;;
         esac
     done < <(grep -v '^#' "$CONFIG_FILE" | tr ':' '=' 2>/dev/null)
 }
@@ -265,7 +271,7 @@ check_engine() {
     esac
 }
 
-parse_token_usage() {
+get_token_summary() {
     local output_file="$1"
     local input_tokens=0
     local output_tokens=0
@@ -336,14 +342,15 @@ parse_token_usage() {
         local cost
         cost=$(awk -v it="$input_tokens" -v ot="$output_tokens" -v ir="$input_rate" -v or="$output_rate" \
             'BEGIN {printf "%.4f", (it * ir + ot * or) / 1000000}')
-        echo "  ${CYAN}Tokens:${RESET} ${input_tokens} in / ${output_tokens} out · ${CYAN}Cost:${RESET} \$${cost}"
 
         # Update totals for summary
         total_input_tokens=$((total_input_tokens + input_tokens))
         total_output_tokens=$((total_output_tokens + output_tokens))
-    else
-        echo "  ${YELLOW}Token usage not available${RESET}"
+
+        # Return compact summary string
+        echo " · ${input_tokens}/${output_tokens}tok · \$${cost}"
     fi
+    # Return empty string if no tokens available
 }
 
 build_engine_cmd() {
@@ -396,11 +403,21 @@ parse_prd() {
 
 run_task() {
     local task="$1" num="${2:-1}" workdir="${3:-.}"
+    local task_start_time=$(date +%s)
 
-    log_info "Task $num: $task"
+    # Only show task info in verbose mode - spinner shows task info
+    log_debug "Task $num: $task"
     save_progress "$num" "running"
 
-    [[ ! -d "$workdir/$MARGE_FOLDER" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
+    if [[ ! -d "$workdir/$MARGE_FOLDER" ]]; then
+        if [[ "$MARGE_FOLDER" == ".marge" ]]; then
+            "$MARGE_HOME/marge-init" >/dev/null 2>&1
+            log_debug "Initialized $MARGE_FOLDER/"
+        else
+            log_error "Folder '$MARGE_FOLDER' not found. Create it first or use default .marge/"
+            return 1
+        fi
+    fi
 
     local prompt="Read the AGENTS.md file in the $MARGE_FOLDER folder and follow it.
 
@@ -424,12 +441,12 @@ After finished, list remaining unchecked items in $MARGE_FOLDER/tasklist.md."
         log_debug "Command: $cmd \"<prompt>\""
         log_debug "Workdir: $workdir"
 
-        # Run AI command in background
-        (cd "$workdir" && eval "$cmd" '"$prompt"' > "$output_file" 2>&1) &
+        # Run AI command in background with new session, no stdin (prevents direct tty writes)
+        setsid bash -c "cd \"$workdir\" && $cmd \"\$1\" > \"$output_file\" 2>&1" -- "$prompt" </dev/null &
         ai_pid=$!
         log_debug "Started PID: $ai_pid"
 
-        # Show spinner while AI is running
+        # Show spinner while AI is running (this is the only visible output during execution)
         show_spinner "$output_file" "$task" "$ai_pid"
 
         # Wait for AI and get exit status
@@ -437,7 +454,7 @@ After finished, list remaining unchecked items in $MARGE_FOLDER/tasklist.md."
         local exit_code=$?
         log_debug "Exit code: $exit_code"
 
-        # Show output (always show if it exists and is non-empty, for debugging)
+        # Show output only in verbose mode
         if [[ -f "$output_file" ]] && [[ -s "$output_file" ]]; then
             [[ "$VERBOSE" == true ]] && cat "$output_file"
             log_debug "Output file size: $(wc -c < "$output_file") bytes"
@@ -446,8 +463,46 @@ After finished, list remaining unchecked items in $MARGE_FOLDER/tasklist.md."
         fi
 
         if [[ $exit_code -eq 0 ]]; then
-            log_success "Task $num completed"
-            parse_token_usage "$output_file"
+            local task_end_time=$(date +%s)
+            local task_duration=$((task_end_time - task_start_time))
+            local duration_mins=$((task_duration / 60))
+            local duration_secs=$((task_duration % 60))
+
+            # Single completion line with all info
+            local token_info=""
+            token_info=$(get_token_summary "$output_file")
+            echo "${GREEN}✓${RESET} Task $num done ${CYAN}${duration_mins}m${duration_secs}s${RESET}${token_info}"
+
+            # Show changed files (if in a git repo)
+            if git -C "$workdir" rev-parse --git-dir &>/dev/null; then
+                # Get modified files (unstaged)
+                local modified
+                modified=$(git -C "$workdir" diff --name-only 2>/dev/null)
+                # Get staged files
+                local staged
+                staged=$(git -C "$workdir" diff --cached --name-only 2>/dev/null)
+                # Get new untracked files
+                local untracked
+                untracked=$(git -C "$workdir" ls-files --others --exclude-standard 2>/dev/null)
+
+                # Combine all changes
+                local all_changes
+                all_changes=$(printf '%s\n%s\n%s' "$modified" "$staged" "$untracked" | grep -v '^$' | sort -u | head -15)
+
+                if [[ -n "$all_changes" ]]; then
+                    local count
+                    count=$(echo "$all_changes" | wc -l)
+                    echo "  ${CYAN}Files changed (${count}):${RESET}"
+                    echo "$all_changes" | while IFS= read -r file; do
+                        if [[ -n "$file" ]]; then
+                            echo "    ${YELLOW}•${RESET} $file"
+                        fi
+                    done
+                else
+                    echo "  ${CYAN}No files changed${RESET}"
+                fi
+            fi
+
             auto_commit "$num"
             save_progress "$num" "completed"
             rm -f "$output_file"
@@ -496,13 +551,8 @@ run_prd() {
         return 0
     fi
 
-    echo ""
-    echo "${BOLD}Marge v$VERSION${RESET}"
-    echo "Found ${CYAN}$count${RESET} tasks"
-    echo "Engine: ${CYAN}$ENGINE${RESET}"
-    echo "Folder: ${CYAN}$MARGE_FOLDER${RESET}"
-    [[ "$PARALLEL" == true ]] && echo "Mode: ${CYAN}parallel${RESET} (max $MAX_PARALLEL)"
-    echo ""
+    # Minimal header
+    echo "${BOLD}Marge v$VERSION${RESET} · ${count} tasks"
 
     if [[ "$DRY_RUN" == true ]]; then
         echo "${BOLD}Tasks:${RESET}"
@@ -545,13 +595,13 @@ run_prd() {
 
             run_task "$task" "$iteration" || { [[ "$LOOP" != true ]] && break; }
 
-            is_task_complete && { log_success "All tasks complete!"; break; }
+            is_task_complete && break
             [[ $iteration -ge $MAX_ITER ]] && { log_warn "Max iterations"; break; }
         done
     fi
 
     if [[ "$CREATE_PR" == true ]]; then
-        log_info "Creating PR..."
+        log_debug "Creating PR..."
         local pr_title="Marge: Completed $iteration tasks"
         local pr_body="Automated PR by marge v$VERSION"
         gh pr create --title "$pr_title" --body "$pr_body" 2>/dev/null || log_warn "PR creation failed"
@@ -565,9 +615,15 @@ run_prd() {
 
 print_session_summary() {
     local iter_count="${1:-0}"
+    local session_end_time=$(date +%s)
+    local total_duration=$((session_end_time - session_start_time))
+    local total_mins=$((total_duration / 60))
+    local total_secs=$((total_duration % 60))
+
     echo "${BOLD}═══════════════════════════════════════════════════${RESET}"
     echo "${BOLD}Session Summary${RESET}"
-    echo "  Iterations: $iter_count"
+    echo "  ${CYAN}Duration:${RESET} ${total_mins}m ${total_secs}s"
+    echo "  ${CYAN}Iterations:${RESET} $iter_count"
 
     if [[ $total_input_tokens -gt 0 ]] || [[ $total_output_tokens -gt 0 ]]; then
         # Calculate total cost
@@ -592,8 +648,8 @@ print_session_summary() {
         total_cost=$(awk -v it="$total_input_tokens" -v ot="$total_output_tokens" -v ir="$input_rate" -v or="$output_rate" \
             'BEGIN {printf "%.4f", (it * ir + ot * or) / 1000000}')
 
-        echo "  ${CYAN}Total Tokens:${RESET} ${total_input_tokens} in / ${total_output_tokens} out"
-        echo "  ${CYAN}Total Cost:${RESET} \$${total_cost}"
+        echo "  ${CYAN}Tokens:${RESET} ${total_input_tokens} in / ${total_output_tokens} out"
+        echo "  ${CYAN}Cost:${RESET} \$${total_cost}"
     fi
     echo "${BOLD}═══════════════════════════════════════════════════${RESET}"
 }
@@ -601,20 +657,15 @@ print_session_summary() {
 run_single() {
     local task="$1"
 
-    echo ""
-    echo "${BOLD}Marge v$VERSION${RESET} - Single task"
-    echo "Task: ${CYAN}$task${RESET}"
-    echo "Folder: ${CYAN}$MARGE_FOLDER${RESET}"
-    echo ""
+    # Minimal header - just version
+    echo "${BOLD}Marge v$VERSION${RESET}"
 
     if [[ "$LOOP" == true ]]; then
         while [[ $iteration -lt $MAX_ITER ]]; do
             ((iteration++))
-            echo "${BOLD}=== Iteration $iteration / $MAX_ITER ===${RESET}"
-
+            # Iteration info shown inline via spinner, no separate line
             run_task "$task" "$iteration" || true
-            is_task_complete && { log_success "Complete!"; break; }
-
+            is_task_complete && break
             sleep 1
         done
     else
@@ -628,15 +679,27 @@ run_single() {
 }
 
 init_config() {
-    mkdir -p .marge
-    cat > .marge/config.yaml <<EOF
+    local force_flag=""
+    [[ "${1:-}" == "--force" ]] && force_flag="--force"
+
+    # Use marge-init for full setup
+    if ! "$MARGE_HOME/marge-init" $force_flag; then
+        log_error "Failed to initialize .marge/"
+        return 1
+    fi
+
+    # Create config.yaml if it doesn't exist
+    if [[ ! -f ".marge/config.yaml" ]]; then
+        cat > .marge/config.yaml <<EOF
 engine: claude
 model: ""
 max_iterations: 20
 max_retries: 3
-auto_commit: true
+auto_commit: false
 EOF
+    fi
 
+    # Create PRD.md template if it doesn't exist
     [[ ! -f "PRD.md" ]] && cat > PRD.md <<'EOF'
 # PRD
 
@@ -664,25 +727,32 @@ while [[ $# -gt 0 ]]; do
         --dry-run) DRY_RUN=true; shift ;;
         --model) MODEL="$2"; shift 2 ;;
         --engine) ENGINE="$2"; shift 2 ;;
-        --folder) MARGE_FOLDER="$2"; shift 2 ;;
         --fast) FAST=true; shift ;;
         --loop) LOOP=true; shift ;;
         --max-iterations) MAX_ITER="$2"; shift 2 ;;
         --max-retries) MAX_RETRIES="$2"; shift 2 ;;
+        --commit) AUTO_COMMIT=true; shift ;;
         --no-commit) AUTO_COMMIT=false; shift ;;
         --parallel) PARALLEL=true; shift ;;
         --max-parallel) MAX_PARALLEL="$2"; shift 2 ;;
         --branch-per-task) BRANCH_PER_TASK=true; shift ;;
         --create-pr) CREATE_PR=true; shift ;;
+        --folder) MARGE_FOLDER="$2"; shift 2 ;;
         -v|--verbose) VERBOSE=true; shift ;;
         --version) echo "marge $VERSION"; exit 0 ;;
         -h|--help|help) print_usage; exit 0 ;;
-        init) init_config; exit 0 ;;
-        meta) MARGE_FOLDER="meta_marge"; shift ;;
+        meta)
+            MARGE_FOLDER=".marge/meta"
+            shift
+            ;;
+        init)
+            shift
+            init_config "$@"
+            exit 0
+            ;;
         status)
             echo "${BOLD}Marge Status${RESET}"
             echo "Project type: $(detect_project)"
-            echo "Folder: $MARGE_FOLDER"
             [[ -f "$PROGRESS_FILE" ]] && {
                 echo "Progress file: $PROGRESS_FILE"
                 cat "$PROGRESS_FILE"
@@ -690,7 +760,7 @@ while [[ $# -gt 0 ]]; do
             [[ -f "$PRD_FILE" ]] && echo "PRD tasks: $(parse_prd "$PRD_FILE" | wc -l)"
             exit 0
             ;;
-        config) [[ -f .marge/config.yaml ]] && cat .marge/config.yaml; exit 0 ;;
+        config) [[ -f "$MARGE_FOLDER/config.yaml" ]] && cat "$MARGE_FOLDER/config.yaml"; exit 0 ;;
         resume)
             load_progress && {
                 log_info "Resuming from iteration $iteration"
