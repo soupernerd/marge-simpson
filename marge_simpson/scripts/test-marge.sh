@@ -128,8 +128,9 @@ AGENTS_CONTENT=$(cat "$AGENTS_PATH")
 HAS_CRITICAL=$(echo "$AGENTS_CONTENT" | grep -q "CRITICAL" && echo 0 || echo 1)
 test_assert "AGENTS.md contains CRITICAL section" "$HAS_CRITICAL" || true
 
-HAS_FOLDER_REF=$(echo "$AGENTS_CONTENT" | grep -q "$MS_FOLDER_NAME/" && echo 0 || echo 1)
-test_assert "AGENTS.md contains folder reference '$MS_FOLDER_NAME/'" "$HAS_FOLDER_REF" || true
+# Check for .marge/ references (the installed folder name, not the repo template folder name)
+HAS_FOLDER_REF=$(echo "$AGENTS_CONTENT" | grep -q "\.marge/" && echo 0 || echo 1)
+test_assert "AGENTS.md contains folder reference '.marge/'" "$HAS_FOLDER_REF" || true
 
 HAS_VERIFY_REF=$(echo "$AGENTS_CONTENT" | grep -q "verify" && echo 0 || echo 1)
 test_assert "AGENTS.md contains verification reference" "$HAS_VERIFY_REF" || true
