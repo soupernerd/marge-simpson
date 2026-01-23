@@ -90,13 +90,12 @@ if command -v shellcheck &>/dev/null; then
         fi
     done
     # Meta scripts in meta/ folder
-    for script in "$MS_DIR/meta/convert-to-meta.sh"; do
-        if [[ -f "$script" ]]; then
-            script_name=$(basename "$script")
-            SHELLCHECK_RESULT=$(shellcheck "$script" 2>&1 && echo 0 || echo 1)
-            test_assert "$script_name passes shellcheck" "$SHELLCHECK_RESULT" || true
-        fi
-    done
+    script="$MS_DIR/meta/convert-to-meta.sh"
+    if [[ -f "$script" ]]; then
+        script_name=$(basename "$script")
+        SHELLCHECK_RESULT=$(shellcheck "$script" 2>&1 && echo 0 || echo 1)
+        test_assert "$script_name passes shellcheck" "$SHELLCHECK_RESULT" || true
+    fi
 else
     echo "  [SKIP] ShellCheck not installed (optional: apt install shellcheck)"
 fi
@@ -114,7 +113,8 @@ set +e
 VERIFY_OUTPUT=$("$SCRIPTS_DIR/verify.sh" fast --skip-if-no-tests 2>&1)
 VERIFY_EXIT=$?
 set -e
-test_assert "verify.sh --skip-if-no-tests exits 0" "$VERIFY_EXIT" || true
+# Exit 0 means either tests passed OR no tests found (both acceptable with --skip-if-no-tests)
+test_assert "verify.sh --skip-if-no-tests exits 0" "$([[ $VERIFY_EXIT -eq 0 ]] && echo 0 || echo 1)" || true
 CONTAINS_FOLDER=$(echo "$VERIFY_OUTPUT" | grep -q "\[$MS_FOLDER_NAME\]" && echo 0 || echo 1)
 test_assert "Output contains folder name" "$CONTAINS_FOLDER" || true
 echo ""
