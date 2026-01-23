@@ -3,7 +3,7 @@
 **Priority:** correctness > safety > minimal diffs > speed
 
 **Scope (CRITICAL):**
-1. The `marge-simpson/` folder is **excluded from audits** -- it is the tooling, not the target, unless `.meta_marge/` exists and is being used to update Marge.
+1. The `marge-simpson/` folder is **excluded from audits** -- it is the tooling, not the target, unless `.meta_marge/` exists and is being used to update marge-simpson.
 2. Audit the workspace/repo OUTSIDE this folder. Track findings HERE in `marge-simpson/planning_docs/` assessment.md and tasklist.md.
 3. Never create `marge-simpson` files outside this folder.
 

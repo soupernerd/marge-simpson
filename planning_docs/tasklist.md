@@ -8,13 +8,13 @@ AI/Agents must read `AGENTS.md` before working.
 ---
 
 ## Tracking (required)
-- **Next ID:** MS-0022
+- **Next ID:** MS-0001
   - Use this for the next new Issue/Task ID, then increment here AND in `planning_docs/assessment.md`.
 
 ---
 
 ## Active Priorities (Top 5)
-1) (none - system healthy)
+1) …
 2) …
 3) …
 4) …
@@ -25,53 +25,41 @@ AI/Agents must read `AGENTS.md` before working.
 ## Work Queue
 
 ### P0 — Must fix (breaking / core workflow)
-(none)
+- [ ] **MS-0001 —** (clear, testable outcome)
+  - **Why:** …
+  - **Expert(s):** (optional) Relevant expert persona(s) from `experts/_index.md`
+  - **Definition of Done:** …
+  - **Verification:**
+    - Run automated verification:
+      - macOS/Linux: `./scripts/verify.sh fast`
+      - Windows: `./scripts/verify.ps1 fast`
+    - Add/adjust a regression test or deterministic repro for this MS item.
+    - Record evidence in `planning_docs/assessment.md` (raw output or verify log path).
+  - **Files likely involved:** …
+  - **Linked assessment:** [MS-0001]
 
 ### P1 — Should fix (important but not blocking)
-(none)
+- [ ] **MS-0002 —** …
 
 ### P2 — Nice to have (polish / refactor / cleanup)
-(none)
+- [ ] **MS-0003 —** …
 
 ---
 
 ## In Progress
-(none)
+- [ ] **MS-000X —** …
+  - **Started:** YYYY-MM-DD
+  - **Expert(s):** (optional) Relevant expert persona(s) from `experts/_index.md`
+  - **Current status:** …
+  - **Blockers:** …
+  - **Next step:** …
 
 ---
 
 ## Done (recent)
-- [x] **MS-0018 —** Fix em-dash encoding in shell scripts
-  - **Completed:** 2025-01-23
-  - **Expert(s):** testing, devops
+- [x] **MS-000X —** …
+  - **Completed:** YYYY-MM-DD
+  - **Expert(s):** (optional) Relevant expert persona(s) from `experts/_index.md`
   - **Verification:**
-    - Commands run: `.\scripts\verify.ps1 fast`
-    - Evidence: 87/87 tests pass
-
-- [x] **MS-0019 —** Fix PowerShell UTF-8 encoding detection in test-general.ps1
-  - **Completed:** 2025-01-23
-  - **Expert(s):** testing, devops
-  - **Verification:**
-    - Commands run: `.\scripts\verify.ps1 fast`
-    - Evidence: 61/61 general tests pass, 87 total tests pass
-
-- [x] **MS-0020 —** Add -Help flag to marge-init.ps1
-  - **Completed:** 2025-01-23
-  - **Expert(s):** devops
-  - **Verification:**
-    - Commands run: `.\cli\marge-init.ps1 -Help`
-    - Evidence: Displays help correctly
-
-- [x] **MS-0021 —** Update scripts/_index.md with test-syntax and test-general
-  - **Completed:** 2025-01-23
-  - **Expert(s):** documentation
-  - **Verification:**
-    - Commands run: `.\scripts\verify.ps1 fast`
-    - Evidence: 87/87 tests pass
-
-- [x] **Create general validation tests —** test-general.ps1 and test-general.sh
-  - **Completed:** 2025-01-23
-  - **Expert(s):** testing
-  - **Verification:**
-    - 6 test categories: encoding, version, parity, files, README, workflows
-    - 61 tests total, all passing
+    - Commands run: …
+    - Evidence: (paste raw output)
