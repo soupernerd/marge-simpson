@@ -1,0 +1,189 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# install-global.sh
+# Installs marge globally with shared resources and per-project initialization.
+#
+# Usage: ./install-global.sh [OPTIONS]
+#
+# Options:
+#   -d, --dir DIR     Install directory (default: ~/.marge)
+#   -f, --force       Overwrite existing installation
+#   -h, --help        Show this help message
+#
+# After installation, use 'marge-init' in any project directory to set up
+# marge_simpson/ with symlinks to shared resources and local tracking files.
+
+INSTALL_DIR="${HOME}/.marge"
+FORCE=0
+
+print_usage() {
+    sed -n '3,12p' "$0" | sed 's/^# //' | sed 's/^#//'
+}
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -d|--dir)
+            INSTALL_DIR="$2"
+            shift 2
+            ;;
+        -f|--force)
+            FORCE=1
+            shift
+            ;;
+        -h|--help)
+            print_usage
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            print_usage
+            exit 1
+            ;;
+    esac
+done
+
+SRC_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SRC="$SRC_DIR/marge_simpson"
+
+if [[ ! -d "$SRC" ]]; then
+    echo "Error: marge_simpson/ folder not found in $SRC_DIR" >&2
+    exit 1
+fi
+
+if [[ -d "$INSTALL_DIR" ]]; then
+    if [[ "$FORCE" -ne 1 ]]; then
+        echo "Error: $INSTALL_DIR already exists. Use --force to overwrite." >&2
+        exit 1
+    fi
+    echo "Removing existing installation..."
+    rm -rf "$INSTALL_DIR"
+fi
+
+echo "Installing marge globally to $INSTALL_DIR..."
+
+# Create directory structure
+mkdir -p "$INSTALL_DIR/shared" "$INSTALL_DIR/templates"
+
+# Copy shared resources (symlinked to projects)
+SHARED_FILES=(
+    "AGENTS.md"
+    "assets"
+    "experts"
+    "knowledge"
+    "model_pricing.json"
+    "prompt_examples"
+    "README.md"
+    "scripts"
+    "VERSION"
+    "workflows"
+)
+
+for item in "${SHARED_FILES[@]}"; do
+    if [[ -e "$SRC/$item" ]]; then
+        cp -R "$SRC/$item" "$INSTALL_DIR/shared/"
+    fi
+done
+
+# Copy per-project templates
+TEMPLATE_FILES=(
+    "assessment.md"
+    "instructions_log.md"
+    "tasklist.md"
+    "verify.config.json"
+)
+
+for item in "${TEMPLATE_FILES[@]}"; do
+    if [[ -e "$SRC/$item" ]]; then
+        cp "$SRC/$item" "$INSTALL_DIR/templates/"
+    fi
+done
+
+# Install marge-init script
+cp "$SRC_DIR/marge-init" "$INSTALL_DIR/marge-init"
+chmod +x "$INSTALL_DIR/marge-init"
+
+# Install marge CLI wrapper
+cp "$SRC_DIR/marge" "$INSTALL_DIR/marge"
+chmod +x "$INSTALL_DIR/marge"
+
+# Create convenience symlinks in ~/.local/bin if it exists or can be created
+LOCAL_BIN="${HOME}/.local/bin"
+if [[ -d "$LOCAL_BIN" ]] || mkdir -p "$LOCAL_BIN" 2>/dev/null; then
+    ln -sf "$INSTALL_DIR/marge" "$LOCAL_BIN/marge"
+    ln -sf "$INSTALL_DIR/marge-init" "$LOCAL_BIN/marge-init"
+    ADDED_TO_PATH=1
+else
+    ADDED_TO_PATH=0
+fi
+
+# Validate installation
+echo "Validating installation..."
+REQUIRED=(
+    "$INSTALL_DIR/shared/AGENTS.md"
+    "$INSTALL_DIR/shared/scripts/verify.sh"
+    "$INSTALL_DIR/shared/workflows"
+    "$INSTALL_DIR/shared/experts"
+    "$INSTALL_DIR/templates/assessment.md"
+    "$INSTALL_DIR/templates/tasklist.md"
+    "$INSTALL_DIR/marge-init"
+    "$INSTALL_DIR/marge"
+)
+
+MISSING=()
+for file in "${REQUIRED[@]}"; do
+    if [[ ! -e "$file" ]]; then
+        MISSING+=("$file")
+    fi
+done
+
+if [[ ${#MISSING[@]} -gt 0 ]]; then
+    echo "Warning: Installation may be incomplete. Missing:" >&2
+    for f in "${MISSING[@]}"; do
+        echo "  - $f" >&2
+    done
+fi
+
+echo ""
+echo "✓ Marge installed globally to $INSTALL_DIR"
+echo ""
+echo "Structure:"
+echo "  $INSTALL_DIR/"
+echo "  ├── shared/        # Shared resources (symlinked to projects)"
+echo "  │   ├── AGENTS.md"
+echo "  │   ├── experts/"
+echo "  │   ├── workflows/"
+echo "  │   ├── scripts/"
+echo "  │   └── knowledge/"
+echo "  ├── templates/     # Per-project templates"
+echo "  │   ├── assessment.md"
+echo "  │   ├── tasklist.md"
+echo "  │   └── verify.config.json"
+echo "  ├── marge          # CLI wrapper"
+echo "  └── marge-init     # Project initialization script"
+echo ""
+
+if [[ "$ADDED_TO_PATH" -eq 1 ]]; then
+    echo "marge and marge-init have been added to $LOCAL_BIN"
+    if [[ ":$PATH:" != *":$LOCAL_BIN:"* ]]; then
+        echo ""
+        echo "Add to your PATH (if not already):"
+        echo "  echo 'export PATH=\"\$HOME/.local/bin:\$PATH\"' >> ~/.bashrc"
+        echo "  source ~/.bashrc"
+    fi
+else
+    echo "To use marge from anywhere, add to your PATH:"
+    echo "  echo 'export PATH=\"$INSTALL_DIR:\$PATH\"' >> ~/.bashrc"
+    echo "  source ~/.bashrc"
+fi
+
+echo ""
+echo "Usage:"
+echo "  marge \"fix the bug\"              # Run task directly"
+echo "  marge \"refactor\" --model opus    # Use specific model"
+echo "  marge \"audit\" --dry-run          # Preview prompt"
+echo "  marge \"cleanup\" --loop           # Iterate until done"
+echo "  marge \"hotfix\" --fast            # Skip verification"
+echo "  marge init                        # Initialize marge_simpson/"
+echo "  marge status                      # Show marge status"
+echo "  marge --help                      # Show all commands"

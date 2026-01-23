@@ -1,0 +1,8 @@
+# Normalize line endings
+* text=auto
+
+# Ensure shell scripts use LF
+*.sh text eol=lf
+
+# Ensure PowerShell scripts use CRLF (optional; many prefer LF, but Windows tooling often expects CRLF)
+*.ps1 text eol=crlf
