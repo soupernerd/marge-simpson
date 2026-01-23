@@ -457,7 +457,7 @@ After finished, list remaining unchecked items in $MARGE_FOLDER/planning_docs/ta
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
-        echo "${CYAN}Mode:${RESET} $([ \"$LITE_MODE\" == true ] && echo 'lite' || echo 'full')"
+        echo "${CYAN}Mode:${RESET} $([[ "$LITE_MODE" == true ]] && echo 'lite' || echo 'full')"
         echo "${CYAN}Would run:${RESET} $(build_engine_cmd "$ENGINE") \"<prompt>\""
         return 0
     fi
