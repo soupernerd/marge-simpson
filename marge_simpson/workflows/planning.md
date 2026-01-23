@@ -1,47 +1,108 @@
 # Planning Workflow
 
-> Read-only analysis mode. NO code changes allowed.
+> For design discussions, architecture proposals, and strategic planning without code changes.
 
-## When to Use
+## Activation Triggers
 
-User's prompt contains:
+When the user's message includes:
 - "PLANNING ONLY"
-- "plan only"
 - "no code changes"
-- "read only"
-- "analyze only"
+- "just brainstorm"
+- "design discussion"
+- "architecture review"
+- "what would it take to..."
+- "propose a solution for..."
 
----
+## Planning Mode Rules
 
-## Rules (Strictly Enforced)
+### No Code Changes
+- **DO NOT** modify any files
+- **DO NOT** run verification scripts
+- **DO NOT** create MS-#### work items
 
-### ✅ DO
-- Read and analyze code
-- Compare code against requirements
-- Generate/update `tasklist.md` with prioritized tasks
-- Update `assessment.md` with findings and analysis
-- Create implementation plans and recommendations
+### Focus On
+- Analysis and exploration
+- Architecture proposals
+- Pros/cons evaluation
+- Risk assessment
+- Effort estimation (rough)
+- Alternative approaches
 
-### ❌ DO NOT
-- Make any code changes
-- Create patches or diffs
-- Modify any source files
-- Run implementation commands
+## Planning Response Format
 
----
+```
+## Planning: [Topic]
 
-## Why Planning Mode Exists
+### Current State
+- What exists now
+- Key constraints
 
-- **Saves tokens** — analysis without implementation overhead
-- **Prevents accidents** — no unintended changes during discovery
-- **Clear phases** — planning and building are distinct
+### Proposed Approach
+- Option A: [Description]
+  - Pros: ...
+  - Cons: ...
+  - Effort: Low/Medium/High
 
----
+- Option B: [Description]
+  - Pros: ...
+  - Cons: ...
+  - Effort: Low/Medium/High
 
-## Output
+### Recommendation
+[Which option and why]
 
-Update these files only:
-- `assessment.md` — findings, gap analysis
-- `tasklist.md` — prioritized tasks extracted from findings
+### Next Steps (if approved)
+1. First step
+2. Second step
+3. ...
 
-Do NOT touch source code.
+### Open Questions
+- Question 1?
+- Question 2?
+```
+
+## Checkpoint Rules
+
+### Major Changes Requiring Planning
+Before these changes, stop and request approval:
+
+| Change Type | Requires Plan |
+|-------------|---------------|
+| Architecture changes | Yes |
+| Large refactors (>5 files) | Yes |
+| Schema/database changes | Yes |
+| API contract changes | Yes |
+| New dependencies | Yes |
+| Breaking changes | Yes |
+
+### Plan Contents
+1. **What** - Clear description of the change
+2. **Why** - Business/technical justification
+3. **How** - Implementation approach
+4. **Risks** - What could go wrong
+5. **Rollback** - How to undo if needed
+6. **Effort** - Rough scope (files, complexity)
+
+## Transitioning to Work
+
+When planning is approved and user says "proceed" or "implement":
+
+1. Create MS-#### work items in tasklist.md
+2. Switch to `workflows/work.md` process
+3. Reference the planning discussion in work items
+
+## Examples
+
+### Planning Request
+User: "What would it take to add multi-tenant support?"
+
+Response: Full planning analysis, no code changes, no work IDs.
+
+### Planning to Work Transition
+User: "The plan looks good, proceed with Option B"
+
+Response: Create MS-#### items, begin implementation following work.md.
+
+## Token Cost
+
+~600 tokens when read

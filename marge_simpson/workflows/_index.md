@@ -36,8 +36,8 @@ Whichever AGENTS.md you read determines where IDs go:
 | **Question** | Curiosity, "how", "why", "what" | None (answer directly) | No |
 | **Work** | Fix, add, change, build | [work.md](work.md) | Yes (or continue existing) |
 | **Audit** | "audit", "review codebase" | [audit.md](audit.md) → then work.md | Yes (generates multiple) |
-| **Planning** | "PLANNING ONLY", "plan only", "no code changes" | [planning.md](planning.md) | Yes (findings become tasks) |
-| **Loop** | "loop until clean", "iterate until done" | [loop.md](loop.md) | Depends on work type |
+| **Loop** | "loop until clean", "iterate" | [loop.md](loop.md) (modifier) | Continues existing |
+| **Planning** | "PLANNING ONLY", design discussion | [planning.md](planning.md) | No |
 | **Session End** | Task complete, goodbye, natural end | [session_end.md](session_end.md) | No |
 
 ## Decision Tree
@@ -47,8 +47,12 @@ User message received
     │
     ├─ Just asking a question? → Answer directly, no ID needed
     │
+    ├─ Planning/design discussion? (no code changes)
+    │   └─ Read workflows/planning.md
+    │
     ├─ Wants something done (fix/add/change)?
-    │   └─ Read workflows/work.md
+    │   ├─ Read workflows/work.md
+    │   └─ If "loop until clean" → Also read workflows/loop.md
     │
     ├─ Wants codebase audit/review?
     │   └─ Read workflows/audit.md (discovery)
@@ -64,5 +68,7 @@ User message received
 |----------|---------------|--------|
 | Question only | AGENTS.md only | ~1,500 |
 | Single work item | AGENTS.md + work.md | ~2,500 |
+| Work + loop | AGENTS.md + work.md + loop.md | ~3,300 |
 | Audit | AGENTS.md + audit.md + work.md | ~3,000 |
+| Planning only | AGENTS.md + planning.md | ~2,100 |
 | Session end | session_end.md | ~500 |
