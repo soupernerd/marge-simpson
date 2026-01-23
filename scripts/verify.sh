@@ -41,14 +41,16 @@ say() {
 
 # Cross-platform command adaptation
 # Converts Windows PowerShell commands to bash equivalents when running on Unix
+# Since run_cmd uses 'bash -c', we always need to convert .ps1 to .sh
 adapt_command() {
   local cmd="$1"
   
   # Convert Windows backslashes to forward slashes
   cmd="${cmd//\\//}"
   
-  # If command references a .ps1 file, try to find equivalent .sh
-  if [[ "$cmd" =~ \.ps1 ]] && ! have powershell && ! have pwsh; then
+  # If command references a .ps1 file, convert to .sh equivalent
+  # (run_cmd uses bash -c, so we can't run .ps1 directly even if pwsh exists)
+  if [[ "$cmd" =~ \.ps1 ]]; then
     # Extract the .ps1 file path
     local ps1_path
     ps1_path=$(echo "$cmd" | grep -oE '[^ ]*\.ps1')
@@ -57,18 +59,18 @@ adapt_command() {
       # Convert to .sh path
       local sh_path="${ps1_path%.ps1}.sh"
       
-      # Check if the .sh equivalent exists (try both relative and from ROOT_DIR)
-      local sh_full_path="$ROOT_DIR/$sh_path"
-      # Remove leading ./ if present for the check
-      sh_full_path="${sh_full_path/\/.\//\/}"
+      # Check if the .sh equivalent exists relative to ROOT_DIR (where commands run from)
+      # Remove leading ./ for path joining
+      local clean_sh_path="${sh_path#./}"
+      local sh_full_path="$ROOT_DIR/$clean_sh_path"
       
-      if [[ -f "$sh_full_path" ]] || [[ -f "$sh_path" ]]; then
-        # Replace .ps1 with .sh
+      if [[ -f "$sh_full_path" ]]; then
+        # Replace .ps1 with .sh in the command
         cmd="${cmd//$ps1_path/$sh_path}"
-        say "[cross-platform] Adapted: $cmd"
+        echo "[cross-platform] Adapted: $cmd" >&2
       else
-        say "[warning] No bash equivalent found for: $ps1_path (tried $sh_full_path)"
-        return 1
+        echo "[warning] No bash equivalent found for: $ps1_path (tried $sh_full_path)" >&2
+        # Return the original command anyway - let it fail naturally
       fi
     fi
   fi
