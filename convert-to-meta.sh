@@ -126,7 +126,6 @@ while IFS= read -r -d '' file; do
   PLACEHOLDER1="###BOTH_FOLDERS_1###"
   PLACEHOLDER2="###BOTH_FOLDERS_2###"
   PLACEHOLDER3="###SOURCE_TRUTH###"
-  PLACEHOLDER4="###WORKING_COPY###"
   PLACEHOLDER5="###READ_SOURCE_AGENTS###"
   PLACEHOLDER6="###IDS_SOURCE_TASKLIST###"
   # README.md Repository Architecture section placeholders
@@ -194,7 +193,7 @@ while IFS= read -r -d '' file; do
   
   if [[ "$content" != "$original_content" ]]; then
     echo "$content" > "$file"
-    rel_path="${file#$TARGET_FOLDER/}"
+    rel_path="${file#"$TARGET_FOLDER"/}"
     echo "  Transformed: $rel_path"
     ((TRANSFORMED_COUNT++)) || true
   fi
@@ -279,7 +278,6 @@ AGENTS_PATH="$TARGET_FOLDER/AGENTS.md"
 if [[ -f "$AGENTS_PATH" ]]; then
   # The source marge_simpson has a conditional clause "unless meta_marge exists..."
   # For meta_marge, we want the simpler rule without the conditional
-  CONDITIONAL_PATTERN=", unless \\\`${TARGET_NAME}/\\\` exists and is being used to update Marge"
   if grep -q "unless \`${TARGET_NAME}/\` exists and is being used to update Marge" "$AGENTS_PATH"; then
     # Remove the conditional clause using sed
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -304,7 +302,7 @@ echo "[5/5] Verifying conversion..."
 REMAINING_REFS=0
 while IFS= read -r -d '' file; do
   if grep -q "\\b$SOURCE_NAME\\b" "$file" 2>/dev/null; then
-    rel_path="${file#$TARGET_FOLDER/}"
+    rel_path="${file#"$TARGET_FOLDER"/}"
     echo "  WARNING: '$SOURCE_NAME' still found in: $rel_path"
     ((REMAINING_REFS++)) || true
   fi
