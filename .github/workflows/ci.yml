@@ -16,7 +16,7 @@ jobs:
       - name: Run Marge Self-Tests (PowerShell)
         shell: pwsh
         run: |
-          powershell -ExecutionPolicy Bypass -File ./marge_simpson/scripts/test-marge.ps1
+          powershell -ExecutionPolicy Bypass -File ./scripts/test-marge.ps1
 
   test-linux:
     name: Test on Linux
@@ -26,12 +26,12 @@ jobs:
       
       - name: Make scripts executable
         run: |
-          chmod +x ./marge_simpson/scripts/verify.sh
-          chmod +x ./marge_simpson/scripts/cleanup.sh
-          chmod +x ./marge_simpson/scripts/test-marge.sh
+          chmod +x ./scripts/verify.sh
+          chmod +x ./scripts/cleanup.sh
+          chmod +x ./scripts/test-marge.sh
       
       - name: Run Marge Self-Tests (Bash)
-        run: ./marge_simpson/scripts/test-marge.sh
+        run: ./scripts/test-marge.sh
 
   test-macos:
     name: Test on macOS
@@ -41,12 +41,12 @@ jobs:
       
       - name: Make scripts executable
         run: |
-          chmod +x ./marge_simpson/scripts/verify.sh
-          chmod +x ./marge_simpson/scripts/cleanup.sh
-          chmod +x ./marge_simpson/scripts/test-marge.sh
+          chmod +x ./scripts/verify.sh
+          chmod +x ./scripts/cleanup.sh
+          chmod +x ./scripts/test-marge.sh
       
       - name: Run Marge Self-Tests (Bash)
-        run: ./marge_simpson/scripts/test-marge.sh
+        run: ./scripts/test-marge.sh
 
   shellcheck:
     name: ShellCheck Lint
@@ -66,8 +66,8 @@ jobs:
             shellcheck "$script" || exit 1
           done
           
-          # Also check bash scripts without .sh extension
-          for script in ./marge ./marge-init; do
+          # Also check bash scripts without .sh extension in cli/
+          for script in ./cli/marge ./cli/marge-init; do
             if [ -f "$script" ]; then
               echo "Checking: $script"
               shellcheck "$script" || exit 1

@@ -1,4 +1,6 @@
-# Meta-development folder (not for distribution)
+# Meta-development folder (for developing Marge itself)
+.meta_marge/
+.marge_meta/
 meta_marge/
 
 # OS / filesystem noise

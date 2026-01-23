@@ -1,0 +1,13 @@
+{
+  "fast": [
+    ".\\marge-simpson\\scripts\\test-syntax.ps1",
+    ".\\marge-simpson\\scripts\\test-general.ps1",
+    ".\\marge-simpson\\scripts\\test-marge.ps1"
+  ],
+  "full": [
+    ".\\marge-simpson\\scripts\\test-syntax.ps1",
+    ".\\marge-simpson\\scripts\\test-general.ps1",
+    ".\\marge-simpson\\scripts\\test-marge.ps1"
+  ],
+  "_comment": "Marge core tests. Commands run from repo root (parent of this folder)."
+}

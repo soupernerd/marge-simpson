@@ -1,5 +1,0 @@
-{
-  "fast": [],
-  "full": [],
-  "_comment": "Empty by default. The CI workflow runs test scripts directly. Users can add project-specific test commands here."
-}

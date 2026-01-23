@@ -1,0 +1,18 @@
+Read the AGENTS.md file in this folder and follow it.
+
+Instructions:
+- Audit the assessment and tasklist files in planning_docs/. Look for solid reasoning in the actions taken
+- Audit the workspace and compare it to your assessment and tasklist audit above, make sure all actions taken were good decisions
+- Find an expert for the above in the experts/ folder
+- Audit CLI functions, ensure they match intended functionality. Reference docs as needed.
+- When conflicts exist, pick the option that makes the most sense based on what creates a more robust system, not ease of implementation
+
+Read-only, update assessment.md and tasklist.md (etc) as you go
+
+Loop until clean, minimum 20 iterations.
+
+1 loop = ENTIRE audit of the workspace
+
+Output using the Response Format (include IDs created) WITH DETAIL for the user to understand.
+
+Between each loop, fix the issues. Do not stop between loops except for a brief pause. Audit → fix → audit → fix until you hit at least the min stated above, and keep looping beyond the min if there are still issues found until clean.

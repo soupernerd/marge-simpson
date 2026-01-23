@@ -1,6 +1,0 @@
-﻿engine: claude
-model: ""
-max_iterations: 20
-max_retries: 3
-auto_commit: true
-folder: marge_simpson
