@@ -1,3 +1,7 @@
+# Marge runtime artifacts (created by `marge init` in projects)
+.marge/
+PRD.md
+
 # Meta-development folder (not for distribution)
 meta_marge/
 
