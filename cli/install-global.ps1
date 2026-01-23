@@ -53,6 +53,7 @@ New-Item -ItemType Directory -Force -Path "$InstallDir\templates" | Out-Null
 # Copy shared resources
 $SharedItems = @(
     "AGENTS.md",
+    "AGENTS-lite.md",
     "assets",
     "experts",
     "knowledge",

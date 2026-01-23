@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Marge v1.2.2 - Autonomous AI Coding Loop (PowerShell)
+    Marge v1.3.0 - Autonomous AI Coding Loop (PowerShell)
 
 .DESCRIPTION
     A command-line interface for running AI coding tasks autonomously.
