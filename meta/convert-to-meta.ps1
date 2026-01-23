@@ -167,6 +167,10 @@ foreach ($file in $files) {
         $originalContent = $content
         
         foreach ($name in $ContentSourceNames) {
+            # Protect GitHub URLs from transformation (repo name should stay as-is)
+            $githubPlaceholder = "___GITHUB_REPO_PLACEHOLDER___"
+            $content = $content -replace "(github\.com/[^/]+/)$([regex]::Escape($name))", "`$1$githubPlaceholder"
+            
             # Apply replacements
             $content = $content -replace [regex]::Escape("$name/"), "$TargetName/"
             $content = $content -replace [regex]::Escape("[$name]"), "[$TargetName]"
@@ -184,6 +188,9 @@ foreach ($file in $files) {
             
             # Word boundary replacement
             $content = $content -replace "(?<![a-zA-Z0-9_])$([regex]::Escape($name))(?![a-zA-Z0-9_])", $TargetName
+            
+            # Restore protected GitHub URLs
+            $content = $content -replace $githubPlaceholder, $name
         }
         
         if ($content -ne $originalContent) {

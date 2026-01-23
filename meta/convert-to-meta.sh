@@ -158,6 +158,12 @@ while IFS= read -r -d '' file; do
   fi
 
   for name in "${CONTENT_SOURCE_NAMES[@]}"; do
+    # Protect GitHub URLs from transformation (repo name should stay as-is)
+    # Uses a unique placeholder pattern that won't be matched by other replacements
+    github_placeholder="___GITHUB_PROTECTED_${name}___"
+    # shellcheck disable=SC2001
+    content=$(echo "$content" | sed "s|github\.com/\([^/]*\)/${name}|github.com/\1/${github_placeholder}|g")
+    
     # Apply replacements
     content=${content//"$name/"/"$TARGET_NAME/"}
     content=${content//"[$name]"/"[$TARGET_NAME]"}
@@ -176,6 +182,9 @@ while IFS= read -r -d '' file; do
     # Final word-boundary replacement for any remaining instances
     # shellcheck disable=SC2001  # sed needed for regex word boundaries
     content=$(echo "$content" | sed -E "s/(^|[^[:alnum:]_])${name}([^[:alnum:]_]|$)/\\1${TARGET_NAME}\\2/g")
+    
+    # Restore protected GitHub URLs
+    content=${content//"${github_placeholder}"/"${name}"}
   done
   
   if [[ "$content" != "$original_content" ]]; then
