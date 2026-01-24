@@ -18,10 +18,10 @@ User explicitly asks for:
 
 Before scanning, check what's already known:
 
-1. **Read `knowledge/_index.md`** — check Quick Stats and Recent Entries
-2. **Grep `knowledge/decisions.md`** for architectural decisions:
+1. **Read `marge-simpson/knowledge/_index.md`** — check Quick Stats and Recent Entries
+2. **Grep `marge-simpson/knowledge/decisions.md`** for architectural decisions:
    ```powershell
-   Select-String -Path "knowledge/decisions.md" -Pattern "#architecture|#database|#api"
+   Select-String -Path "marge-simpson/knowledge/decisions.md" -Pattern "#architecture|#database|#api"
    ```
 3. **Note any constraints** — don't flag issues that contradict known decisions
 
@@ -44,7 +44,7 @@ Before scanning, check what's already known:
 
 ### Document Findings
 
-Update `planning_docs/assessment.md`:
+Update `marge-simpson/planning_docs/assessment.md`:
 
 ```markdown
 ## Audit: [Date] - [Scope]

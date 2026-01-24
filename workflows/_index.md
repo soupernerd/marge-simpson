@@ -2,31 +2,15 @@
 
 > Route to the right workflow based on intent. Read only what you need.
 
-## Scope Inference
+## Path Resolution
 
-When both `.meta_marge/` and another Marge folder exist, paths can be ambiguous.
+All paths in this system use explicit folder prefixes:
+- `marge-simpson/planning_docs/` → tracking files
+- `marge-simpson/workflows/` → workflow files  
+- `marge-simpson/experts/` → domain expertise
+- `marge-simpson/knowledge/` → decisions and patterns
 
-### Rule: Ask When Ambiguous
-
-If the user references a shared path (e.g., "fix prompt_examples/", "update README.md"):
-
-> "I noticed you have both `.meta_marge/` and another Marge folder. Which folder should I apply this to?
-> - The main Marge folder (source of truth)
-> - `.meta_marge/` (working copy for meta-development)"
-
-### When NOT Ambiguous
-
-| Signal | Target |
-|--------|--------|
-| User explicitly names folder | Use that folder |
-| Only one Marge folder exists | Use that folder |
-| Path only exists in one folder | Use that folder |
-
-### Tracking Always Follows AGENTS.md
-
-Whichever AGENTS.md you read determines where IDs go:
-- Read `.meta_marge/AGENTS.md` → IDs in `.meta_marge/planning_docs/tasklist.md`
-- Read any other AGENTS.md → IDs in that folder's `planning_docs/tasklist.md`
+When `.meta_marge/` exists, the `convert-to-meta` script transforms these to `.meta_marge/` paths.
 
 ## Quick Reference
 
@@ -48,18 +32,18 @@ User message received
     ├─ Just asking a question? → Answer directly, no ID needed
     │
     ├─ Planning/design discussion? (no code changes)
-    │   └─ Read workflows/planning.md
+    │   └─ Read marge-simpson/workflows/planning.md
     │
     ├─ Wants something done (fix/add/change)?
-    │   ├─ Read workflows/work.md
-    │   └─ If "loop until clean" → Also read workflows/loop.md
+    │   ├─ Read marge-simpson/workflows/work.md
+    │   └─ If "loop until clean" → Also read marge-simpson/workflows/loop.md
     │
     ├─ Wants codebase audit/review?
-    │   └─ Read workflows/audit.md (discovery)
-    │   └─ Then workflows/work.md (execution)
+    │   └─ Read marge-simpson/workflows/audit.md (discovery)
+    │   └─ Then marge-simpson/workflows/work.md (execution)
     │
     └─ Task complete / session ending?
-        └─ Read workflows/session_end.md
+        └─ Read marge-simpson/workflows/session_end.md
 ```
 
 ## Token Costs

@@ -1,337 +1,134 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# convert-to-meta.sh -- Creates .meta_marge/ for meta-development
-#
-# This script copies the current Marge folder to a .meta_marge/ subfolder
-# inside the workspace for meta-development (improving Marge itself).
-#
-# Run this from inside a Marge folder or repo root.
-# The .meta_marge/ folder is gitignored by default.
-#
-# Usage:
-#   ./meta/convert-to-meta.sh              # From repo root
-#   ./meta/convert-to-meta.sh -f           # Force overwrite
+# convert-to-meta.sh - Creates .meta_marge/ for meta-development
+# Usage: ./meta/convert-to-meta.sh [-f|--force] [-h|--help]
 
-# Defaults
 FORCE=false
-
-# Parse arguments
 while [[ $# -gt 0 ]]; do
-  case "$1" in
-    -f|--force) FORCE=true; shift ;;
-    -h|--help)
-      echo "Usage: $0 [-f|--force]"
-      echo ""
-      echo "Creates .meta_marge/ folder for meta-development."
-      echo "Run from within a Marge folder or repo root."
-      echo ""
-      echo "Options:"
-      echo "  -f, --force     Overwrite existing .meta_marge/ without prompting"
-      exit 0
-      ;;
-    *) shift ;;
-  esac
+    case "$1" in
+        -f|--force) FORCE=true; shift ;;
+        -h|--help)
+            echo "Usage: $0 [-f|--force] [-h|--help]"
+            echo "Creates .meta_marge/ folder for meta-development."
+            exit 0 ;;
+        *) shift ;;
+    esac
 done
 
-# Determine source folder (where the Marge files are)
+# Locate source folder
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-
-# If script is in meta/, go up one level to find the Marge root
-if [[ "$(basename "$SCRIPT_DIR")" == "meta" ]]; then
-  SOURCE_FOLDER="$(dirname "$SCRIPT_DIR")"
-else
-  SOURCE_FOLDER="$SCRIPT_DIR"
-fi
-
-# Detect source folder name
+SOURCE_FOLDER="$([[ "$(basename "$SCRIPT_DIR")" == "meta" ]] && dirname "$SCRIPT_DIR" || echo "$SCRIPT_DIR")"
 SOURCE_NAME=$(basename "$SOURCE_FOLDER")
-
-# Always use .meta_marge as the target name (standardized)
 TARGET_NAME=".meta_marge"
-
-# Check if we're already in a meta folder
-if [[ "$SOURCE_NAME" == ".meta_marge" ]] || [[ "$SOURCE_NAME" == ".marge_meta" ]] || [[ "$SOURCE_NAME" == "meta_marge" ]]; then
-  echo "ERROR: Already in a meta-development folder ($SOURCE_NAME)"
-  echo "This script creates the meta folder - you're already in one."
-  exit 1
-fi
-
-# Target is INSIDE the source folder (not a sibling)
 TARGET_FOLDER="$SOURCE_FOLDER/$TARGET_NAME"
 
-echo ""
-echo "============================================================"
-echo " Convert $SOURCE_NAME -> $TARGET_NAME"
-echo "============================================================"
-echo ""
-echo "Source: $SOURCE_FOLDER"
-echo "Target: $TARGET_FOLDER"
-echo ""
+# Validate
+[[ "$SOURCE_NAME" == ".meta_marge" ]] && { echo "ERROR: Already in meta folder"; exit 1; }
+[[ ! -f "$SOURCE_FOLDER/AGENTS.md" ]] && { echo "ERROR: No AGENTS.md found"; exit 1; }
 
-# Validate source has AGENTS.md (confirms it's a Marge folder)
-if [[ ! -f "$SOURCE_FOLDER/AGENTS.md" ]]; then
-  echo "ERROR: Not a valid Marge folder (no AGENTS.md found)"
-  echo "Run this script from inside a Marge folder or repo root."
-  exit 1
-fi
+echo -e "\n===== Convert $SOURCE_NAME -> $TARGET_NAME =====\n"
 
-# Check if target exists
+# [1/4] Remove existing / create fresh
 if [[ -d "$TARGET_FOLDER" ]]; then
-  if [[ "$FORCE" != "true" ]]; then
-    read -rp "$TARGET_NAME already exists. Overwrite? (y/N) " response
-    if [[ "$response" != "y" && "$response" != "Y" ]]; then
-      echo "Aborted."
-      exit 0
+    if [[ "$FORCE" != "true" ]]; then
+        read -rp "$TARGET_NAME exists. Overwrite? (y/N) " r
+        [[ "$r" != "y" && "$r" != "Y" ]] && { echo "Aborted."; exit 0; }
     fi
-  fi
-  echo "[1/5] Removing existing $TARGET_NAME..."
-  rm -rf "$TARGET_FOLDER"
-else
-  echo "[1/5] Target folder does not exist, will create fresh."
+    rm -rf "$TARGET_FOLDER"
 fi
+echo "[1/4] Copying..."
 
-# Copy folder (excluding .git, node_modules, and files not needed for meta-dev)
-echo "[2/5] Copying $SOURCE_NAME -> $TARGET_NAME..."
 mkdir -p "$TARGET_FOLDER"
-
-# Use rsync if available for better exclusion, otherwise cp with cleanup
 if command -v rsync &>/dev/null; then
-  rsync -a \
-    --exclude='.git' \
-    --exclude='node_modules' \
-    --exclude='.meta_marge' \
-    --exclude='.marge_meta' \
-    --exclude='meta_marge' \
-    --exclude='cli' \
-    --exclude='meta' \
-    --exclude='assets' \
-    --exclude='.github' \
-    --exclude='README.md' \
-    --exclude='CHANGELOG.md' \
-    --exclude='VERSION' \
-    --exclude='LICENSE' \
-    --exclude='.gitignore' \
-    --exclude='.gitattributes' \
-    "$SOURCE_FOLDER/" "$TARGET_FOLDER/"
+    rsync -a \
+        --exclude='.git' --exclude='node_modules' --exclude='.meta_marge' \
+        --exclude='.marge' --exclude='cli' --exclude='meta' \
+        --exclude='assets' --exclude='.github' \
+        --exclude='README.md' --exclude='CHANGELOG.md' --exclude='VERSION' \
+        --exclude='LICENSE' --exclude='.gitignore' --exclude='.gitattributes' \
+        "$SOURCE_FOLDER/" "$TARGET_FOLDER/"
 else
-  cp -r "$SOURCE_FOLDER/." "$TARGET_FOLDER/"
-  # Remove folders/files not needed for meta-development
-  rm -rf "$TARGET_FOLDER/.git" "$TARGET_FOLDER/node_modules" "$TARGET_FOLDER/.meta_marge" \
-         "$TARGET_FOLDER/.marge_meta" "$TARGET_FOLDER/meta_marge" "$TARGET_FOLDER/cli" \
-         "$TARGET_FOLDER/meta" "$TARGET_FOLDER/assets" "$TARGET_FOLDER/.github" 2>/dev/null || true
-  rm -f "$TARGET_FOLDER/README.md" "$TARGET_FOLDER/CHANGELOG.md" "$TARGET_FOLDER/VERSION" \
-        "$TARGET_FOLDER/LICENSE" \
-        "$TARGET_FOLDER/.gitignore" "$TARGET_FOLDER/.gitattributes" 2>/dev/null || true
+    cp -r "$SOURCE_FOLDER/." "$TARGET_FOLDER/"
+    rm -rf "$TARGET_FOLDER/.git" "$TARGET_FOLDER/node_modules" "$TARGET_FOLDER/.meta_marge" \
+           "$TARGET_FOLDER/.marge" "$TARGET_FOLDER/cli" "$TARGET_FOLDER/meta" \
+           "$TARGET_FOLDER/assets" "$TARGET_FOLDER/.github" 2>/dev/null || true
+    rm -f "$TARGET_FOLDER/README.md" "$TARGET_FOLDER/CHANGELOG.md" "$TARGET_FOLDER/VERSION" \
+          "$TARGET_FOLDER/LICENSE" "$TARGET_FOLDER/.gitignore" "$TARGET_FOLDER/.gitattributes" 2>/dev/null || true
 fi
 
-# Text file extensions to transform
-TEXT_EXTENSIONS="md|txt|json|yml|yaml|toml|ps1|sh|bash|zsh|py|js|ts|jsx|tsx|html|css|scss|less|xml|config|cfg|ini|env|gitignore|dockerignore|sql|graphql|prisma"
-
-# Names to rewrite inside files (support repo-root runs where SOURCE_NAME isn't .marge)
-CONTENT_SOURCE_NAMES=()
-CONTENT_SOURCE_NAMES+=("$SOURCE_NAME")
-if [[ "$SOURCE_NAME" != ".marge" ]]; then
-  CONTENT_SOURCE_NAMES+=(".marge")
-fi
-
-echo "[3/5] Transforming file contents..."
-
-TRANSFORMED_COUNT=0
-SKIPPED_COUNT=0
-
-# Find all files and transform them
+# [2/4] Transform: marge-simpson/ -> .meta_marge/
+echo "[2/4] Transforming paths..."
+count=0
 while IFS= read -r -d '' file; do
-  # Check if it's a text file by extension or known filename
-  filename=$(basename "$file")
-  ext="${filename##*.}"
-  
-  is_text=false
-  if [[ "$ext" =~ ^($TEXT_EXTENSIONS)$ ]]; then
-    is_text=true
-  elif [[ "$filename" =~ ^(Makefile|Dockerfile|Jenkinsfile|Procfile|LICENSE|README|CHANGELOG|CONTRIBUTING|VERSION)$ ]]; then
-    is_text=true
-  elif [[ "$ext" == "$filename" ]]; then
-    # No extension - check if it's text
-    if file "$file" 2>/dev/null | grep -q "text"; then
-      is_text=true
+    # Check text file
+    ext="${file##*.}"
+    [[ ! "$ext" =~ ^(md|txt|json|yml|yaml|toml|ps1|sh|py|js|ts)$ ]] && continue
+    [[ ! -r "$file" ]] && continue
+    
+    content=$(cat "$file" 2>/dev/null) || continue
+    original="$content"
+    
+    # Protect GitHub URLs, transform, restore
+    content=$(echo "$content" | sed "s|github\.com/\([^/]*\)/${SOURCE_NAME}|github.com/\1/___GITHUB___|g")
+    content=${content//"$SOURCE_NAME/"/"$TARGET_NAME/"}
+    content=$(echo "$content" | sed -E "s/(^|[^[:alnum:]_./-])${SOURCE_NAME}([^[:alnum:]_]|\$)/\1${TARGET_NAME}\2/g")
+    content=${content//___GITHUB___/"$SOURCE_NAME"}
+    
+    if [[ "$content" != "$original" ]]; then
+        echo "$content" > "$file"
+        ((count++)) || true
     fi
-  fi
-  
-  if [[ "$is_text" != "true" ]]; then
-    ((SKIPPED_COUNT++)) || true
-    continue
-  fi
-  
-  # Read file content
-  if [[ ! -r "$file" ]]; then
-    ((SKIPPED_COUNT++)) || true
-    continue
-  fi
-  
-  original_content=$(cat "$file" 2>/dev/null) || continue
-  content="$original_content"
-
-  # Skip meta/README.md - it documents meta-development and references should stay as original
-  relative_path="${file#"$TARGET_FOLDER"/}"
-  if [[ "$relative_path" == "meta/README.md" ]]; then
-    continue
-  fi
-
-  for name in "${CONTENT_SOURCE_NAMES[@]}"; do
-    # Protect GitHub URLs from transformation (repo name should stay as-is)
-    # Uses a unique placeholder pattern that won't be matched by other replacements
-    github_placeholder="___GITHUB_PROTECTED_${name}___"
-    # shellcheck disable=SC2001
-    content=$(echo "$content" | sed "s|github\.com/\([^/]*\)/${name}|github.com/\1/${github_placeholder}|g")
-    
-    # Apply replacements
-    content=${content//"$name/"/"$TARGET_NAME/"}
-    content=${content//"[$name]"/"[$TARGET_NAME]"}
-    content=${content//"'$name'"/"'$TARGET_NAME'"}
-    content=${content//"\"$name\""/"\"$TARGET_NAME\""}
-    content=${content//"\`$name\`"/"\`$TARGET_NAME\`"}
-    content=${content//" $name "/" $TARGET_NAME "}
-    content=${content//" $name."/" $TARGET_NAME."}
-    content=${content//" $name,"/" $TARGET_NAME,"}
-    content=${content//" $name:"/" $TARGET_NAME:"}
-    content=${content//"($name)"/"($TARGET_NAME)"}
-    content=${content//": $name"/": $TARGET_NAME"}
-    content=${content//"# $name"/"# $TARGET_NAME"}
-    content=${content//"=$name"/"=$TARGET_NAME"}
-    
-    # Final word-boundary replacement for any remaining instances
-    # shellcheck disable=SC2001  # sed needed for regex word boundaries
-    content=$(echo "$content" | sed -E "s/(^|[^[:alnum:]_])${name}([^[:alnum:]_]|$)/\\1${TARGET_NAME}\\2/g")
-    
-    # Restore protected GitHub URLs
-    content=${content//"${github_placeholder}"/"${name}"}
-  done
-  
-  if [[ "$content" != "$original_content" ]]; then
-    echo "$content" > "$file"
-    rel_path="${file#"$TARGET_FOLDER"/}"
-    echo "  Transformed: $rel_path"
-    ((TRANSFORMED_COUNT++)) || true
-  fi
 done < <(find "$TARGET_FOLDER" -type f -print0)
+echo "  $count files transformed"
 
-echo "  $TRANSFORMED_COUNT files transformed, $SKIPPED_COUNT skipped (binary/non-text)"
+# [3/4] Reset work queues + rewrite AGENTS.md scope
+echo "[3/4] Resetting work queues..."
 
-# Transform prompt_examples and README.md to use explicit .meta_marge paths
-# This ensures embedded prompt templates reference the correct locations
-meta_transform_file() {
-  local file="$1"
-  if [[ -f "$file" ]]; then
-    content=$(cat "$file" 2>/dev/null) || return
-    original_content="$content"
-    
-    # Make AGENTS.md reference explicit for meta-development
-    content=${content//"Read the AGENTS.md file in this folder"/"Read the .meta_marge/AGENTS.md file"}
-    content=${content//"AGENTS.md file in this folder"/".meta_marge/AGENTS.md file"}
-    content=${content//"AGENTS.md (in this folder)"/".meta_marge/AGENTS.md"}
-    
-    # Make planning_docs paths explicit (only if not already prefixed)
-    content=$(echo "$content" | sed -E 's/([^.])planning_docs\//\1.meta_marge\/planning_docs\//g')
-    content=$(echo "$content" | sed -E 's/^planning_docs\//.meta_marge\/planning_docs\//g')
-    
-    if [[ "$content" != "$original_content" ]]; then
-      echo "$content" > "$file"
-      rel_path="${file#"$TARGET_FOLDER"/}"
-      echo "  Meta-transformed: $rel_path"
-    fi
-  fi
-}
-
-# Transform prompt_examples/
-PROMPT_EXAMPLES_DIR="$TARGET_FOLDER/prompt_examples"
-if [[ -d "$PROMPT_EXAMPLES_DIR" ]]; then
-  while IFS= read -r -d '' file; do
-    meta_transform_file "$file"
-  done < <(find "$PROMPT_EXAMPLES_DIR" -type f \( -name "*.md" -o -name "*.txt" -o ! -name "*.*" \) -print0)
-fi
-
-# Transform README.md (has embedded prompt templates)
-README_PATH="$TARGET_FOLDER/README.md"
-meta_transform_file "$README_PATH"
-
-# Reset work queues for fresh meta-development
-echo "[4/5] Resetting work queues..."
-
-# Reset planning_docs/assessment.md
-ASSESSMENT_PATH="$TARGET_FOLDER/planning_docs/assessment.md"
-if [[ -f "$ASSESSMENT_PATH" ]]; then
-  cat > "$ASSESSMENT_PATH" << EOF
+cat > "$TARGET_FOLDER/planning_docs/assessment.md" << EOF
 # $TARGET_NAME Assessment
 
-> This file tracks issues found in the Marge system itself (meta-development).
-> The AI reads .meta_marge/AGENTS.md and makes improvements directly to marge-simpson/.
+> Meta-development tracking. AI reads .meta_marge/AGENTS.md, improves marge-simpson/.
 
 **Next ID:** MS-0001
 
 ---
 
 ## Triage (New Issues)
-
 _None_
-
----
 
 ## Accepted (Ready to Work)
-
 _None_
-
----
 
 ## In-Progress
-
 _None_
-
----
 
 ## Done
-
 _None_
 EOF
-  echo "  Reset: planning_docs/assessment.md"
-fi
 
-# Reset planning_docs/tasklist.md
-TASKLIST_PATH="$TARGET_FOLDER/planning_docs/tasklist.md"
-if [[ -f "$TASKLIST_PATH" ]]; then
-  cat > "$TASKLIST_PATH" << EOF
+cat > "$TARGET_FOLDER/planning_docs/tasklist.md" << EOF
 # $TARGET_NAME Tasklist
 
-> Work queue for meta-development tasks (improving Marge itself).
+> Work queue for meta-development.
 
 **Next ID:** MS-0001
 
 ---
 
 ## Backlog
-
 _None_
-
----
 
 ## In-Progress
-
 _None_
-
----
 
 ## Done
-
 _None_
 EOF
-  echo "  Reset: planning_docs/tasklist.md"
-fi
 
-# Rewrite the AGENTS.md Scope section for meta-development
+# Rewrite AGENTS.md scope section
 AGENTS_PATH="$TARGET_FOLDER/AGENTS.md"
-if [[ -f "$AGENTS_PATH" ]]; then
-  # Create the new scope section for .meta_marge with clear workflow
-  NEW_SCOPE="**Scope (CRITICAL):**
+NEW_SCOPE="**Scope (CRITICAL):**
 1. The \`$TARGET_NAME/\` folder is **excluded from audits** -- it is the tooling, not the target.
 2. Audit the workspace/repo OUTSIDE this folder (e.g., \`marge-simpson/\`).
 3. Track findings HERE in \`$TARGET_NAME/planning_docs/\` assessment.md and tasklist.md.
@@ -339,96 +136,33 @@ if [[ -f "$AGENTS_PATH" ]]; then
 
 **Meta-Development Workflow:**
 \`\`\`
-┌─────────────────────────────────────────────────────────────────┐
-│  .meta_marge/AGENTS.md    ← You are here (the guide)            │
-│         ↓                                                       │
-│  AI audits marge-simpson/ ← The target of improvements          │
-│         ↓                                                       │
-│  Changes made DIRECTLY to marge-simpson/                        │
-│         ↓                                                       │
-│  Work tracked in .meta_marge/planning_docs/                     │
-│         ↓                                                       │
-│  When done: run convert-to-meta again to reset .meta_marge/     │
-└─────────────────────────────────────────────────────────────────┘
+  .meta_marge/AGENTS.md  ->  AI audits marge-simpson/  ->  Changes to marge-simpson/
+  Work tracked in .meta_marge/planning_docs/
+  When done: run convert-to-meta again to reset
 \`\`\`
 
-**IMPORTANT:** \`.meta_marge/\` is the control plane, NOT a sandbox.
-Changes go directly to the source repo. See \`meta/README.md\` for details."
+**IMPORTANT:** \`.meta_marge/\` is the control plane, NOT a sandbox."
 
-  # Read the file, replace the scope section, write back
-  # Using awk for multi-line replacement
-  awk -v new_scope="$NEW_SCOPE" '
-    /^\*\*Scope \(CRITICAL\):\*\*/ {
-      print new_scope
-      # Skip the next 3 lines (the old scope lines)
-      getline; getline; getline
-      next
-    }
+awk -v new_scope="$NEW_SCOPE" '
+    /^\*\*Scope \(CRITICAL\):\*\*/ { print new_scope; getline; getline; getline; next }
     { print }
-  ' "$AGENTS_PATH" > "${AGENTS_PATH}.tmp" && mv "${AGENTS_PATH}.tmp" "$AGENTS_PATH"
-  
-  echo "  Updated: AGENTS.md (scope section for meta-development)"
-fi
+' "$AGENTS_PATH" > "${AGENTS_PATH}.tmp" && mv "${AGENTS_PATH}.tmp" "$AGENTS_PATH"
 
-# Verify the conversion
-echo "[5/5] Verifying conversion..."
+echo "  Reset assessment.md, tasklist.md, AGENTS.md"
 
-# Check for any remaining source name references
-REMAINING_REFS=0
-while IFS= read -r -d '' file; do
-  for name in "${CONTENT_SOURCE_NAMES[@]}"; do
-    if grep -q "\\b${name}\\b" "$file" 2>/dev/null; then
-      rel_path="${file#"$TARGET_FOLDER"/}"
-      echo "  Note: '$name' still found in: $rel_path (may be intentional)"
-      ((REMAINING_REFS++)) || true
-      break
-    fi
-  done
-done < <(find "$TARGET_FOLDER" -type f -print0)
-
-# Run verification if verify script exists
+# [4/4] Verify
+echo "[4/4] Verifying..."
 VERIFY_SCRIPT="$TARGET_FOLDER/scripts/verify.sh"
 if [[ -x "$VERIFY_SCRIPT" ]]; then
-  echo ""
-  VERIFY_EXIT=0
-  "$VERIFY_SCRIPT" fast || VERIFY_EXIT=$?
-  
-  if [[ $VERIFY_EXIT -eq 0 ]]; then
-    echo ""
-    echo "============================================================"
-    echo " SUCCESS: $TARGET_NAME created and verified!"
-    echo "============================================================"
-    echo ""
-    echo "META-DEVELOPMENT WORKFLOW:"
-    echo "  1. AI reads .meta_marge/AGENTS.md (the guide)"
-    echo "  2. AI audits and improves $SOURCE_NAME/ (the target)"
-    echo "  3. Work tracked in .meta_marge/planning_docs/"
-    echo "  4. When done: run this script again to reset .meta_marge/"
-    echo ""
-    echo "IMPORTANT: Changes go directly to $SOURCE_NAME/, NOT .meta_marge/"
-    echo "           .meta_marge/ is the control plane, not a sandbox."
-  else
-    echo ""
-    echo "============================================================"
-    echo " WARNING: Conversion complete but verification had issues"
-    echo "============================================================"
-  fi
-  
-  exit $VERIFY_EXIT
+    "$VERIFY_SCRIPT" fast
+    exit_code=$?
+    if [[ $exit_code -eq 0 ]]; then
+        echo -e "\n===== SUCCESS: $TARGET_NAME created ====="
+    else
+        echo -e "\n===== WARNING: Verification had issues ====="
+    fi
+    exit $exit_code
 else
-  echo ""
-  echo "============================================================"
-  echo " DONE: $TARGET_NAME created"
-  echo "============================================================"
-  echo ""
-  echo "META-DEVELOPMENT WORKFLOW:"
-  echo "  1. AI reads .meta_marge/AGENTS.md (the guide)"
-  echo "  2. AI audits and improves $SOURCE_NAME/ (the target)"
-  echo "  3. Work tracked in .meta_marge/planning_docs/"
-  echo "  4. When done: run this script again to reset .meta_marge/"
-  echo ""
-  echo "IMPORTANT: Changes go directly to $SOURCE_NAME/, NOT .meta_marge/"
-  echo ""
-  echo "Run: $TARGET_NAME/scripts/verify.sh fast"
-  exit 0
+    echo -e "\n===== DONE: $TARGET_NAME created ====="
+    exit 0
 fi

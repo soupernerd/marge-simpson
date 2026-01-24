@@ -9,6 +9,8 @@
 
 **DO NOT create folders:** Never create `.marge/` or `planning_docs/` folders during chat prompting. Those folders are created only by CLI commands (`marge init`, `marge-init`). If the user needs them, tell them to run the CLI command.
 
+**Paths are explicit, not flexible:** All paths use the `marge-simpson/` prefix (e.g., `marge-simpson/planning_docs/`). We are not folder-agnostic. If someone renames folders, that's their problem to fix.
+
 ---
 
 ## Core Rules
@@ -64,9 +66,9 @@ Spawn 2-5 agents for independent tasks, wait for all, then verify.
 
 | File | Purpose |
 |------|---------|
-| `planning_docs/assessment.md` | Findings + root cause + verification evidence |
-| `planning_docs/tasklist.md` | Work queue: backlog → in-progress → done |
-| `planning_docs/[name]_MS-XXXX.md` | Feature plans (created for each feature) |
+| `marge-simpson/planning_docs/assessment.md` | Findings + root cause + verification evidence |
+| `marge-simpson/planning_docs/tasklist.md` | Work queue: backlog → in-progress → done |
+| `marge-simpson/planning_docs/[name]_MS-XXXX.md` | Feature plans (created for each feature) |
 ```
 IMPLEMENT → VERIFY → RECORD → COMPLETE
 ```
@@ -88,10 +90,10 @@ IMPLEMENT → VERIFY → RECORD → COMPLETE
 | Intent | Action |
 |--------|--------|
 | Question | Answer directly (no ID unless issue found) |
-| Work (fix, add, change) | Read `workflows/work.md`, create MS-#### |
-| Audit | Read `workflows/audit.md` first |
-| Planning mode (`PLANNING ONLY`, `plan only`) | Read `workflows/planning.md` — NO code changes |
-| Loop mode (`loop until clean`) | Read `workflows/loop.md` |
+| Work (fix, add, change) | Read `marge-simpson/workflows/work.md`, create MS-#### |
+| Audit | Read `marge-simpson/workflows/audit.md` first |
+| Planning mode (`PLANNING ONLY`, `plan only`) | Read `marge-simpson/workflows/planning.md` — NO code changes |
+| Loop mode (`loop until clean`) | Read `marge-simpson/workflows/loop.md` |
 
 **Mixed intent** (e.g., question + feature + bug): Answer questions inline (no ID unless issue found), then process each work item per `work.md` (each gets MS-####).
 
@@ -104,7 +106,7 @@ When delivering work, output:
 - Files modified
 - Verification evidence (raw output)
 
-See `workflows/work.md` for full format.
+See `marge-simpson/workflows/work.md` for full format.
 
 ---
 
@@ -114,7 +116,7 @@ End every response with:
 
 `📊 ~In: X,XXX | Out: X,XXX | Est: $X.XXXX`
 
-Pricing in `model_pricing.json`.
+Pricing in `marge-simpson/model_pricing.json`.
 
 ---
 
@@ -124,12 +126,12 @@ Pricing in `model_pricing.json`.
 
 | Situation | Read First |
 |-----------|------------|
-| Any work task | `knowledge/_index.md` → check for relevant decisions |
-| Domain-specific work | `experts/_index.md` → load matching expert file |
-| Unsure which workflow | `workflows/_index.md` → find the right one |
+| Any work task | `marge-simpson/knowledge/_index.md` → check for relevant decisions |
+| Domain-specific work | `marge-simpson/experts/_index.md` → load matching expert file |
+| Unsure which workflow | `marge-simpson/workflows/_index.md` → find the right one |
 
 **Quick keyword scan:**
-- Security/auth/compliance → `experts/security.md`
-- Testing/QA/coverage → `experts/testing.md`  
-- Deploy/CI-CD/infra → `experts/devops.md`
-- Architecture/API/scale → `experts/architecture.md`
+- Security/auth/compliance → `marge-simpson/experts/security.md`
+- Testing/QA/coverage → `marge-simpson/experts/testing.md`  
+- Deploy/CI-CD/infra → `marge-simpson/experts/devops.md`
+- Architecture/API/scale → `marge-simpson/experts/architecture.md`

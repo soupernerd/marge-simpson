@@ -28,7 +28,7 @@ Before extracting new facts, check if knowledge files are empty:
 
 ```powershell
 # Check entry counts in _index.md
-Select-String -Path "knowledge/_index.md" -Pattern "entries$"
+Select-String -Path "marge-simpson/knowledge/_index.md" -Pattern "entries$"
 ```
 
 If all counts show 0, this is a fresh installation. Consider seeding with:
@@ -73,7 +73,7 @@ Before adding new facts, **check if they conflict with existing entries**:
 
 ```powershell
 # Quick search for potential conflicts
-Select-String -Path "knowledge/*.md" -Pattern "keyword1|keyword2"
+Select-String -Path "marge-simpson/knowledge/*.md" -Pattern "keyword1|keyword2"
 ```
 
 ### Conflict Resolution Rules
@@ -158,7 +158,7 @@ Select-String -Path "knowledge/*.md" -Pattern "keyword1|keyword2"
 
 ## Phase 4: Update Index
 
-After adding/updating entries, update `knowledge/_index.md`:
+After adding/updating entries, update `marge-simpson/knowledge/_index.md`:
 
 1. **Quick Stats** — increment/update counts
 2. **Recent Entries** — add new entries (keep last 5, remove oldest)
@@ -179,7 +179,7 @@ Entries should decay over time. Check for stale entries based on **Last Accessed
 | Decision superseded | Archive with reason |
 
 ### Archiving Process
-1. Move entry to `knowledge/archive.md`
+1. Move entry to `marge-simpson/knowledge/archive.md`
 2. Add: `Archived: YYYY-MM-DD | Reason: <reason>`
 3. Decrement count in index
 4. Remove from Recent Entries if present

@@ -49,7 +49,7 @@ AI/Agents must read `AGENTS.md` before working.
 ### [MS-0001] Short title
 - **Reported:** YYYY-MM-DD
 - **Status:** Todo / Doing / Done
-- **Expert(s):** (optional) Relevant expert persona(s) from `experts/_index.md`
+- **Expert(s):** (optional) Relevant expert persona(s) from `marge-simpson/experts/_index.md`
 - **Symptom:** What the user sees
 - **Root cause:** The actual cause (code-level)
 - **Fix:** What changed (brief)

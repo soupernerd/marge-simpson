@@ -15,24 +15,24 @@ User wants something **done** - any of:
 
 ### 1. Check Experts (if task has domain keywords)
 
-Read `experts/_index.md` and scan for keywords matching your task:
+Read `marge-simpson/experts/_index.md` and scan for keywords matching your task:
 
 | Task Keywords | Load File |
 |---------------|----------|
-| security, auth, GDPR | `experts/security.md` |
-| test, coverage, QA | `experts/testing.md` |
-| deploy, CI/CD, docker | `experts/devops.md` |
-| architecture, API, scale | `experts/architecture.md` |
-| UI, UX, accessibility | `experts/design.md` |
+| security, auth, GDPR | `marge-simpson/experts/security.md` |
+| test, coverage, QA | `marge-simpson/experts/testing.md` |
+| deploy, CI/CD, docker | `marge-simpson/experts/devops.md` |
+| architecture, API, scale | `marge-simpson/experts/architecture.md` |
+| UI, UX, accessibility | `marge-simpson/experts/design.md` |
 
 **Skip if:** Simple bug fix or task doesn't match any domain keywords.
 
 ### 2. Check Knowledge (for prior decisions)
 
-Grep `knowledge/decisions.md` for tags related to your task:
+Grep `marge-simpson/knowledge/decisions.md` for tags related to your task:
 
 ```powershell
-Select-String -Path "knowledge/decisions.md" -Pattern "#auth|#api|#database"
+Select-String -Path "marge-simpson/knowledge/decisions.md" -Pattern "#auth|#api|#database"
 ```
 
 **Apply any relevant decisions** — don't contradict prior architectural choices without explicit approval.
@@ -44,41 +44,41 @@ Select-String -Path "knowledge/decisions.md" -Pattern "#auth|#api|#database"
 ### For FEATURES (type: feature)
 
 1. Create the next MS-#### ID
-2. Create plan file: `planning_docs/[feature-name]_MS-####.md`
-   - Copy from `planning_docs/_template.md`
+2. Create plan file: `marge-simpson/planning_docs/[feature-name]_MS-####.md`
+   - Copy from `marge-simpson/planning_docs/_template.md`
    - Fill in: Goal, Approach, Why, Risks
    - List sub-tasks (each gets own MS-#### ID)
-3. Add entry to `planning_docs/assessment.md` referencing the plan
-4. Add task(s) to `planning_docs/tasklist.md` with parent reference
+3. Add entry to `marge-simpson/planning_docs/assessment.md` referencing the plan
+4. Add task(s) to `marge-simpson/planning_docs/tasklist.md` with parent reference
 5. Increment `Next ID` in BOTH files
 
 ### For BUGS/IMPROVEMENTS/REFACTORS
 
 1. Create the next MS-#### ID
-2. Add entry to `planning_docs/assessment.md`:
+2. Add entry to `marge-simpson/planning_docs/assessment.md`:
    ```markdown
    ### [MS-####] Short description
    - **Type:** bug | feature | improvement | refactor
    - **Status:** In Progress
    - **Description:** What needs to be done
-   - **Expert(s):** (if using experts/ - optional)
+   - **Expert(s):** (if using marge-simpson/experts/ - optional)
    - **Plan:** Steps to implement
    - **Verification:** How to confirm it works
    - **Files:** (fill in as you work)
    ```
-3. Add task to `planning_docs/tasklist.md`:
+3. Add task to `marge-simpson/planning_docs/tasklist.md`:
    ```markdown
    ### [MS-####] Short description
    - **Type:** bug | feature | improvement
    - **DoD:** What "done" looks like
-   - **Verification:** `./scripts/verify.ps1 fast` (Win) or `./scripts/verify.sh fast` (Unix)
+   - **Verification:** `./marge-simpson/scripts/verify.ps1 fast` (Win) or `./marge-simpson/scripts/verify.sh fast` (Unix)
    - **Status:** [ ] Not started
    ```
 4. Increment `Next ID` in BOTH files
 
 ### For EXISTING work (ID already exists)
 
-1. Find the MS-#### in `planning_docs/tasklist.md`
+1. Find the MS-#### in `marge-simpson/planning_docs/tasklist.md`
 2. Mark it `In Progress`
 3. Continue from where it left off
 
@@ -86,19 +86,19 @@ Select-String -Path "knowledge/decisions.md" -Pattern "#auth|#api|#database"
 
 ### Work Order (priority)
 
-1. **First:** Existing unchecked P0/P1 items in `planning_docs/tasklist.md`
+1. **First:** Existing unchecked P0/P1 items in `marge-simpson/planning_docs/tasklist.md`
 2. **Then:** Newly created items from this message
 3. **Finally:** Remaining items (P0 → P1 → P2)
 
 ### For Each Item
 
 ```
-┌─────────────────────────────────────┐
-│  1. IMPLEMENT                       │
-│     - Make the smallest safe change │
-│     - Update planning_docs/         │
-│       assessment.md with files      │
-└──────────────┬──────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  1. IMPLEMENT                                    │
+│     - Make the smallest safe change              │
+│     - Update marge-simpson/planning_docs/        │
+│       assessment.md                              │
+└───────────────────────┬──────────────────────────┘
                ▼
 ┌─────────────────────────────────────┐
 │  2. VERIFY                          │
@@ -127,7 +127,7 @@ Select-String -Path "knowledge/decisions.md" -Pattern "#auth|#api|#database"
 
 - Run the verification runner
 - Capture raw output (or log file path)
-- Record in planning_docs/assessment.md
+- Record in marge-simpson/planning_docs/assessment.md
 - Only THEN mark complete
 
 ## Labels (for tracking, not routing)
@@ -196,7 +196,7 @@ When delivering work, output:
 
 After completing work (especially significant decisions or discoveries):
 
-1. Consider running `workflows/session_end.md` to capture:
+1. Consider running `marge-simpson/workflows/session_end.md` to capture:
    - Decisions made during this work
    - Patterns observed in the codebase
    - User preferences expressed

@@ -1,376 +1,157 @@
 <#
 .SYNOPSIS
     Creates .meta_marge/ for meta-development.
-
 .DESCRIPTION
-    This script copies the current Marge folder to a .meta_marge/ subfolder
-    inside the workspace for meta-development (improving Marge itself).
-    
-    Run this from inside a Marge folder or repo root.
-    The .meta_marge/ folder is gitignored by default.
-
-.PARAMETER Force
-    Overwrite existing .meta_marge/ folder without prompting.
-
+    Copies marge-simpson/ to .meta_marge/ with path transformations.
 .EXAMPLE
     .\meta\convert-to-meta.ps1
-    
-.EXAMPLE
     .\meta\convert-to-meta.ps1 -Force
 #>
 
-param(
-    [switch]$Force,
-    [switch]$Help
-)
+param([switch]$Force, [switch]$Help)
 
 if ($Help) {
     Write-Host @"
 convert-to-meta - Create .meta_marge/ for meta-development
 
-USAGE:
-  .\meta\convert-to-meta.ps1 [options]
+USAGE:  .\meta\convert-to-meta.ps1 [-Force] [-Help]
 
-OPTIONS:
-  -Force  Overwrite existing .meta_marge/ folder
-  -Help   Show this help
-
-DESCRIPTION:
-  Creates a .meta_marge/ folder for improving Marge itself.
-  The AI reads .meta_marge/AGENTS.md and makes changes directly
-  to marge-simpson/ (the target), NOT to .meta_marge/.
-
-  Workflow:
-    1. Run this script to create .meta_marge/
-    2. Use VS Code Copilot or 'marge meta "task"' 
-    3. AI audits marge-simpson/ and applies fixes
-    4. Work tracked in .meta_marge/planning_docs/
-
-EXAMPLES:
-  .\meta\convert-to-meta.ps1
-  .\meta\convert-to-meta.ps1 -Force
+Creates .meta_marge/ folder. AI reads .meta_marge/AGENTS.md and
+makes changes directly to marge-simpson/ (the target).
 "@
     exit 0
 }
 
 $ErrorActionPreference = "Stop"
 
-# Determine source folder (where the Marge files are)
+# Locate source folder
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-
-# If script is in meta/, go up one level to find the Marge root
-if ((Split-Path -Leaf $ScriptDir) -eq "meta") {
-    $SourceFolder = Split-Path -Parent $ScriptDir
-} else {
-    $SourceFolder = $ScriptDir
-}
-
-# Detect source folder name
+$SourceFolder = if ((Split-Path -Leaf $ScriptDir) -eq "meta") { Split-Path -Parent $ScriptDir } else { $ScriptDir }
 $SourceName = Split-Path -Leaf $SourceFolder
-
-# Always use .meta_marge as the target name (standardized)
 $TargetName = ".meta_marge"
-
-# Check if we're already in a meta folder
-if ($SourceName -eq ".meta_marge" -or $SourceName -eq ".marge_meta" -or $SourceName -eq "meta_marge") {
-    Write-Host "ERROR: Already in a meta-development folder ($SourceName)" -ForegroundColor Red
-    Write-Host "This script creates the meta folder - you're already in one."
-    exit 1
-}
-
-# Target is INSIDE the source folder (not a sibling)
 $TargetFolder = Join-Path $SourceFolder $TargetName
 
-Write-Host ""
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host " Convert $SourceName -> $TargetName" -ForegroundColor Cyan
-Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "Source: $SourceFolder"
-Write-Host "Target: $TargetFolder"
-Write-Host ""
+# Validate
+if ($SourceName -eq ".meta_marge") { Write-Host "ERROR: Already in meta folder" -ForegroundColor Red; exit 1 }
+if (-not (Test-Path (Join-Path $SourceFolder "AGENTS.md"))) { Write-Host "ERROR: No AGENTS.md found" -ForegroundColor Red; exit 1 }
 
-# Validate source has AGENTS.md (confirms it's a Marge folder)
-if (-not (Test-Path (Join-Path $SourceFolder "AGENTS.md"))) {
-    Write-Host "ERROR: Not a valid Marge folder (no AGENTS.md found)" -ForegroundColor Red
-    Write-Host "Run this script from inside a Marge folder or repo root."
-    exit 1
-}
+Write-Host "`n===== Convert $SourceName -> $TargetName =====`n" -ForegroundColor Cyan
 
-# Check if target exists
+# [1/4] Remove existing / create fresh
 if (Test-Path $TargetFolder) {
     if (-not $Force) {
-        $response = Read-Host "$TargetName already exists. Overwrite? (y/N)"
-        if ($response -ne "y" -and $response -ne "Y") {
-            Write-Host "Aborted."
-            exit 0
-        }
+        $r = Read-Host "$TargetName exists. Overwrite? (y/N)"
+        if ($r -ne "y" -and $r -ne "Y") { Write-Host "Aborted."; exit 0 }
     }
-    Write-Host "[1/5] Removing existing $TargetName..."
     Remove-Item -Path $TargetFolder -Recurse -Force
-} else {
-    Write-Host "[1/5] Target folder does not exist, will create fresh."
 }
+Write-Host "[1/4] Copying..."
 
-# Copy folder (excluding .git, node_modules, and files not needed for meta-dev)
-Write-Host "[2/5] Copying $SourceName -> $TargetName..."
-
-# Folders to exclude entirely
-$excludeDirs = @('.git', 'node_modules', '.meta_marge', '.marge_meta', 'meta_marge', 'cli', 'meta', 'assets', '.github')
-
-# Files to exclude (not needed for meta-development)
+# Exclusions
+$excludeDirs = @('.git', 'node_modules', '.meta_marge', '.marge', 'cli', 'meta', 'assets', '.github')
 $excludeFiles = @('README.md', 'CHANGELOG.md', 'VERSION', 'LICENSE', '.gitignore', '.gitattributes')
 
-$items = Get-ChildItem -Path $SourceFolder -Recurse -Force | Where-Object {
-    $exclude = $false
-    # Check directory exclusions
-    foreach ($dir in $excludeDirs) {
-        if ($_.FullName -like "*\$dir\*" -or $_.FullName -like "*\$dir") {
-            $exclude = $true
-            break
-        }
-    }
-    # Check file exclusions (only at root level)
-    if (-not $exclude -and -not $_.PSIsContainer) {
-        $relativePath = $_.FullName.Substring($SourceFolder.Length + 1)
-        if ($relativePath -in $excludeFiles) {
-            $exclude = $true
-        }
-    }
-    -not $exclude
-}
-
-# Create target folder
+# Copy with exclusions
 New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
-
-# Copy structure
-foreach ($item in $items) {
-    $relativePath = $item.FullName.Substring($SourceFolder.Length + 1)
-    $targetPath = Join-Path $TargetFolder $relativePath
-    
-    if ($item.PSIsContainer) {
-        New-Item -ItemType Directory -Path $targetPath -Force | Out-Null
-    } else {
-        $targetDir = Split-Path -Parent $targetPath
-        if (-not (Test-Path $targetDir)) {
-            New-Item -ItemType Directory -Path $targetDir -Force | Out-Null
-        }
-        Copy-Item -Path $item.FullName -Destination $targetPath -Force
+Get-ChildItem -Path $SourceFolder -Recurse -Force | Where-Object {
+    $dominated = $false
+    foreach ($d in $excludeDirs) { if ($_.FullName -like "*\$d\*" -or $_.FullName -like "*\$d") { $dominated = $true; break } }
+    if (-not $dominated -and -not $_.PSIsContainer) {
+        $rel = $_.FullName.Substring($SourceFolder.Length + 1)
+        if ($rel -in $excludeFiles) { $dominated = $true }
+    }
+    -not $dominated
+} | ForEach-Object {
+    $rel = $_.FullName.Substring($SourceFolder.Length + 1)
+    $tgt = Join-Path $TargetFolder $rel
+    if ($_.PSIsContainer) { New-Item -ItemType Directory -Path $tgt -Force | Out-Null }
+    else {
+        $dir = Split-Path -Parent $tgt
+        if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+        Copy-Item -Path $_.FullName -Destination $tgt -Force
     }
 }
 
-# Text file extensions to transform
-$TextExtensions = @('md', 'txt', 'json', 'yml', 'yaml', 'toml', 'ps1', 'sh', 'bash', 'zsh', 'py', 'js', 'ts', 'jsx', 'tsx', 'html', 'css', 'scss', 'less', 'xml', 'config', 'cfg', 'ini', 'env', 'gitignore', 'dockerignore', 'sql', 'graphql', 'prisma')
-$TextFilenames = @('Makefile', 'Dockerfile', 'Jenkinsfile', 'Procfile', 'LICENSE', 'README', 'CHANGELOG', 'CONTRIBUTING', 'VERSION')
+# [2/4] Transform: marge-simpson/ -> .meta_marge/
+Write-Host "[2/4] Transforming paths..."
+$TextExt = @('md','txt','json','yml','yaml','toml','ps1','sh','py','js','ts')
+$count = 0
 
-# Names to rewrite inside files (support repo-root runs where SourceName isn't .marge)
-$ContentSourceNames = @($SourceName, '.marge') | Select-Object -Unique
-
-Write-Host "[3/5] Transforming file contents..."
-
-$TransformedCount = 0
-$SkippedCount = 0
-
-# Get all files in target folder
-$files = Get-ChildItem -Path $TargetFolder -Recurse -File -Force
-
-foreach ($file in $files) {
-    $ext = $file.Extension.TrimStart('.')
-    $filename = $file.Name
-    $relativePath = $file.FullName.Substring($TargetFolder.Length + 1)
-    
-    # Skip meta/README.md - it documents meta-development and references should stay as original
-    if ($relativePath -eq "meta\README.md" -or $relativePath -eq "meta/README.md") {
-        continue
-    }
-    
-    $isText = $false
-    if ($ext -in $TextExtensions) {
-        $isText = $true
-    } elseif ($filename -in $TextFilenames) {
-        $isText = $true
-    } elseif ([string]::IsNullOrEmpty($ext)) {
-        # No extension - assume text for known files
-        $isText = $true
-    }
-    
-    if (-not $isText) {
-        $SkippedCount++
-        continue
-    }
+Get-ChildItem -Path $TargetFolder -Recurse -File -Force | ForEach-Object {
+    $ext = $_.Extension.TrimStart('.')
+    if ($ext -notin $TextExt -and $_.Name -notmatch '^(Makefile|Dockerfile)$') { return }
     
     try {
-        $content = Get-Content -Path $file.FullName -Raw -ErrorAction Stop
-        if ($null -eq $content) {
-            $SkippedCount++
-            continue
-        }
+        $content = Get-Content -Path $_.FullName -Raw -ErrorAction Stop
+        if (-not $content) { return }
+        $original = $content
         
-        $originalContent = $content
+        # Protect GitHub URLs
+        $content = $content -replace "(github\.com/[^/]+/)$([regex]::Escape($SourceName))", '$1___GITHUB___'
         
-        foreach ($name in $ContentSourceNames) {
-            # Protect GitHub URLs from transformation (repo name should stay as-is)
-            $githubPlaceholder = "___GITHUB_REPO_PLACEHOLDER___"
-            $content = $content -replace "(github\.com/[^/]+/)$([regex]::Escape($name))", "`$1$githubPlaceholder"
-            
-            # Apply replacements
-            $content = $content -replace [regex]::Escape("$name/"), "$TargetName/"
-            $content = $content -replace [regex]::Escape("[$name]"), "[$TargetName]"
-            $content = $content -replace [regex]::Escape("'$name'"), "'$TargetName'"
-            $content = $content -replace [regex]::Escape("`"$name`""), "`"$TargetName`""
-            $content = $content -replace [regex]::Escape("``$name``"), "``$TargetName``"
-            $content = $content -replace " $([regex]::Escape($name)) ", " $TargetName "
-            $content = $content -replace " $([regex]::Escape($name))\.", " $TargetName."
-            $content = $content -replace " $([regex]::Escape($name)),", " ${TargetName},"
-            $content = $content -replace " $([regex]::Escape($name)):", " ${TargetName}:"
-            $content = $content -replace "\($([regex]::Escape($name))\)", "($TargetName)"
-            $content = $content -replace ": $([regex]::Escape($name))", ": $TargetName"
-            $content = $content -replace "# $([regex]::Escape($name))", "# $TargetName"
-            $content = $content -replace "=$([regex]::Escape($name))", "=${TargetName}"
-            
-            # Word boundary replacement
-            $content = $content -replace "(?<![a-zA-Z0-9_])$([regex]::Escape($name))(?![a-zA-Z0-9_])", $TargetName
-            
-            # Restore protected GitHub URLs
-            $content = $content -replace $githubPlaceholder, $name
-        }
+        # Single word-boundary replacement for folder name
+        $content = $content -replace "(?<![a-zA-Z0-9_./])$([regex]::Escape($SourceName))(?![a-zA-Z0-9_])", $TargetName
         
-        if ($content -ne $originalContent) {
-            Set-Content -Path $file.FullName -Value $content -NoNewline
-            $relativePath = $file.FullName.Substring($TargetFolder.Length + 1)
-            Write-Host "  Transformed: $relativePath"
-            $TransformedCount++
+        # Restore GitHub URLs
+        $content = $content -replace '___GITHUB___', $SourceName
+        
+        if ($content -ne $original) {
+            Set-Content -Path $_.FullName -Value $content -NoNewline
+            $count++
         }
-    } catch {
-        $SkippedCount++
-    }
+    } catch {}
 }
+Write-Host "  $count files transformed"
 
-Write-Host "  $TransformedCount files transformed, $SkippedCount skipped (binary/non-text)"
+# [3/4] Reset work queues + rewrite AGENTS.md scope
+Write-Host "[3/4] Resetting work queues..."
 
-# Transform prompt_examples and README.md to use explicit .meta_marge paths
-# This ensures embedded prompt templates reference the correct locations
-function MetaTransformFile {
-    param([string]$FilePath)
-    
-    if (-not (Test-Path $FilePath)) { return }
-    
-    try {
-        $content = Get-Content -Path $FilePath -Raw -ErrorAction Stop
-        $originalContent = $content
-        
-        # Make AGENTS.md reference explicit for meta-development
-        $content = $content -replace 'Read the AGENTS\.md file in this folder', 'Read the .meta_marge/AGENTS.md file'
-        $content = $content -replace 'AGENTS\.md file in this folder', '.meta_marge/AGENTS.md file'
-        $content = $content -replace 'AGENTS\.md \(in this folder\)', '.meta_marge/AGENTS.md'
-        
-        # Make planning_docs paths explicit
-        $content = $content -replace '(?<!\.)planning_docs/', '.meta_marge/planning_docs/'
-        
-        if ($content -ne $originalContent) {
-            Set-Content -Path $FilePath -Value $content -NoNewline
-            $relativePath = $FilePath.Substring($TargetFolder.Length + 1)
-            Write-Host "  Meta-transformed: $relativePath"
-        }
-    } catch {
-        # Skip files that can't be read
-    }
-}
-
-# Transform prompt_examples/
-$PromptExamplesDir = Join-Path $TargetFolder "prompt_examples"
-if (Test-Path $PromptExamplesDir) {
-    $promptFiles = Get-ChildItem -Path $PromptExamplesDir -File -Recurse | Where-Object { $_.Extension -match '\.(md|txt)$' -or $_.Extension -eq '' }
-    foreach ($file in $promptFiles) {
-        MetaTransformFile -FilePath $file.FullName
-    }
-}
-
-# Transform README.md (has embedded prompt templates)
-$ReadmePath = Join-Path $TargetFolder "README.md"
-MetaTransformFile -FilePath $ReadmePath
-
-# Reset work queues for fresh meta-development
-Write-Host "[4/5] Resetting work queues..."
-
-# Reset planning_docs/assessment.md
-$AssessmentPath = Join-Path $TargetFolder "planning_docs\assessment.md"
-if (Test-Path $AssessmentPath) {
-    $assessmentContent = @"
+@"
 # $TargetName Assessment
 
-> This file tracks issues found in the Marge system itself (meta-development).
-> The AI reads .meta_marge/AGENTS.md and makes improvements directly to marge-simpson/.
+> Meta-development tracking. AI reads .meta_marge/AGENTS.md, improves marge-simpson/.
 
 **Next ID:** MS-0001
 
 ---
 
 ## Triage (New Issues)
-
 _None_
-
----
 
 ## Accepted (Ready to Work)
-
 _None_
-
----
 
 ## In-Progress
-
 _None_
-
----
 
 ## Done
-
 _None_
-"@
-    Set-Content -Path $AssessmentPath -Value $assessmentContent
-    Write-Host "  Reset: planning_docs/assessment.md"
-}
+"@ | Set-Content -Path (Join-Path $TargetFolder "planning_docs\assessment.md")
 
-# Reset planning_docs/tasklist.md
-$TasklistPath = Join-Path $TargetFolder "planning_docs\tasklist.md"
-if (Test-Path $TasklistPath) {
-    $tasklistContent = @"
+@"
 # $TargetName Tasklist
 
-> Work queue for meta-development tasks (improving Marge itself).
+> Work queue for meta-development.
 
 **Next ID:** MS-0001
 
 ---
 
 ## Backlog
-
 _None_
-
----
 
 ## In-Progress
-
 _None_
-
----
 
 ## Done
-
 _None_
-"@
-    Set-Content -Path $TasklistPath -Value $tasklistContent
-    Write-Host "  Reset: planning_docs/tasklist.md"
-}
+"@ | Set-Content -Path (Join-Path $TargetFolder "planning_docs\tasklist.md")
 
-# Rewrite the AGENTS.md Scope section for meta-development
+# Rewrite AGENTS.md scope section
 $AgentsPath = Join-Path $TargetFolder "AGENTS.md"
-if (Test-Path $AgentsPath) {
-    $agentsContent = Get-Content -Path $AgentsPath -Raw
-    
-    # Define the new scope section for .meta_marge with clear workflow
-    $newScope = @"
+$agentsContent = Get-Content -Path $AgentsPath -Raw
+
+$newScope = @"
 **Scope (CRITICAL):**
 1. The ``$TargetName/`` folder is **excluded from audits** -- it is the tooling, not the target.
 2. Audit the workspace/repo OUTSIDE this folder (e.g., ``marge-simpson/``).
@@ -379,98 +160,31 @@ if (Test-Path $AgentsPath) {
 
 **Meta-Development Workflow:**
 ``````
-┌─────────────────────────────────────────────────────────────────┐
-│  .meta_marge/AGENTS.md    ← You are here (the guide)            │
-│         ↓                                                       │
-│  AI audits marge-simpson/ ← The target of improvements          │
-│         ↓                                                       │
-│  Changes made DIRECTLY to marge-simpson/                        │
-│         ↓                                                       │
-│  Work tracked in .meta_marge/planning_docs/                     │
-│         ↓                                                       │
-│  When done: run convert-to-meta again to reset .meta_marge/     │
-└─────────────────────────────────────────────────────────────────┘
+  .meta_marge/AGENTS.md  ->  AI audits marge-simpson/  ->  Changes to marge-simpson/
+  Work tracked in .meta_marge/planning_docs/
+  When done: run convert-to-meta again to reset
 ``````
 
 **IMPORTANT:** ``.meta_marge/`` is the control plane, NOT a sandbox.
-Changes go directly to the source repo. See ``meta/README.md`` for details.
 "@
-    
-    # Replace the entire Scope section (matches from **Scope to the line before ---)
-    $agentsContent = $agentsContent -replace '\*\*Scope \(CRITICAL\):\*\*\r?\n1\.[^\r\n]+\r?\n2\.[^\r\n]+\r?\n3\.[^\r\n]+', $newScope
-    
-    Set-Content -Path $AgentsPath -Value $agentsContent -NoNewline
-    Write-Host "  Updated: AGENTS.md (scope section for meta-development)"
-}
 
-# Verify the conversion
-Write-Host "[5/5] Verifying conversion..."
+$agentsContent = $agentsContent -replace '\*\*Scope \(CRITICAL\):\*\*\r?\n1\.[^\r\n]+\r?\n2\.[^\r\n]+\r?\n3\.[^\r\n]+', $newScope
+Set-Content -Path $AgentsPath -Value $agentsContent -NoNewline
+Write-Host "  Reset assessment.md, tasklist.md, AGENTS.md"
 
-# Check for any remaining source name references
-$RemainingRefs = 0
-foreach ($file in (Get-ChildItem -Path $TargetFolder -Recurse -File -Force)) {
-    try {
-        $content = Get-Content -Path $file.FullName -Raw -ErrorAction SilentlyContinue
-        foreach ($name in $ContentSourceNames) {
-            if ($content -match "\b$([regex]::Escape($name))\b") {
-                $relativePath = $file.FullName.Substring($TargetFolder.Length + 1)
-                Write-Host "  Note: '$name' still found in: $relativePath (may be intentional)"
-                $RemainingRefs++
-                break
-            }
-        }
-    } catch {
-        # Skip binary files
-    }
-}
-
-# Run verification if verify script exists
+# [4/4] Verify
+Write-Host "[4/4] Verifying..."
 $VerifyScript = Join-Path $TargetFolder "scripts\verify.ps1"
 if (Test-Path $VerifyScript) {
-    Write-Host ""
-    try {
-        & $VerifyScript fast
-        $VerifyExit = $LASTEXITCODE
-    } catch {
-        $VerifyExit = 1
-    }
-    
-    if ($VerifyExit -eq 0) {
-        Write-Host ""
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host " SUCCESS: $TargetName created and verified!" -ForegroundColor Green
-        Write-Host "============================================================" -ForegroundColor Green
-        Write-Host ""
-        Write-Host "META-DEVELOPMENT WORKFLOW:" -ForegroundColor Cyan
-        Write-Host "  1. AI reads .meta_marge/AGENTS.md (the guide)"
-        Write-Host "  2. AI audits and improves $SourceName/ (the target)"
-        Write-Host "  3. Work tracked in .meta_marge/planning_docs/"
-        Write-Host "  4. When done: run this script again to reset .meta_marge/"
-        Write-Host ""
-        Write-Host "IMPORTANT: Changes go directly to $SourceName/, NOT .meta_marge/" -ForegroundColor Yellow
-        Write-Host "           .meta_marge/ is the control plane, not a sandbox." -ForegroundColor Yellow
+    & $VerifyScript fast
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -eq 0) {
+        Write-Host "`n===== SUCCESS: $TargetName created =====" -ForegroundColor Green
     } else {
-        Write-Host ""
-        Write-Host "============================================================" -ForegroundColor Yellow
-        Write-Host " WARNING: Conversion complete but verification had issues" -ForegroundColor Yellow
-        Write-Host "============================================================" -ForegroundColor Yellow
+        Write-Host "`n===== WARNING: Verification had issues =====" -ForegroundColor Yellow
     }
-    
-    exit $VerifyExit
+    exit $exitCode
 } else {
-    Write-Host ""
-    Write-Host "============================================================" -ForegroundColor Green
-    Write-Host " DONE: $TargetName created" -ForegroundColor Green
-    Write-Host "============================================================" -ForegroundColor Green
-    Write-Host ""
-    Write-Host "META-DEVELOPMENT WORKFLOW:" -ForegroundColor Cyan
-    Write-Host "  1. AI reads .meta_marge/AGENTS.md (the guide)"
-    Write-Host "  2. AI audits and improves $SourceName/ (the target)"
-    Write-Host "  3. Work tracked in .meta_marge/planning_docs/"
-    Write-Host "  4. When done: run this script again to reset .meta_marge/"
-    Write-Host ""
-    Write-Host "IMPORTANT: Changes go directly to $SourceName/, NOT .meta_marge/" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "Run: $TargetName\scripts\verify.ps1 fast"
+    Write-Host "`n===== DONE: $TargetName created =====" -ForegroundColor Green
     exit 0
 }

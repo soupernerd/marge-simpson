@@ -13,7 +13,7 @@
 
 ## Phase 1: Quick Preference Scan
 
-Read `knowledge/_index.md` and scan for **broad preferences** that affect all work:
+Read `marge-simpson/knowledge/_index.md` and scan for **broad preferences** that affect all work:
 
 | Tag | Impact |
 |-----|--------|

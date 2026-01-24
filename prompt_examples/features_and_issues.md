@@ -5,6 +5,6 @@ New Feature / Issues:
 - Example / New Issue: "The right hand side nav is not expanding as expected"
 - Example / Existing issue not fixed: "MS-0046 is still exhibiting [insert issue here]"
 
-After finished above, search for and list remaining unchecked items (if any exist) in planning_docs/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in marge-simpson/planning_docs/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
