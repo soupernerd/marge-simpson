@@ -8,74 +8,63 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- **`marge doctor` command** - Diagnostics for troubleshooting (checks engines, config, environment)
-- **model_pricing.json validation** - Graceful fallback if JSON malformed or missing
-- **`-Help` parameter** for `install-global.ps1` and `convert-to-meta.ps1`
-- **Meta command test suite** - 9 new tests for meta init/status/clean commands
-- **Unix verify profiles** - `fast_sh` and `full_sh` profiles in verify.config.json
-- **Expanded subagent guidance** - AGENTS.md now encourages subagents for edits/creation, not just research
-- **verify.sh auto-profile selection** - Automatically uses `fast_sh` profile on Unix if available
-- **test-cli.sh** - Bash equivalent of test-cli.ps1 for Unix platform testing (24 tests)
-- **Project type detection (PS1)** - `marge status` now shows project type (parity with bash)
-- **Spinner step detection (PS1)** - Shows meaningful progress (Reading, Writing, Testing, etc.) instead of just "Working"
-- **Functional CLI command tests** - Tests for init, clean, doctor, config, resume commands
-- **Edge case tests** - Tests for invalid engine, invalid max-iterations, empty tasks
-- **--fast mode instruction** - Now passes `[FAST MODE: Skip verification steps]` to AI prompt
-- **--auto mode instruction** - Now passes `[AUTO MODE: Proceed autonomously without asking for confirmation]` to AI prompt
-- **Argument bounds checking** - CLI validates that options requiring values actually have them
-- **Task failure output** - Shows last 10 lines of output when task fails, helping diagnose issues
-- **Temp file cleanup on exit** - Temp files now cleaned up on any exit (success, error, interrupt)
-- **Dynamic VERSION** - CLI scripts now read version from VERSION file instead of hardcoding
-- **First-run guidance** - `marge init` now shows quick start example after initialization
-- **Subagent toggle** - AGENTS.md now has explicit `ENABLED/DISABLED` toggle for subagent behavior
-- **Folder creation prohibition** - AGENTS.md now explicitly prevents AI from creating .marge/ folders during chat
-- **Cross-platform shebang** - All PS1 scripts now have `#!/usr/bin/env pwsh` for Unix compatibility
-- **PRD.md in marge-init output** - Tree display now shows PRD.md file that's copied
-- **[Unreleased] changelog link** - Added comparison link for unreleased changes
-- **Centralized fallback pricing constants** - `DEFAULT_INPUT_RATE`/`DEFAULT_OUTPUT_RATE` defined once, used everywhere
-- **`.marge/` in .gitignore** - Per-project CLI folder now properly excluded from version control
-- **Path flexibility** - Source files now use relative paths (`./`) enabling users to rename folder; convert-to-meta dynamically transforms to explicit paths
+- **`marge doctor` command** - Diagnostics for troubleshooting
+- **model_pricing.json validation** - Graceful fallback if malformed
+- **`-Help` parameter** for install-global and convert-to-meta scripts
+- **Meta command test suite** - 9 tests for meta init/status/clean
+- **Unix verify profiles** - `fast_sh`/`full_sh` in verify.config.json
+- **Expanded subagent guidance** - AGENTS.md encourages subagents for edits
+- **verify.sh auto-profile selection** - Uses `fast_sh` on Unix if available
+- **test-cli.sh** - Bash equivalent (24 tests)
+- **Project type detection (PS1)** - Parity with bash
+- **Spinner step detection (PS1)** - Shows Reading, Writing, Testing, etc.
+- **CLI test expansion** - init, clean, doctor, config, resume, edge cases
+- **--fast/--auto mode instructions** - Passes mode hints to AI prompt
+- **Argument bounds checking** - Validates options have required values
+- **Task failure output** - Shows last 10 lines on failure
+- **Temp file cleanup on exit** - All exit paths now clean up
+- **Complexity hint for lite mode** - CLI auto-detects simple tasks (typo fixes, renames, formatting) for lite mode; defaults to full AGENTS.md
+- **Dynamic VERSION** - Read from VERSION file, not hardcoded
+- **First-run guidance** - `marge init` shows quick start example
+- **Subagent toggle** - Explicit ENABLED/DISABLED in AGENTS.md
+- **Folder creation prohibition** - AI can't create .marge/ during chat
+- **Cross-platform shebang** - `#!/usr/bin/env pwsh` on PS1 scripts
+- **Path flexibility** - Source uses relative paths (`./`); convert-to-meta transforms to explicit
 
 ### Changed
 - **README identity clarification** - Updated tagline from "drop-in workflow" to "persistent knowledge base that keeps AI assistants informed across sessions"
 - **ARCHITECTURE.md identity** - Describes Marge as a "hard drive for AI context" rather than "prompt engineering framework"
 
 ### Fixed
-- **P1: .marge/ created during tests** - `test-cli.ps1` "empty task" test now runs in temp directory, preventing `.marge/` folder from being created in source during verification
-- **P1: PRD.md is now a blank template** - Replaced filled-in test artifact with proper blank template users fill in to enable PRD mode
-- **P1: Ambiguous verify path in AGENTS.md** - Changed `./scripts/verify.ps1` to explicit `marge-simpson/scripts/verify.ps1`
-- **P1: Redundant .meta_marge/scripts/** - `convert-to-meta` now excludes `scripts/` folder (meta_marge uses source scripts directly)
-- **P0: Get-Slug truncation bug** - `marge.ps1` `Get-Slug` function now correctly truncates to 50 characters using `Substring()` instead of `Select-Object -First 50`
-- **P1: Premature loop termination** - `is_task_complete()` (bash) and `Test-TaskComplete` (PS1) now return false when files don't exist, preventing early loop exit
-- **P2: Path traversal validation** - Both CLI scripts now reject additional edge cases: trailing `..`, standalone `..`, and backslash-prefixed paths
-- **P2: marge-init symlink indicator** - Bash version now shows "(copy)" vs "(symlink)" status like PS1 version
-- **P2: Token estimate format** - AGENTS-lite.md now uses `$X.XXXX` format consistent with AGENTS.md
-- **P2: Cross-platform verification docs** - work.md now shows both `.ps1` and `.sh` commands
-- **P3: Grammar** - "README.md's" corrected to "README.md" in deep_system_audit.md
-- **P3: loop.md accuracy** - Removed false claim about word-to-number parsing (only digits supported)
-- **Removed unused variables** - Cleaned up `$usingFallback`/`using_fallback` dead code from CLI scripts
-
-### Fixed
-- **Security: Path traversal in --folder** - Now validates folder path is relative and within project
-- **Security: Code injection in load_progress** - Bash version now parses progress file explicitly instead of using `source`
+- **P0: Get-Slug truncation bug** - Now uses `Substring()` instead of `Select-Object -First 50`
+- **P1: .marge/ created during tests** - Empty task test now runs in temp directory
+- **Template hardcoded paths** - Fixed `marge-simpson/` in tasklist.md and knowledge/_index.md; now uses relative `./` paths per D-006
+- **P1: PRD.md is now a blank template** - Users fill it in to enable PRD mode
+- **P1: Ambiguous verify path** - Now explicit `marge-simpson/scripts/verify.ps1`
+- **P1: Redundant .meta_marge/scripts/** - Excluded; meta uses source scripts
+- **P1: Premature loop termination** - Functions return false when files don't exist
+- **P2: Path traversal validation** - Rejects `..` edge cases in both CLI scripts
+- **P2: marge-init symlink indicator** - Bash now shows "(copy)" vs "(symlink)"
+- **P2: Token estimate format** - AGENTS-lite.md uses `$X.XXXX` format
+- **P2: Cross-platform verification docs** - work.md shows both `.ps1` and `.sh`
+- **P3: Grammar/accuracy fixes** - deep_system_audit.md, loop.md
+- **Security: Path traversal in --folder** - Validates folder is relative and within project
+- **Security: Code injection in load_progress** - Parses explicitly instead of `source`
+- **Removed unused variables** - Cleaned up dead code from CLI scripts
 
 ### Changed
-- **Help text parity** - PS1 and Bash help now show identical OPTIONS and META-DEVELOPMENT sections
-- **Show-Usage output** - Changed from Write-Host to Write-Output (now capturable for testing)
-- **Early engine validation** - `--engine` parameter now validated during arg parsing with helpful error message
-- **CLI test count increased** - From 23 to 36 tests with new functional and edge case coverage
-- **deep_system_audit.md simplified** - Removed duplicated looping/subagent instructions, now references centralized AGENTS.md and workflows/loop.md
-- **Engine not found error** - Now shows installation hints for known engines (claude, aider, opencode, codex)
-- **Removed unused prompt parameter** - `Build-EngineCmd` no longer accepts unused `$Prompt` parameter
-- **Bash invalid flag handling** - Now shows friendly "Unknown option" message with help suggestion
-- **README missing --auto** - Added --auto flag to CLI options table
-- **README missing utilities** - Added `marge doctor` and `marge clean` to Utilities section
-- **README missing --help** - Added `--help, -h` to CLI Options table
-- **loop.md default clarity** - Clarified loop workflow default (5) vs CLI `--max-iterations` default (20)
-- **deep_system_audit.md incorrect reference** - Fixed AGENTS.md path to use standard relative reference
-- **marge-init bash symlink fallback** - Added copy fallback when symlinks not supported (parity with PS1)
-- **Config parse warnings** - Both PS1 and bash now warn when config.yaml has parse errors or invalid values
-- **--model/--engine/--folder missing value** - CLI now errors if option is last argument without value
+- **Help text parity** - PS1 and Bash now identical
+- **Show-Usage output** - Write-Output instead of Write-Host (testable)
+- **Early engine validation** - Validated during arg parsing with hints
+- **CLI test count** - 23 → 36 tests
+- **deep_system_audit.md** - References centralized docs, removed duplication
+- **Engine not found error** - Shows installation hints
+- **Bash invalid flag handling** - Friendly "Unknown option" message
+- **README completeness** - Added --auto, --help, doctor, clean
+- **loop.md defaults** - Clarified workflow (5) vs CLI (20)
+- **marge-init bash** - Added copy fallback for symlink failures
+- **Config parse warnings** - Both scripts warn on invalid config.yaml
+- **Missing value errors** - CLI errors if --option lacks value
 
 ## [1.3.0] - 2026-01-23
 

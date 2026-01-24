@@ -7,8 +7,6 @@
 2. Audit the workspace/repo OUTSIDE this folder. Track findings in `./planning_docs/`.
 3. Never create files from this folder outside this folder.
 
-> **⚠️ Meta-dev?** If working in `.meta_marge/`, read `./meta/ARCHITECTURE.md` → "CONSTITUTIONAL RULES" section first. Paths behave differently in meta mode.
-
 ---
 
 ## Core Rules

@@ -605,14 +605,32 @@ function Invoke-Task {
     Write-Info "Task $Num`: $Task"
     Save-Progress $Num "running"
 
-    # Determine mode: lite vs full
+    # Determine mode: full (default) vs lite (simple tasks only)
     $margeDir = Join-Path $WorkDir $script:MARGE_FOLDER
     $useLiteMode = $false
+    $hasLocalMarge = Test-Path $margeDir
     
-    if (-not (Test-Path $margeDir) -and -not $script:FULL_MODE) {
+    # Simple task patterns - only these get lite mode
+    $simplePatterns = @(
+        '^fix\s+(typo|typos|spelling|whitespace|indent)',
+        '^(add|update|change)\s+(comment|version|license|copyright)',
+        '^rename\s+\w+\s+to\s+\w+$',
+        '^remove\s+(unused|dead)\s+(code|import|variable)',
+        '^format\s+',
+        '^lint\s+fix',
+        '^\w+$'  # Single word tasks like "help", "version"
+    )
+    $taskLower = $Task.ToLower().Trim()
+    $looksSimple = $simplePatterns | Where-Object { $taskLower -match $_ }
+    
+    # Use lite mode only if: task is simple AND no local .marge AND not forcing full
+    if ($looksSimple -and -not $hasLocalMarge -and -not $script:FULL_MODE) {
         $useLiteMode = $true
         $script:LITE_MODE = $true
-        Write-Debug-Msg "Using lite mode (AGENTS-lite.md)"
+        Write-Debug-Msg "Using lite mode (simple task detected)"
+    } elseif (-not $hasLocalMarge -and -not $script:FULL_MODE) {
+        # Full mode without local tracking - still use AGENTS.md but note no tracking
+        Write-Debug-Msg "Using full mode (no local .marge/ - tracking disabled)"
     }
 
     if ($useLiteMode) {

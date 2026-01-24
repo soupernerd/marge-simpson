@@ -4,13 +4,11 @@
 
 ## Path Resolution
 
-All paths in this folder use relative prefixes (`./`):
+All paths in this folder are relative to this folder:
 - `./planning_docs/` → tracking files
 - `./workflows/` → workflow files  
 - `./experts/` → domain expertise
 - `./knowledge/` → decisions and patterns
-
-This allows the folder to be renamed to anything (`.marge`, `marge`, etc.).
 
 ## Quick Reference
 

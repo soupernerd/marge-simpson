@@ -264,47 +264,9 @@ Loaded based on task keywords (see `experts/_index.md`):
 
 ---
 
-## Design Decisions
-
-### Why Symlinks for Global Install?
-
-**Decision:** User projects get symlinks to `~/.marge/shared/`, not copies.
-
-**Rationale:**
-- Single source of truth for shared resources
-- Updates to global install propagate automatically
-- Per-project files (assessment, tasklist) are actual copies for isolation
-
-### Why Lite Mode?
-
-**Decision:** Tasks without local `.marge/` use minimal `AGENTS-lite.md`.
-
-**Rationale:**
-- Quick one-off tasks don't need full tracking overhead
-- Reduces token cost for simple requests
-- `--full` flag allows opting into full mode
-
-### Why .meta_marge is Recreated?
-
-**Decision:** `convert-to-meta` always creates fresh `.meta_marge/`.
-
-**Rationale:**
-- Ensures clean state for each meta-development session
-- Avoids stale planning_docs from previous sessions
-- ARCHITECTURE.md lives in `meta/` to survive recreation
-
-### Why Folder-Agnostic Prompts?
-
-**Decision:** Prompts use "this folder" instead of hardcoded names.
-
-**Rationale:**
-- Users can name the folder anything (`.marge/`, `ai/`, etc.)
-- Same prompts work regardless of folder name
-- Improves flexibility without breaking functionality
-
----
-
 ## Maintenance Notes
+
+> **Design decisions** are documented in `knowledge/decisions.md` (D-### format).
 
 ### When to Update This File
 

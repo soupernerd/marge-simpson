@@ -870,11 +870,11 @@ parse_prd() {
     grep -E "^### " "$file" | sed 's/^### //' | sed 's/^Task [0-9]*: //'
 }
 
-# Determine which AGENTS file to use
+# Determine which AGENTS file to use (called before run_task sets final mode)
 get_agents_file() {
     local workdir="${1:-.}"
     
-    # If local .marge folder exists, use full mode
+    # If local .marge folder exists, always use full mode
     if [[ -d "$workdir/$MARGE_FOLDER" ]]; then
         echo "AGENTS.md"
         return 0
@@ -886,9 +886,27 @@ get_agents_file() {
         return 0
     fi
     
-    # Otherwise, use lite mode
-    LITE_MODE=true
-    echo "AGENTS-lite.md"
+    # Default to full mode - lite is determined per-task in run_task
+    echo "AGENTS.md"
+}
+
+# Check if task is simple enough for lite mode
+is_simple_task() {
+    local task="$1"
+    local task_lower
+    task_lower=$(echo "$task" | tr '[:upper:]' '[:lower:]' | xargs)
+    
+    # Simple patterns that qualify for lite mode
+    if echo "$task_lower" | grep -qE '^fix\s+(typo|typos|spelling|whitespace|indent)'; then return 0; fi
+    if echo "$task_lower" | grep -qE '^(add|update|change)\s+(comment|version|license|copyright)'; then return 0; fi
+    if echo "$task_lower" | grep -qE '^rename\s+\w+\s+to\s+\w+$'; then return 0; fi
+    if echo "$task_lower" | grep -qE '^remove\s+(unused|dead)\s+(code|import|variable)'; then return 0; fi
+    if echo "$task_lower" | grep -qE '^format\s+'; then return 0; fi
+    if echo "$task_lower" | grep -qE '^lint\s+fix'; then return 0; fi
+    # Single word tasks
+    if [[ "$task_lower" =~ ^[a-z]+$ ]]; then return 0; fi
+    
+    return 1
 }
 
 run_task() {
@@ -900,10 +918,22 @@ run_task() {
     # Determine mode: lite vs full
     local agents_file
     agents_file=$(get_agents_file "$workdir")
+    local has_local_marge=false
+    [[ -d "$workdir/$MARGE_FOLDER" ]] && has_local_marge=true
     
-    # For lite mode, we don't need local .marge folder
-    if [[ "$LITE_MODE" == true ]]; then
-        log_debug "Using lite mode (AGENTS-lite.md)"
+    # Determine mode: full (default) vs lite (simple tasks only)
+    local use_lite_mode=false
+    
+    # Use lite mode only if: task is simple AND no local .marge AND not forcing full
+    if is_simple_task "$task" && [[ "$has_local_marge" == false ]] && [[ "$FULL_MODE" != true ]]; then
+        use_lite_mode=true
+        LITE_MODE=true
+        log_debug "Using lite mode (simple task detected)"
+    elif [[ "$has_local_marge" == false ]] && [[ "$FULL_MODE" != true ]]; then
+        log_debug "Using full mode (no local .marge/ - tracking disabled)"
+    fi
+    
+    if [[ "$use_lite_mode" == true ]]; then
         # Validate MARGE_HOME exists for lite mode
         if [[ ! -d "$MARGE_HOME" ]]; then
             log_error "MARGE_HOME not found: $MARGE_HOME"
@@ -928,8 +958,11 @@ $(cat "$agents_path" 2>/dev/null || echo "Be concise. Do the task directly. List
 
 Task: ${task}${fast_suffix}${auto_suffix}"
     else
-        # Full mode - ensure .marge folder exists
-        [[ ! -d "$workdir/$MARGE_FOLDER" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
+        # Full mode - ensure .marge folder exists (only if has local tracking)
+        if [[ "$has_local_marge" == false ]] && [[ -x "$MARGE_HOME/marge-init" ]]; then
+            # No local .marge - use AGENTS.md from global but no local tracking
+            :
+        fi
         
         local fast_suffix="$([[ "$FAST" == true ]] && echo $'\n\n[FAST MODE: Skip verification steps - do not run verify.ps1/verify.sh]')"
         local auto_suffix="$([[ "$AUTO" == true ]] && echo $'\n[AUTO MODE: Proceed autonomously without asking for user confirmation. Make decisions using best judgment.]')"

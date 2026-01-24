@@ -27,14 +27,14 @@ AI/Agents must read `AGENTS.md` before working.
 ### P0 — Must fix (breaking / core workflow)
 - [ ] **MS-0001 —** (clear, testable outcome)
   - **Why:** …
-  - **Expert(s):** (optional) Relevant expert persona(s) from `marge-simpson/experts/_index.md`
+  - **Expert(s):** (optional) Relevant expert persona(s) from `./experts/_index.md`
   - **Definition of Done:** …
   - **Verification:**
     - Run automated verification:
       - macOS/Linux: `./scripts/verify.sh fast`
       - Windows: `./scripts/verify.ps1 fast`
     - Add/adjust a regression test or deterministic repro for this MS item.
-    - Record evidence in `marge-simpson/planning_docs/assessment.md` (raw output or verify log path).
+    - Record evidence in `./planning_docs/assessment.md` (raw output or verify log path).
   - **Files likely involved:** …
   - **Linked assessment:** [MS-0001]
 
@@ -49,7 +49,7 @@ AI/Agents must read `AGENTS.md` before working.
 ## In Progress
 - [ ] **MS-000X —** …
   - **Started:** YYYY-MM-DD
-  - **Expert(s):** (optional) Relevant expert persona(s) from `marge-simpson/experts/_index.md`
+  - **Expert(s):** (optional) Relevant expert persona(s) from `./experts/_index.md`
   - **Current status:** …
   - **Blockers:** …
   - **Next step:** …
@@ -59,7 +59,7 @@ AI/Agents must read `AGENTS.md` before working.
 ## Done (recent)
 - [x] **MS-000X —** …
   - **Completed:** YYYY-MM-DD
-  - **Expert(s):** (optional) Relevant expert persona(s) from `marge-simpson/experts/_index.md`
+  - **Expert(s):** (optional) Relevant expert persona(s) from `./experts/_index.md`
   - **Verification:**
     - Commands run: …
     - Evidence: (paste raw output)
