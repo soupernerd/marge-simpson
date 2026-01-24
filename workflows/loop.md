@@ -82,7 +82,7 @@ Users can specify iteration bounds in their prompt:
 - Look for `min/minimum` followed by a number
 - Look for `max/maximum` followed by a number
 - Look for `exactly` or `run X times` for fixed count
-- If no max specified, default max is 5
+- If no max specified, default max is 5 (conservative safety limit; CLI `--max-iterations` defaults to 20)
 - If min > max, treat as exactly min passes
 - Numbers can be digits (5) or words (five) for 1-10
 

@@ -192,20 +192,37 @@ function Get-Slug {
 function Load-Config {
     if (-not (Test-Path $script:CONFIG_FILE)) { return }
 
-    Get-Content $script:CONFIG_FILE | ForEach-Object {
-        if ($_ -match '^\s*(\w+)\s*:\s*(.*)$') {
-            $key = $Matches[1]
-            $value = $Matches[2].Trim().Trim('"').Trim("'")
+    try {
+        Get-Content $script:CONFIG_FILE -ErrorAction Stop | ForEach-Object {
+            if ($_ -match '^\s*(\w+)\s*:\s*(.*)$') {
+                $key = $Matches[1]
+                $value = $Matches[2].Trim().Trim('"').Trim("'")
 
-            switch ($key) {
-                "engine" { if (-not $script:ENGINE -or $script:ENGINE -eq "claude") { $script:ENGINE = $value } }
-                "model" { if (-not $script:MODEL) { $script:MODEL = $value } }
-                "max_iterations" { $script:MAX_ITER = [int]$value }
-                "max_retries" { $script:MAX_RETRIES = [int]$value }
-                "auto_commit" { $script:AUTO_COMMIT = $value -eq "true" }
-                "folder" { if (-not $env:MARGE_FOLDER) { $script:MARGE_FOLDER = $value } }
+                switch ($key) {
+                    "engine" { if (-not $script:ENGINE -or $script:ENGINE -eq "claude") { $script:ENGINE = $value } }
+                    "model" { if (-not $script:MODEL) { $script:MODEL = $value } }
+                    "max_iterations" {
+                        if ($value -match '^[1-9][0-9]*$') {
+                            $script:MAX_ITER = [int]$value
+                        } else {
+                            Write-Warn "Config: max_iterations must be a positive integer, got '$value' - using default ($script:MAX_ITER)"
+                        }
+                    }
+                    "max_retries" {
+                        if ($value -match '^[1-9][0-9]*$') {
+                            $script:MAX_RETRIES = [int]$value
+                        } else {
+                            Write-Warn "Config: max_retries must be a positive integer, got '$value' - using default ($script:MAX_RETRIES)"
+                        }
+                    }
+                    "auto_commit" { $script:AUTO_COMMIT = $value -eq "true" }
+                    "folder" { if (-not $env:MARGE_FOLDER) { $script:MARGE_FOLDER = $value } }
+                }
             }
         }
+    } catch {
+        Write-Warn "Failed to parse config file '$script:CONFIG_FILE': $($_.Exception.Message)"
+        Write-Warn "Using default configuration values"
     }
 }
 
@@ -496,20 +513,63 @@ function Test-TaskComplete {
 }
 
 function Show-Spinner {
-    param([string]$Task, [System.Diagnostics.Process]$Process)
+    param(
+        [string]$Task,
+        [System.Diagnostics.Process]$Process,
+        [string]$OutputFile = ""
+    )
 
     $spinChars = @('⠋', '⠙', '⠹', '⠸', '⠼', '⠴', '⠦', '⠧', '⠇', '⠏')
     $spinIdx = 0
     $startTime = Get-Date
     $truncatedTask = if ($Task.Length -gt 45) { $Task.Substring(0, 45) + "..." } else { $Task }
+    $currentStep = "Working"
 
     while (-not $Process.HasExited) {
         $elapsed = (Get-Date) - $startTime
         $mins = [math]::Floor($elapsed.TotalMinutes)
         $secs = $elapsed.Seconds
 
+        # Check output for step indicators (ported from bash version)
+        if ($OutputFile -and (Test-Path $OutputFile)) {
+            try {
+                $content = Get-Content $OutputFile -Raw -ErrorAction SilentlyContinue
+                if ($content) {
+                    # Take last ~3000 chars for performance
+                    if ($content.Length -gt 3000) {
+                        $content = $content.Substring($content.Length - 3000)
+                    }
+                    
+                    if ($content -match 'git commit') {
+                        $currentStep = "Committing"
+                    }
+                    elseif ($content -match 'git add') {
+                        $currentStep = "Staging"
+                    }
+                    elseif ($content -match 'lint|eslint|biome') {
+                        $currentStep = "Linting"
+                    }
+                    elseif ($content -match 'test|jest|vitest|pytest') {
+                        $currentStep = "Testing"
+                    }
+                    elseif ($content -match '"tool":"[Ww]rite"|"tool":"[Ee]dit"') {
+                        $currentStep = "Writing"
+                    }
+                    elseif ($content -match '"tool":"[Rr]ead"|"tool":"[Gg]lob"') {
+                        $currentStep = "Reading"
+                    }
+                    elseif ($content -match '[Tt]hinking') {
+                        $currentStep = "Thinking"
+                    }
+                }
+            }
+            catch {
+                # Ignore read errors, keep current step
+            }
+        }
+
         $spinner = $spinChars[$spinIdx % $spinChars.Length]
-        Write-Host "`r  $spinner Working [$($mins.ToString('00')):$($secs.ToString('00'))] $truncatedTask    " -NoNewline
+        Write-Host "`r  $spinner $currentStep [$($mins.ToString('00')):$($secs.ToString('00'))] $truncatedTask    " -NoNewline
 
         $spinIdx++
         Start-Sleep -Milliseconds 100
@@ -618,7 +678,7 @@ After finished, list remaining unchecked items in $script:MARGE_FOLDER/planning_
             $process.StartInfo = $pinfo
             $process.Start() | Out-Null
 
-            Show-Spinner $Task $process
+            Show-Spinner $Task $process $outputFile
             $process.WaitForExit()
 
             $exitCode = $process.ExitCode
@@ -844,8 +904,34 @@ folder: .marge
     Write-Success "Initialized .marge/ and planning_docs/"
 }
 
+function Get-ProjectType {
+    <#
+    .SYNOPSIS
+        Detect project type based on config files
+    #>
+    if (Test-Path "package.json") {
+        return "node"
+    }
+    elseif (Test-Path "Cargo.toml") {
+        return "rust"
+    }
+    elseif (Test-Path "go.mod") {
+        return "go"
+    }
+    elseif ((Test-Path "requirements.txt") -or (Test-Path "pyproject.toml")) {
+        return "python"
+    }
+    elseif (Test-Path "Gemfile") {
+        return "ruby"
+    }
+    else {
+        return "unknown"
+    }
+}
+
 function Show-Status {
     Write-Host "Marge Status" -ForegroundColor White
+    Write-Host "Project type: $(Get-ProjectType)"
     Write-Host "Folder: $script:MARGE_FOLDER"
     
     # Compute PROGRESS_FILE if not yet set (for early-exit commands like 'status')
@@ -1339,7 +1425,16 @@ while ($i -lt $Arguments.Count) {
     if ($arg -match '^(-Auto|--auto)$') { $script:AUTO = $true; $matched = $true }
     elseif ($arg -match '^(-DryRun|--dry-run)$') { $script:DRY_RUN = $true; $matched = $true }
     elseif ($arg -match '^(-Model|--model)$') { $i++; $script:MODEL = $Arguments[$i]; $matched = $true }
-    elseif ($arg -match '^(-Engine|--engine)$') { $i++; $script:ENGINE = $Arguments[$i]; $matched = $true }
+    elseif ($arg -match '^(-Engine|--engine)$') {
+        $i++
+        $script:ENGINE = $Arguments[$i]
+        $validEngines = @('claude', 'opencode', 'codex', 'aider')
+        if ($script:ENGINE -notin $validEngines) {
+            Write-Err "Unknown engine '$($script:ENGINE)'. Valid engines: claude, opencode, codex, aider"
+            exit 1
+        }
+        $matched = $true
+    }
     elseif ($arg -match '^(-Fast|--fast)$') { $script:FAST = $true; $matched = $true }
     elseif ($arg -match '^(-Full|--full)$') { $script:FULL_MODE = $true; $matched = $true }
     elseif ($arg -match '^(-Loop|--loop)$') { $script:LOOP = $true; $matched = $true }

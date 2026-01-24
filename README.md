@@ -253,6 +253,8 @@ marge init                             # Initialize .marge/ in current project
 marge status                           # Show project type, progress, PRD tasks
 marge resume                           # Resume from saved progress
 marge config                           # Show config file
+marge doctor                           # Run diagnostic checks
+marge clean                            # Remove .marge/ folder
 ```
 
 ## CLI Options
@@ -276,6 +278,7 @@ marge config                           # Show config file
 | `--no-commit` | Disable auto-commit |
 | `-v, --verbose` | Debug output |
 | `--version` | Show version |
+| `--help, -h` | Show help message |
 
 **Environment Variables:**
 - `MARGE_HOME` — Global installation directory (default: `~/.marge`)

@@ -73,7 +73,7 @@ echo "Initializing .marge/..."
 # Create directory structure
 mkdir -p "$TARGET_DIR"
 
-# Symlink shared resources
+# Symlink shared resources (with fallback to copy if symlinks fail)
 SHARED_LINKS=(
     "AGENTS.md"
     "AGENTS-lite.md"
@@ -88,9 +88,18 @@ SHARED_LINKS=(
     "workflows"
 )
 
+SYMLINK_FAILED=0
 for item in "${SHARED_LINKS[@]}"; do
     if [[ -e "$MARGE_HOME/shared/$item" ]]; then
-        ln -s "$MARGE_HOME/shared/$item" "$TARGET_DIR/$item"
+        if ! ln -s "$MARGE_HOME/shared/$item" "$TARGET_DIR/$item" 2>/dev/null; then
+            # Fall back to copying if symlinks fail
+            if [[ "$SYMLINK_FAILED" -eq 0 ]]; then
+                echo "Warning: Symlinks not supported. Falling back to copies." >&2
+                echo "         You'll need to run 'marge-init --force' after updates to refresh files." >&2
+                SYMLINK_FAILED=1
+            fi
+            cp -R "$MARGE_HOME/shared/$item" "$TARGET_DIR/$item"
+        fi
     fi
 done
 

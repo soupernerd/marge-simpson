@@ -218,6 +218,13 @@ show_spinner() {
 load_config() {
     [[ ! -f "$CONFIG_FILE" ]] && return 0
 
+    local parse_output
+    if ! parse_output=$(grep -v '^#' "$CONFIG_FILE" | tr ':' '=' 2>&1); then
+        log_warn "Failed to parse config file '$CONFIG_FILE': $parse_output"
+        log_warn "Using default configuration values"
+        return 0
+    fi
+
     while IFS='=' read -r key value; do
         [[ -z "$key" || "$key" =~ ^# ]] && continue
         key=${key// /}
@@ -228,12 +235,24 @@ load_config() {
         case "$key" in
             engine) [[ -z "$ENGINE" || "$ENGINE" == "claude" ]] && ENGINE="$value" ;;
             model) [[ -z "$MODEL" ]] && MODEL="$value" ;;
-            max_iterations) MAX_ITER="$value" ;;
-            max_retries) MAX_RETRIES="$value" ;;
+            max_iterations)
+                if [[ "$value" =~ ^[1-9][0-9]*$ ]]; then
+                    MAX_ITER="$value"
+                else
+                    log_warn "Config: max_iterations must be a positive integer, got '$value' - using default ($MAX_ITER)"
+                fi
+                ;;
+            max_retries)
+                if [[ "$value" =~ ^[1-9][0-9]*$ ]]; then
+                    MAX_RETRIES="$value"
+                else
+                    log_warn "Config: max_retries must be a positive integer, got '$value' - using default ($MAX_RETRIES)"
+                fi
+                ;;
             auto_commit) AUTO_COMMIT="$value" ;;
             folder) [[ -z "$MARGE_FOLDER" || "$MARGE_FOLDER" == ".marge" ]] && MARGE_FOLDER="$value" ;;
         esac
-    done < <(grep -v '^#' "$CONFIG_FILE" | tr ':' '=' 2>/dev/null)
+    done <<< "$parse_output"
 }
 
 save_progress() {
@@ -1160,7 +1179,14 @@ while [[ $# -gt 0 ]]; do
         --auto) AUTO=true; shift ;;
         --dry-run) DRY_RUN=true; shift ;;
         --model) MODEL="$2"; shift 2 ;;
-        --engine) ENGINE="$2"; shift 2 ;;
+        --engine)
+            ENGINE="$2"
+            case "$ENGINE" in
+                claude|opencode|codex|aider) ;;
+                *) log_error "Unknown engine '$ENGINE'. Valid engines: claude, opencode, codex, aider"; exit 1 ;;
+            esac
+            shift 2
+            ;;
         --folder) MARGE_FOLDER="$2"; shift 2 ;;
         --fast) FAST=true; shift ;;
         --full) FULL_MODE=true; shift ;;

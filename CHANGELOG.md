@@ -15,14 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Unix verify profiles** - `fast_sh` and `full_sh` profiles in verify.config.json
 - **Expanded subagent guidance** - AGENTS.md now encourages subagents for edits/creation, not just research
 - **verify.sh auto-profile selection** - Automatically uses `fast_sh` profile on Unix if available
+- **test-cli.sh** - Bash equivalent of test-cli.ps1 for Unix platform testing (24 tests)
+- **Project type detection (PS1)** - `marge status` now shows project type (parity with bash)
+- **Spinner step detection (PS1)** - Shows meaningful progress (Reading, Writing, Testing, etc.) instead of just "Working"
 
 ### Changed
 - **Help text parity** - PS1 and Bash help now show identical OPTIONS and META-DEVELOPMENT sections
 - **Show-Usage output** - Changed from Write-Host to Write-Output (now capturable for testing)
+- **Early engine validation** - `--engine` parameter now validated during arg parsing with helpful error message
 
 ### Fixed
 - **Bash invalid flag handling** - Now shows friendly "Unknown option" message with help suggestion
 - **README missing --auto** - Added --auto flag to CLI options table
+- **README missing utilities** - Added `marge doctor` and `marge clean` to Utilities section
+- **README missing --help** - Added `--help, -h` to CLI Options table
+- **loop.md default clarity** - Clarified loop workflow default (5) vs CLI `--max-iterations` default (20)
+- **deep_system_audit.md incorrect reference** - Fixed AGENTS.md path to use standard relative reference
+- **marge-init bash symlink fallback** - Added copy fallback when symlinks not supported (parity with PS1)
+- **Config parse warnings** - Both PS1 and bash now warn when config.yaml has parse errors or invalid values
 
 ## [1.3.0] - 2026-01-23
 

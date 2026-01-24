@@ -13,7 +13,7 @@ Copy everything below the line:
 ---
 
 ```
-Read .meta_marge/AGENTS.md (or AGENTS.md if no .meta_marge/).
+Read the AGENTS.md file in this folder and follow it.
 
 ## DEEP SYSTEM AUDIT — Loop until clean (min 2, max 5)
 
@@ -210,3 +210,12 @@ No code logic changes unless fixing doc generation.
 3. **Trust subagents:** They handle the breadth; you review the findings
 4. **Verify always:** Never claim "fixed" without test output
 5. **Document everything:** Future audits benefit from prior context
+
+## Loop
+
+Once you are done auditing:
+1. Fix all issues found, in the order you decide. Do not ask emd user or dev any questions
+2. For conflicts use your best judgement. Always put end user UX as the priority even if it means the fix is a bit harder. Dont assume the siple fix is always the best fix
+3. Make sure all id'sand issues have been fixed, then delete .meta_marge folder and recreate a meta marge.
+4. run this entire prompt again, for a total of 20 times. we are looping and we will be auditing, fixing, deleting meta marge, recreating meta marge, auditing, fixing etc 20 times in total.
+5. During all of the time looping, do not ask questions of the dev. use best jusgemdn as described above, usigin reasoning stated above.
