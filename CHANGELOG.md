@@ -32,8 +32,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cross-platform shebang** - All PS1 scripts now have `#!/usr/bin/env pwsh` for Unix compatibility
 - **PRD.md in marge-init output** - Tree display now shows PRD.md file that's copied
 - **[Unreleased] changelog link** - Added comparison link for unreleased changes
-- **Folder creation prohibition** - AGENTS.md now explicitly forbids AI from creating .marge/ folders during chat prompting
-- **Expected test failure documented** - meta/README.md documents the expected SkipIfNoTests failure after convert-to-meta
+- **Centralized fallback pricing constants** - `DEFAULT_INPUT_RATE`/`DEFAULT_OUTPUT_RATE` defined once, used everywhere
+
+### Fixed
+- **Security: Path traversal in --folder** - Now validates folder path is relative and within project
+- **Security: Code injection in load_progress** - Bash version now parses progress file explicitly instead of using `source`
 
 ### Changed
 - **Help text parity** - PS1 and Bash help now show identical OPTIONS and META-DEVELOPMENT sections

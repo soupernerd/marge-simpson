@@ -59,6 +59,10 @@ $versionFile = Get-Content "$PSScriptRoot/../VERSION" -First 1 -ErrorAction Sile
 $script:VERSION = if ($versionFile) { $versionFile.Trim() } else { "0.0.0" }
 $script:MARGE_HOME = if ($env:MARGE_HOME) { $env:MARGE_HOME } else { "$env:USERPROFILE\.marge" }
 
+# Fallback pricing (Claude Sonnet) - used when model_pricing.json unavailable
+$script:DEFAULT_INPUT_RATE = 3.00   # $/1M input tokens
+$script:DEFAULT_OUTPUT_RATE = 15.00 # $/1M output tokens
+
 # Defaults
 $script:DRY_RUN = $false
 $script:VERBOSE_OUTPUT = $false
@@ -346,8 +350,8 @@ function Write-TokenUsage {
     
     if ($tokens.Input -gt 0 -or $tokens.Output -gt 0) {
         # Default Claude Sonnet-class pricing (fallback when file missing/invalid)
-        $inputRate = 3.00
-        $outputRate = 15.00
+        $inputRate = $script:DEFAULT_INPUT_RATE
+        $outputRate = $script:DEFAULT_OUTPUT_RATE
         $usingFallback = $false
         
         # Try to read from model_pricing.json
@@ -1392,8 +1396,8 @@ function Invoke-MetaSetupPrompt {
 
 function Get-ModelPricing {
     # Default Claude Sonnet pricing
-    $inputRate = 3.00
-    $outputRate = 15.00
+    $inputRate = $script:DEFAULT_INPUT_RATE
+    $outputRate = $script:DEFAULT_OUTPUT_RATE
     
     # Try to read from model_pricing.json
     $pricingFile = "./$script:MARGE_FOLDER/model_pricing.json"
@@ -1520,7 +1524,13 @@ while ($i -lt $Arguments.Count) {
             exit 1
         }
         $i++
-        $script:MARGE_FOLDER = $Arguments[$i]
+        $folderValue = $Arguments[$i]
+        # Security: Prevent path traversal outside project
+        if ($folderValue -match '^[/\\]' -or $folderValue -match '^\.\.[/\\]' -or $folderValue -match '[/\\]\.\.[/\\]') {
+            Write-Err "--folder must be a relative path within the project (got: $folderValue)"
+            exit 1
+        }
+        $script:MARGE_FOLDER = $folderValue
         $matched = $true
     }
     elseif ($arg -match '^(-Verbose|--verbose|-v)$') { $script:VERBOSE_OUTPUT = $true; $matched = $true }

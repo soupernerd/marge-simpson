@@ -34,6 +34,10 @@ MAX_PARALLEL=${MAX_PARALLEL:-3}
 PRD_FILE="planning_docs/PRD.md"
 MARGE_FOLDER="${MARGE_FOLDER:-.marge}"
 
+# Fallback pricing (Claude Sonnet) - used when model_pricing.json unavailable
+DEFAULT_INPUT_RATE=3.00   # $/1M input tokens
+DEFAULT_OUTPUT_RATE=15.00 # $/1M output tokens
+
 # State
 iteration=0
 total_input_tokens=0
@@ -268,7 +272,19 @@ EOF
 
 load_progress() {
     [[ ! -f "$PROGRESS_FILE" ]] && return 1
-    source "$PROGRESS_FILE" 2>/dev/null || return 1
+    # Security: Parse explicitly instead of using 'source' to prevent code injection
+    while IFS='=' read -r key value; do
+        # Only allow known keys with valid values
+        [[ -z "$key" ]] && continue
+        [[ "$key" =~ ^[[:space:]]*# ]] && continue  # Skip comments
+        key=$(echo "$key" | tr -d '[:space:]')
+        value=$(echo "$value" | tr -d '[:space:]"'"'")
+        case "$key" in
+            iteration)
+                [[ "$value" =~ ^[0-9]+$ ]] && iteration="$value"
+                ;;
+        esac
+    done < "$PROGRESS_FILE"
     return 0
 }
 
@@ -380,9 +396,9 @@ parse_token_usage() {
     [[ ! "$output_tokens" =~ ^[0-9]+$ ]] && output_tokens=0
 
     # Calculate cost using model pricing
-    # Default to Claude Sonnet-class pricing: $3/1M input, $15/1M output (fallback when file missing/invalid)
-    local input_rate=3.00
-    local output_rate=15.00
+    # Default to Claude Sonnet-class pricing (fallback when file missing/invalid)
+    local input_rate=$DEFAULT_INPUT_RATE
+    local output_rate=$DEFAULT_OUTPUT_RATE
     local using_fallback=false
 
     # Try to read from model_pricing.json if available
@@ -1101,8 +1117,8 @@ print_session_summary() {
 
     if [[ $total_input_tokens -gt 0 ]] || [[ $total_output_tokens -gt 0 ]]; then
         # Calculate total cost
-        local input_rate=3.00
-        local output_rate=15.00
+        local input_rate=$DEFAULT_INPUT_RATE
+        local output_rate=$DEFAULT_OUTPUT_RATE
 
         local pricing_file="./$MARGE_FOLDER/model_pricing.json"
         [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
@@ -1222,6 +1238,11 @@ while [[ $# -gt 0 ]]; do
         --folder)
             if [[ -z "$2" || "$2" == -* ]]; then
                 log_error "--folder requires a value"
+                exit 1
+            fi
+            # Security: Prevent path traversal outside project
+            if [[ "$2" == /* ]] || [[ "$2" == ../* ]] || [[ "$2" == */../* ]]; then
+                log_error "--folder must be a relative path within the project (got: $2)"
                 exit 1
             fi
             MARGE_FOLDER="$2"; shift 2 ;;
