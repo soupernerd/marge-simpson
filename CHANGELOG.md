@@ -18,11 +18,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **test-cli.sh** - Bash equivalent of test-cli.ps1 for Unix platform testing (24 tests)
 - **Project type detection (PS1)** - `marge status` now shows project type (parity with bash)
 - **Spinner step detection (PS1)** - Shows meaningful progress (Reading, Writing, Testing, etc.) instead of just "Working"
+- **Functional CLI command tests** - Tests for init, clean, doctor, config, resume commands
+- **Edge case tests** - Tests for invalid engine, invalid max-iterations, empty tasks
 
 ### Changed
 - **Help text parity** - PS1 and Bash help now show identical OPTIONS and META-DEVELOPMENT sections
 - **Show-Usage output** - Changed from Write-Host to Write-Output (now capturable for testing)
 - **Early engine validation** - `--engine` parameter now validated during arg parsing with helpful error message
+- **CLI test count increased** - From 23 to 36 tests with new functional and edge case coverage
 
 ### Fixed
 - **Bash invalid flag handling** - Now shows friendly "Unknown option" message with help suggestion

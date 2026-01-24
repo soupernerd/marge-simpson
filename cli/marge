@@ -2,7 +2,7 @@
 # shellcheck disable=SC2015  # A && B || C pattern is intentional for fallback
 # shellcheck disable=SC2155  # Declare and assign combined is acceptable here
 # shellcheck disable=SC1090  # Can't follow non-constant source (dynamic config)
-# shellcheck disable=SC2034  # Some variables reserved for future use (AUTO, FAST)
+# shellcheck disable=SC2034  # AUTO reserved for future use
 set -eo pipefail
 
 # ============================================
@@ -16,6 +16,7 @@ VERSION="1.3.0"
 DRY_RUN=false
 VERBOSE=false
 MODEL=""
+# FAST mode: Passed to AI context to skip verification steps (verify.ps1/verify.sh)
 FAST=false
 LOOP=false
 AUTO=false
@@ -309,11 +310,20 @@ cleanup_worktrees() {
 }
 
 check_engine() {
+    local install_hints="
+  Install with one of:
+    claude:   npm install -g @anthropic-ai/claude-cli
+    aider:    pip install aider-chat
+    opencode: go install github.com/opencode-ai/opencode@latest
+    codex:    npm install -g @openai/codex
+
+  Or specify a different engine: marge --engine aider 'your task'"
+
     case "$1" in
-        claude) command -v claude &>/dev/null || { log_error "claude not found"; return 1; } ;;
-        opencode) command -v opencode &>/dev/null || { log_error "opencode not found"; return 1; } ;;
-        codex) command -v codex &>/dev/null || { log_error "codex not found"; return 1; } ;;
-        aider) command -v aider &>/dev/null || { log_error "aider not found"; return 1; } ;;
+        claude) command -v claude &>/dev/null || { log_error "claude not found.$install_hints"; return 1; } ;;
+        opencode) command -v opencode &>/dev/null || { log_error "opencode not found.$install_hints"; return 1; } ;;
+        codex) command -v codex &>/dev/null || { log_error "codex not found.$install_hints"; return 1; } ;;
+        aider) command -v aider &>/dev/null || { log_error "aider not found.$install_hints"; return 1; } ;;
         *) log_error "Unknown engine: $1"; return 1 ;;
     esac
 }
@@ -897,19 +907,21 @@ run_task() {
             return 1
         fi
         
+        local fast_suffix="$([[ "$FAST" == true ]] && echo ' [FAST MODE: Skip verification steps]')"
         local prompt="Read and follow these rules:
 
 $(cat "$agents_path" 2>/dev/null || echo "Be concise. Do the task directly. List files modified.")
 
-Task: ${task}"
+Task: ${task}${fast_suffix}"
     else
         # Full mode - ensure .marge folder exists
         [[ ! -d "$workdir/$MARGE_FOLDER" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
         
+        local fast_suffix="$([[ "$FAST" == true ]] && echo $'\n\n[FAST MODE: Skip verification steps - do not run verify.ps1/verify.sh]')"
         local prompt="Read the AGENTS.md file in the $MARGE_FOLDER folder and follow it.
 
 Instruction:
-- ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")
+- ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")${fast_suffix}
 
 After finished, list remaining unchecked items in $MARGE_FOLDER/planning_docs/tasklist.md."
     fi
@@ -1178,8 +1190,17 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --auto) AUTO=true; shift ;;
         --dry-run) DRY_RUN=true; shift ;;
-        --model) MODEL="$2"; shift 2 ;;
+        --model)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                log_error "--model requires a value"
+                exit 1
+            fi
+            MODEL="$2"; shift 2 ;;
         --engine)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                log_error "--engine requires a value"
+                exit 1
+            fi
             ENGINE="$2"
             case "$ENGINE" in
                 claude|opencode|codex|aider) ;;
@@ -1187,15 +1208,35 @@ while [[ $# -gt 0 ]]; do
             esac
             shift 2
             ;;
-        --folder) MARGE_FOLDER="$2"; shift 2 ;;
+        --folder)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                log_error "--folder requires a value"
+                exit 1
+            fi
+            MARGE_FOLDER="$2"; shift 2 ;;
         --fast) FAST=true; shift ;;
         --full) FULL_MODE=true; shift ;;
         --loop) LOOP=true; shift ;;
-        --max-iterations) validate_positive_int "$2" "--max-iterations" || exit 1; MAX_ITER="$2"; shift 2 ;;
-        --max-retries) validate_positive_int "$2" "--max-retries" || exit 1; MAX_RETRIES="$2"; shift 2 ;;
+        --max-iterations)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                log_error "--max-iterations requires a value"
+                exit 1
+            fi
+            validate_positive_int "$2" "--max-iterations" || exit 1; MAX_ITER="$2"; shift 2 ;;
+        --max-retries)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                log_error "--max-retries requires a value"
+                exit 1
+            fi
+            validate_positive_int "$2" "--max-retries" || exit 1; MAX_RETRIES="$2"; shift 2 ;;
         --no-commit) AUTO_COMMIT=false; shift ;;
         --parallel) PARALLEL=true; shift ;;
-        --max-parallel) validate_positive_int "$2" "--max-parallel" || exit 1; MAX_PARALLEL="$2"; shift 2 ;;
+        --max-parallel)
+            if [[ -z "$2" || "$2" == -* ]]; then
+                log_error "--max-parallel requires a value"
+                exit 1
+            fi
+            validate_positive_int "$2" "--max-parallel" || exit 1; MAX_PARALLEL="$2"; shift 2 ;;
         --branch-per-task) BRANCH_PER_TASK=true; shift ;;
         --create-pr) CREATE_PR=true; shift ;;
         -v|--verbose) VERBOSE=true; shift ;;

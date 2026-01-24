@@ -62,6 +62,7 @@ $script:MARGE_HOME = if ($env:MARGE_HOME) { $env:MARGE_HOME } else { "$env:USERP
 $script:DRY_RUN = $false
 $script:VERBOSE_OUTPUT = $false
 $script:MODEL = ""
+# FAST mode: Passed to AI context to skip verification steps (verify.ps1/verify.sh)
 $script:FAST = $false
 $script:LOOP = $false
 $script:AUTO = $false
@@ -448,11 +449,22 @@ function Invoke-TaskParallel {
 function Test-Engine {
     param([string]$EngineName)
 
+    $installHints = @"
+
+  Install with one of:
+    claude:   npm install -g @anthropic-ai/claude-cli
+    aider:    pip install aider-chat
+    opencode: go install github.com/opencode-ai/opencode@latest
+    codex:    npm install -g @openai/codex
+
+  Or specify a different engine: marge --engine aider 'your task'
+"@
+
     switch ($EngineName) {
-        "claude" { if (-not (Get-Command "claude" -ErrorAction SilentlyContinue)) { Write-Err "claude not found"; return $false } }
-        "opencode" { if (-not (Get-Command "opencode" -ErrorAction SilentlyContinue)) { Write-Err "opencode not found"; return $false } }
-        "codex" { if (-not (Get-Command "codex" -ErrorAction SilentlyContinue)) { Write-Err "codex not found"; return $false } }
-        "aider" { if (-not (Get-Command "aider" -ErrorAction SilentlyContinue)) { Write-Err "aider not found"; return $false } }
+        "claude" { if (-not (Get-Command "claude" -ErrorAction SilentlyContinue)) { Write-Err "claude not found.$installHints"; return $false } }
+        "opencode" { if (-not (Get-Command "opencode" -ErrorAction SilentlyContinue)) { Write-Err "opencode not found.$installHints"; return $false } }
+        "codex" { if (-not (Get-Command "codex" -ErrorAction SilentlyContinue)) { Write-Err "codex not found.$installHints"; return $false } }
+        "aider" { if (-not (Get-Command "aider" -ErrorAction SilentlyContinue)) { Write-Err "aider not found.$installHints"; return $false } }
         default { Write-Err "Unknown engine: $EngineName"; return $false }
     }
     return $true
@@ -616,12 +628,13 @@ function Invoke-Task {
         
         $agentsContent = Get-Content $agentsLitePath -Raw
         
+        $fastSuffix = if ($script:FAST) { " [FAST MODE: Skip verification steps]" } else { "" }
         $prompt = @"
 Read and follow these rules:
 
 $agentsContent
 
-Task: $Task
+Task: $Task$fastSuffix
 "@
     } else {
         # Full mode - ensure .marge folder exists
@@ -634,11 +647,12 @@ Task: $Task
 
         # Build prompt
         $loopSuffix = if ($script:LOOP) { " Loop until complete." } else { "" }
+        $fastSuffix = if ($script:FAST) { "`n`n[FAST MODE: Skip verification steps - do not run verify.ps1/verify.sh]" } else { "" }
         $prompt = @"
 Read the AGENTS.md file in the $script:MARGE_FOLDER folder and follow it.
 
 Instruction:
-- $Task$loopSuffix
+- $Task$loopSuffix$fastSuffix
 
 After finished, list remaining unchecked items in $script:MARGE_FOLDER/planning_docs/tasklist.md.
 "@
@@ -1424,8 +1438,20 @@ while ($i -lt $Arguments.Count) {
     # Check options first (more specific)
     if ($arg -match '^(-Auto|--auto)$') { $script:AUTO = $true; $matched = $true }
     elseif ($arg -match '^(-DryRun|--dry-run)$') { $script:DRY_RUN = $true; $matched = $true }
-    elseif ($arg -match '^(-Model|--model)$') { $i++; $script:MODEL = $Arguments[$i]; $matched = $true }
+    elseif ($arg -match '^(-Model|--model)$') {
+        if ($i + 1 -ge $Arguments.Count) {
+            Write-Err "--model requires a value"
+            exit 1
+        }
+        $i++
+        $script:MODEL = $Arguments[$i]
+        $matched = $true
+    }
     elseif ($arg -match '^(-Engine|--engine)$') {
+        if ($i + 1 -ge $Arguments.Count) {
+            Write-Err "--engine requires a value"
+            exit 1
+        }
         $i++
         $script:ENGINE = $Arguments[$i]
         $validEngines = @('claude', 'opencode', 'codex', 'aider')
@@ -1438,14 +1464,49 @@ while ($i -lt $Arguments.Count) {
     elseif ($arg -match '^(-Fast|--fast)$') { $script:FAST = $true; $matched = $true }
     elseif ($arg -match '^(-Full|--full)$') { $script:FULL_MODE = $true; $matched = $true }
     elseif ($arg -match '^(-Loop|--loop)$') { $script:LOOP = $true; $matched = $true }
-    elseif ($arg -match '^(-MaxIterations|--max-iterations)$') { $i++; if (-not (Test-PositiveInt $Arguments[$i] "--max-iterations")) { exit 1 }; $script:MAX_ITER = [int]$Arguments[$i]; $matched = $true }
-    elseif ($arg -match '^(-MaxRetries|--max-retries)$') { $i++; if (-not (Test-PositiveInt $Arguments[$i] "--max-retries")) { exit 1 }; $script:MAX_RETRIES = [int]$Arguments[$i]; $matched = $true }
+    elseif ($arg -match '^(-MaxIterations|--max-iterations)$') {
+        if ($i + 1 -ge $Arguments.Count) {
+            Write-Err "--max-iterations requires a value"
+            exit 1
+        }
+        $i++
+        if (-not (Test-PositiveInt $Arguments[$i] "--max-iterations")) { exit 1 }
+        $script:MAX_ITER = [int]$Arguments[$i]
+        $matched = $true
+    }
+    elseif ($arg -match '^(-MaxRetries|--max-retries)$') {
+        if ($i + 1 -ge $Arguments.Count) {
+            Write-Err "--max-retries requires a value"
+            exit 1
+        }
+        $i++
+        if (-not (Test-PositiveInt $Arguments[$i] "--max-retries")) { exit 1 }
+        $script:MAX_RETRIES = [int]$Arguments[$i]
+        $matched = $true
+    }
     elseif ($arg -match '^(-NoCommit|--no-commit)$') { $script:AUTO_COMMIT = $false; $matched = $true }
     elseif ($arg -match '^(-Parallel|--parallel)$') { $script:PARALLEL = $true; $matched = $true }
-    elseif ($arg -match '^(-MaxParallel|--max-parallel)$') { $i++; if (-not (Test-PositiveInt $Arguments[$i] "--max-parallel")) { exit 1 }; $script:MAX_PARALLEL = [int]$Arguments[$i]; $matched = $true }
+    elseif ($arg -match '^(-MaxParallel|--max-parallel)$') {
+        if ($i + 1 -ge $Arguments.Count) {
+            Write-Err "--max-parallel requires a value"
+            exit 1
+        }
+        $i++
+        if (-not (Test-PositiveInt $Arguments[$i] "--max-parallel")) { exit 1 }
+        $script:MAX_PARALLEL = [int]$Arguments[$i]
+        $matched = $true
+    }
     elseif ($arg -match '^(-BranchPerTask|--branch-per-task)$') { $script:BRANCH_PER_TASK = $true; $matched = $true }
     elseif ($arg -match '^(-CreatePR|--create-pr)$') { $script:CREATE_PR = $true; $matched = $true }
-    elseif ($arg -match '^(-Folder|--folder)$') { $i++; $script:MARGE_FOLDER = $Arguments[$i]; $matched = $true }
+    elseif ($arg -match '^(-Folder|--folder)$') {
+        if ($i + 1 -ge $Arguments.Count) {
+            Write-Err "--folder requires a value"
+            exit 1
+        }
+        $i++
+        $script:MARGE_FOLDER = $Arguments[$i]
+        $matched = $true
+    }
     elseif ($arg -match '^(-Verbose|--verbose|-v)$') { $script:VERBOSE_OUTPUT = $true; $matched = $true }
     elseif ($arg -match '^(-Version|--version)$') { Write-Host "marge $script:VERSION"; exit 0 }
     elseif ($arg -match '^(-Help|--help|-h|help)$') { Show-Usage; exit 0 }
