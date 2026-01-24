@@ -1,4 +1,0 @@
-﻿iteration=1
-task_index=1
-timestamp=1769246414
-status=running

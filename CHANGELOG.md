@@ -20,12 +20,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Spinner step detection (PS1)** - Shows meaningful progress (Reading, Writing, Testing, etc.) instead of just "Working"
 - **Functional CLI command tests** - Tests for init, clean, doctor, config, resume commands
 - **Edge case tests** - Tests for invalid engine, invalid max-iterations, empty tasks
+- **--fast mode instruction** - Now passes `[FAST MODE: Skip verification steps]` to AI prompt
+- **--auto mode instruction** - Now passes `[AUTO MODE: Proceed autonomously without asking for confirmation]` to AI prompt
+- **Argument bounds checking** - CLI validates that options requiring values actually have them
+- **Task failure output** - Shows last 10 lines of output when task fails, helping diagnose issues
+- **Temp file cleanup on exit** - Temp files now cleaned up on any exit (success, error, interrupt)
+- **Dynamic VERSION** - CLI scripts now read version from VERSION file instead of hardcoding
+- **First-run guidance** - `marge init` now shows quick start example after initialization
 
 ### Changed
 - **Help text parity** - PS1 and Bash help now show identical OPTIONS and META-DEVELOPMENT sections
 - **Show-Usage output** - Changed from Write-Host to Write-Output (now capturable for testing)
 - **Early engine validation** - `--engine` parameter now validated during arg parsing with helpful error message
 - **CLI test count increased** - From 23 to 36 tests with new functional and edge case coverage
+- **Engine not found error** - Now shows installation hints for known engines (claude, aider, opencode, codex)
+- **Removed unused prompt parameter** - `Build-EngineCmd` no longer accepts unused `$Prompt` parameter
 
 ### Fixed
 - **Bash invalid flag handling** - Now shows friendly "Unknown option" message with help suggestion
@@ -36,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **deep_system_audit.md incorrect reference** - Fixed AGENTS.md path to use standard relative reference
 - **marge-init bash symlink fallback** - Added copy fallback when symlinks not supported (parity with PS1)
 - **Config parse warnings** - Both PS1 and bash now warn when config.yaml has parse errors or invalid values
+- **--model/--engine/--folder missing value** - CLI now errors if option is last argument without value
 
 ## [1.3.0] - 2026-01-23
 

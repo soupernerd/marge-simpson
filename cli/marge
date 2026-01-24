@@ -6,11 +6,11 @@
 set -eo pipefail
 
 # ============================================
-# Marge v1.3.0 - Autonomous AI Coding Loop
+# Marge - Autonomous AI Coding Loop
 # ============================================
 
 MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
-VERSION="1.3.0"
+VERSION=$(cat "$(dirname "${BASH_SOURCE[0]}")/../VERSION" 2>/dev/null || echo "0.0.0")
 
 # Defaults
 DRY_RUN=false
@@ -443,7 +443,6 @@ parse_token_usage() {
 
 build_engine_cmd() {
     local engine="$1"
-    local prompt="$2"
     case "$engine" in
         claude)
             # -p requires prompt immediately after, other flags come before or after
@@ -908,20 +907,22 @@ run_task() {
         fi
         
         local fast_suffix="$([[ "$FAST" == true ]] && echo ' [FAST MODE: Skip verification steps]')"
+        local auto_suffix="$([[ "$AUTO" == true ]] && echo $'\n[AUTO MODE: Proceed autonomously without asking for user confirmation. Make decisions using best judgment.]')"
         local prompt="Read and follow these rules:
 
 $(cat "$agents_path" 2>/dev/null || echo "Be concise. Do the task directly. List files modified.")
 
-Task: ${task}${fast_suffix}"
+Task: ${task}${fast_suffix}${auto_suffix}"
     else
         # Full mode - ensure .marge folder exists
         [[ ! -d "$workdir/$MARGE_FOLDER" ]] && "$MARGE_HOME/marge-init" 2>/dev/null
         
         local fast_suffix="$([[ "$FAST" == true ]] && echo $'\n\n[FAST MODE: Skip verification steps - do not run verify.ps1/verify.sh]')"
+        local auto_suffix="$([[ "$AUTO" == true ]] && echo $'\n[AUTO MODE: Proceed autonomously without asking for user confirmation. Make decisions using best judgment.]')"
         local prompt="Read the AGENTS.md file in the $MARGE_FOLDER folder and follow it.
 
 Instruction:
-- ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")${fast_suffix}
+- ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")${fast_suffix}${auto_suffix}
 
 After finished, list remaining unchecked items in $MARGE_FOLDER/planning_docs/tasklist.md."
     fi
@@ -936,6 +937,9 @@ After finished, list remaining unchecked items in $MARGE_FOLDER/planning_docs/ta
     local retry=0
     local output_file="/tmp/marge_output_$$.txt"
     local ai_pid
+
+    # Cleanup temp file on exit/interrupt/error
+    trap 'rm -f "$output_file" 2>/dev/null' EXIT
 
     while [[ $retry -lt $MAX_RETRIES ]]; do
         log_debug "Attempt $((retry+1))/$MAX_RETRIES"
@@ -978,6 +982,13 @@ After finished, list remaining unchecked items in $MARGE_FOLDER/planning_docs/ta
 
     save_progress "$num" "failed"
     log_error "Task failed after $MAX_RETRIES retries"
+    # Show last 10 lines of output to help user understand the failure
+    if [[ -f "$output_file" ]] && [[ -s "$output_file" ]]; then
+        log_error "Last 10 lines of output:"
+        echo "----------------------------------------" >&2
+        tail -n 10 "$output_file" >&2
+        echo "----------------------------------------" >&2
+    fi
     rm -f "$output_file"
     return 1
 }

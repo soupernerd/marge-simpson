@@ -52,10 +52,11 @@ param(
 $ErrorActionPreference = "Stop"
 
 # ============================================
-# Marge v1.3.0 - Autonomous AI Coding Loop
+# Marge - Autonomous AI Coding Loop
 # ============================================
 
-$script:VERSION = "1.3.0"
+$versionFile = Get-Content "$PSScriptRoot/../VERSION" -First 1 -ErrorAction SilentlyContinue
+$script:VERSION = if ($versionFile) { $versionFile.Trim() } else { "0.0.0" }
 $script:MARGE_HOME = if ($env:MARGE_HOME) { $env:MARGE_HOME } else { "$env:USERPROFILE\.marge" }
 
 # Defaults
@@ -471,7 +472,7 @@ function Test-Engine {
 }
 
 function Build-EngineCmd {
-    param([string]$EngineName, [string]$Prompt)
+    param([string]$EngineName)
 
     switch ($EngineName) {
         "claude" {
@@ -629,12 +630,13 @@ function Invoke-Task {
         $agentsContent = Get-Content $agentsLitePath -Raw
         
         $fastSuffix = if ($script:FAST) { " [FAST MODE: Skip verification steps]" } else { "" }
+        $autoSuffix = if ($script:AUTO) { "`n[AUTO MODE: Proceed autonomously without asking for user confirmation. Make decisions using best judgment.]" } else { "" }
         $prompt = @"
 Read and follow these rules:
 
 $agentsContent
 
-Task: $Task$fastSuffix
+Task: $Task$fastSuffix$autoSuffix
 "@
     } else {
         # Full mode - ensure .marge folder exists
@@ -648,11 +650,12 @@ Task: $Task$fastSuffix
         # Build prompt
         $loopSuffix = if ($script:LOOP) { " Loop until complete." } else { "" }
         $fastSuffix = if ($script:FAST) { "`n`n[FAST MODE: Skip verification steps - do not run verify.ps1/verify.sh]" } else { "" }
+        $autoSuffix = if ($script:AUTO) { "`n[AUTO MODE: Proceed autonomously without asking for user confirmation. Make decisions using best judgment.]" } else { "" }
         $prompt = @"
 Read the AGENTS.md file in the $script:MARGE_FOLDER folder and follow it.
 
 Instruction:
-- $Task$loopSuffix$fastSuffix
+- $Task$loopSuffix$fastSuffix$autoSuffix
 
 After finished, list remaining unchecked items in $script:MARGE_FOLDER/planning_docs/tasklist.md.
 "@
@@ -670,6 +673,8 @@ After finished, list remaining unchecked items in $script:MARGE_FOLDER/planning_
     $retry = 0
     $outputFile = "$env:TEMP\marge_output_$PID.txt"
 
+    # Ensure temp file cleanup on any exit (success, error, interrupt)
+    try {
     while ($retry -lt $script:MAX_RETRIES) {
         Write-Debug-Msg "Attempt $($retry + 1)/$script:MAX_RETRIES"
         Write-Debug-Msg "Command: $cmd `"<prompt>`""
@@ -723,8 +728,19 @@ After finished, list remaining unchecked items in $script:MARGE_FOLDER/planning_
 
     Save-Progress $Num "failed"
     Write-Err "Task failed after $script:MAX_RETRIES retries"
-    Remove-Item $outputFile -ErrorAction SilentlyContinue
+    # Show last 10 lines of output to help user understand the failure
+    if (Test-Path $outputFile) {
+        Write-Err "Last 10 lines of output:"
+        Write-Err "----------------------------------------"
+        Get-Content $outputFile -Tail 10 | ForEach-Object { Write-Err $_ }
+        Write-Err "----------------------------------------"
+    }
     return $false
+    }
+    finally {
+        # Cleanup temp file on any exit path
+        Remove-Item $outputFile -ErrorAction SilentlyContinue
+    }
 }
 
 function Get-PrdTasks {
