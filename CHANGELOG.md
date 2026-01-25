@@ -5,6 +5,29 @@ All notable changes to the Marge project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-01-25
+
+### Added
+- **`init --help` support** - Both PS and Bash CLIs now show help for init command
+- **Prompts reorganization** - General prompts at root, marge-specific in `prompts/for_meta/`
+- **Knowledge capture reminders** - Response Format now includes knowledge capture prompt
+- **`system/tracking/PRD.md` template** - Blank PRD template for users
+
+### Fixed
+- **P0: PS `resume` crash** - Null path error when no progress file exists
+- **P0: Bash `log_err` undefined** - Changed to `log_error` function
+- **P1: PS/Bash path parity** - Both now use `system/tracking/` consistently
+- **P1: Recursive test harness failure** - Fixed environment variable inheritance in test-marge.ps1
+- **P1: Meta tracking paths** - `.meta_marge/system/tracking/` used correctly
+- **P1: Install script paths** - `install-global.sh` now copies from correct source
+
+### Changed
+- **Renamed `_template.md`** - Now `feature_plan_template.md` for clarity
+- **Prompts structure** - Long/specialized prompts moved to `prompts/for_meta/`
+- **README CLI section** - Updated with `init --help` and correct paths
+
+---
+
 ## [Unreleased]
 
 ### Added
@@ -170,7 +193,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.meta_marge/` - Self-development working copy (gitignored)
 - Changes flow: `marge_simpson/` → `.meta_marge/` → validate → back to `marge_simpson/`
 
-[Unreleased]: https://github.com/Soupernerd/marge-simpson/compare/v1.3.0...HEAD
+[Unreleased]: https://github.com/Soupernerd/marge-simpson/compare/v1.3.1...HEAD
+[1.3.1]: https://github.com/Soupernerd/marge-simpson/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Soupernerd/marge-simpson/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/Soupernerd/marge-simpson/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/Soupernerd/marge-simpson/compare/v1.1.0...v1.2.1
