@@ -5,7 +5,7 @@ meta_marge/
 
 # Internal marketing/notes (not for repo)
 _tweets_for_marge.md
-_release_checklist1.md
+_release_checklist.md
 
 # Per-project CLI folder (runtime artifact)
 .marge/

@@ -1,211 +1,114 @@
 # Work Workflow
 
-> Unified workflow for all trackable work: bugs, features, improvements, refactors.
-> The "type" is a label, not a different process.
+> For all trackable work: bugs, features, improvements, refactors.
 
 ## When to Use
 
-User wants something **done** - any of:
-- Fix a bug / error / broken behavior
-- Add a new feature / capability
-- Improve / enhance existing functionality
-- Refactor / clean up code
+User wants something **done** — fix, add, improve, or refactor.
 
-## Pre-Work: Load Relevant Context
+---
 
-### 1. Check Experts (if task has domain keywords)
+## Pre-Work
 
-Read `./system/experts/_index.md` and scan for keywords matching your task:
+### 1. Load Experts (if domain keywords match)
 
-| Task Keywords | Load File |
-|---------------|----------|
-| security, auth, GDPR | `./system/experts/security.md` |
-| test, coverage, QA | `./system/experts/testing.md` |
-| deploy, CI/CD, docker | `./system/experts/devops.md` |
-| architecture, API, scale | `./system/experts/architecture.md` |
-| UI, UX, accessibility | `./system/experts/design.md` |
+| Keywords | File |
+|----------|------|
+| security, auth | `./system/experts/security.md` |
+| test, QA | `./system/experts/testing.md` |
+| deploy, CI/CD | `./system/experts/devops.md` |
+| architecture, API | `./system/experts/architecture.md` |
+| UI, UX | `./system/experts/design.md` |
 
-**Skip if:** Simple bug fix or task doesn't match any domain keywords.
+Skip if: simple fix, no domain keywords.
 
-### 2. Check Knowledge (for prior decisions)
+### 2. Check Decisions
 
-Grep `./system/knowledge/decisions.md` for tags related to your task:
+Grep `./system/knowledge/decisions.md` for relevant tags. Don't contradict prior choices.
 
-```powershell
-Select-String -Path "./system/knowledge/decisions.md" -Pattern "#auth|#api|#database"
-```
-
-**Apply any relevant decisions** — don't contradict prior architectural choices without explicit approval.
-
-**Skip if:** Knowledge files are empty or task is isolated.
+---
 
 ## Work Intake
 
-### For FEATURES (type: feature)
+### Features
+1. Create MS-#### ID
+2. Create plan: `./system/tracking/[name]_MS-####.md` (copy from `feature_plan_template.md`)
+3. Add to `assessment.md` + `tasklist.md`
+4. Increment Next ID in both
 
-1. Create the next MS-#### ID
-2. Create plan file: `./system/tracking/[feature-name]_MS-####.md`
-   - Copy from `./system/tracking/feature_plan_template.md`
-   - Fill in: Goal, Approach, Why, Risks
-   - List sub-tasks (each gets own MS-#### ID)
-3. Add entry to `./system/tracking/assessment.md` referencing the plan
-4. Add task(s) to `./system/tracking/tasklist.md` with parent reference
-5. Increment `Next ID` in BOTH files
-
-### For BUGS/IMPROVEMENTS/REFACTORS
-
-1. Create the next MS-#### ID
-2. Add entry to `./system/tracking/assessment.md`:
-   ```markdown
-   ### [MS-####] Short description
+### Bugs/Improvements/Refactors
+1. Create MS-#### ID
+2. Add to `assessment.md`:
+   ```
+   ### [MS-####] Description
    - **Type:** bug | feature | improvement | refactor
    - **Status:** In Progress
-   - **Description:** What needs to be done
-   - **Expert(s):** (if using ./system/experts/ - optional)
-   - **Plan:** Steps to implement
-   - **Verification:** How to confirm it works
-   - **Files:** (fill in as you work)
+   - **Plan:** Steps
+   - **Verification:** How to confirm
    ```
-3. Add task to `./system/tracking/tasklist.md`:
-   ```markdown
-   ### [MS-####] Short description
-   - **Type:** bug | feature | improvement
-   - **DoD:** What "done" looks like
-   - **Verification:** `./system/scripts/verify.ps1 fast` (Win) or `./system/scripts/verify.sh fast` (Unix)
-   - **Status:** [ ] Not started
-   ```
-4. Increment `Next ID` in BOTH files
+3. Add to `tasklist.md`
+4. Increment Next ID
 
-### For EXISTING work (ID already exists)
+### Existing Work
+Find MS-#### in `tasklist.md`, mark `In Progress`, continue.
 
-1. Find the MS-#### in `./system/tracking/tasklist.md`
-2. Mark it `In Progress`
-3. Continue from where it left off
+---
 
 ## Execution
 
-### Work Order (priority)
-
-1. **First:** Existing unchecked P0/P1 items in `./system/tracking/tasklist.md`
-2. **Then:** Newly created items from this message
-3. **Finally:** Remaining items (P0 → P1 → P2)
+**Priority:** Existing P0/P1 first → New items → Remaining P0→P1→P2
 
 ### For Each Item
 
 ```
-┌──────────────────────────────────────────────────┐
-│  1. IMPLEMENT                                    │
-│     - Make the smallest safe change              │
-│     - Update ./system/tracking/assessment.md     │
-└───────────────────────┬──────────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│  2. VERIFY                          │
-│     - Run: verify.ps1 fast (Win)    │
-│            verify.sh fast (Unix)    │
-│     - Run any item-specific tests   │
-│     - Capture raw output            │
-└──────────────┬──────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│  3. RECORD                          │
-│     - Paste evidence in assessment  │
-│     - Mark task done in tasklist    │
-└──────────────┬──────────────────────┘
-               ▼
-┌─────────────────────────────────────┐
-│  4. NEXT                            │
-│     - Move to next item             │
-│     - Or deliver if all done        │
-└─────────────────────────────────────┘
+IMPLEMENT → VERIFY → RECORD → NEXT
 ```
 
-### Verification Gate (NON-NEGOTIABLE)
+1. **Implement** — Smallest safe change, update assessment.md
+2. **Verify** — Run `verify.ps1 fast` (Win) or `verify.sh fast` (Unix)
+3. **Record** — Paste evidence, mark done in tasklist
+4. **Next** — Continue or deliver
 
 **Do NOT mark done without evidence.**
 
-- Run the verification runner
-- Capture raw output (or log file path)
-- Record in ./system/tracking/assessment.md
-- Only THEN mark complete
+---
 
-## Labels (for tracking, not routing)
+## Labels
 
-| Type | When to Use |
-|------|-------------|
-| `bug` | Something is broken / wrong |
-| `feature` | Adding new capability |
-| `improvement` | Enhancing existing functionality |
-| `refactor` | Code cleanup, no behavior change |
+| Type | When |
+|------|------|
+| bug | Something broken |
+| feature | New capability |
+| improvement | Enhance existing |
+| refactor | Cleanup, no behavior change |
 
-The process is the same for all types. Labels help with prioritization and reporting.
-
-## Mixed Work (Multiple Items)
-
-If user provides multiple items:
-
-1. Create MS-#### for each distinct piece of work
-2. Each gets its own assessment entry and tasklist item
-3. Execute in priority order
-4. Verify each before moving to next
-
-## Ambiguous Cases
-
-| Situation | Resolution |
-|-----------|------------|
-| "Fix X" but X needs new code | Label as `bug`, implement what's needed |
-| "Add Y" but it's really fixing missing behavior | Label as `feature`, doesn't matter |
-| Not sure if bug or feature | Pick one, note your assumption, proceed |
-
-The label is for humans. The process is the same.
+Process is same for all. Labels are for humans.
 
 ---
 
 ## Response Format
 
-When delivering work, output:
-
-```
-+=======================================================+
-|    __  __    _    ____   ____ _____                   |
-|   |  \/  |  / \  |  _ \ / ___| ____|                  |
-|   | |\/| | / _ \ | |_) | |  _|  _|                    |
-|   | |  | |/ ___ \|  _ <| |_| | |___                   |
-|   |_|  |_/_/   \_\_| \_\\____|_____|   WORK COMPLETE  |
-+=======================================================+
-```
-
 | Field | Value |
 |-------|-------|
-| IDs Touched | MS-000X, MS-000Y |
-| Files Modified | `file1.ts`, `file2.ts` |
-| Status | ✓ VERIFIED / ⚠ NEEDS ATTENTION |
+| **IDs Touched** | MS-000X, MS-000Y |
+| **Files Modified** | `file1.ts`, `file2.ts` |
+| **Status** | ✓ VERIFIED |
 
 ### What Changed
-- (Bullet list of changes)
+- (Bullet list)
 
 ### Verification Evidence
 ```
-(Raw output or log path)
+(Raw output)
 ```
 
 ### Knowledge Captured (if any)
-`📝 D-### added (decision) | PR-### added (preference) | P-### added (pattern) | I-### added (insight)`
-
-_(Skip if trivial fix with no learnings. Run `session_end.md` for significant work.)_
+`📝 D-### | PR-### | P-### | I-###`
 
 ---
 
-## After Work: Knowledge Capture
+## After Work
 
-After completing work (especially significant decisions or discoveries):
+Consider `./system/workflows/session_end.md` to capture decisions/patterns.
 
-1. Consider running `./system/workflows/session_end.md` to capture:
-   - Decisions made during this work
-   - Patterns observed in the codebase
-   - User preferences expressed
-   - Insights about the project
-
-2. This keeps knowledge files populated for future sessions
-
-**Skip if:** Trivial fix with no learning/decisions.
+Skip if: trivial fix with no learnings.
