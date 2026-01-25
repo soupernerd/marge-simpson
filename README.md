@@ -7,7 +7,7 @@
 It gives AI context about your rules, decisions, and work-in-progress so each session starts informed — not blank. Works with VS Code Copilot, Claude, Cursor, and any AI coding assistant.
 
 <p float="none">
-  <img src="./assets/many_marge_experts.jpg" width="100%" />
+  <img src="./.dev/assets/many_marge_experts.jpg" width="100%" />
 </p>
 
 ---
@@ -19,7 +19,7 @@ It gives AI context about your rules, decisions, and work-in-progress so each se
 | 💬 **Chat Prompts** | Interactive work, questions, debugging | Paste prompts into VS Code Copilot, Cursor, etc. |
 | 🖥️ **CLI (Local)** | Automation in one project | Run `./cli/marge "task"` from repo |
 | 🌐 **CLI (Global)** | Multi-project automation | Install once, run `marge "task"` anywhere |
-| 🔧 **Meta Development** | Contributing to Marge | Use the meta/ tools to improve Marge itself |
+| 🔧 **Meta Development** | Contributing to Marge | Use the .dev/ tools to improve Marge itself |
 
 ---
 
@@ -71,7 +71,7 @@ Add a loop phrase to any prompt and Marge will keep iterating until work is comp
 >
 > **⚙️ Control iterations:** Add `min 3` or `max 10` to set bounds.
 >
-> See [prompt_examples/](./prompt_examples/) for ready-to-use templates.
+> See [prompts/](./prompts/) for ready-to-use templates.
 
 ---
 
@@ -87,10 +87,10 @@ Run a system-wide audit of this workspace/repo (read-only).
 - Do not break intended functionality.
 
 Update/create tracking docs:
-- planning_docs/assessment.md (snapshot + findings + new MS issues)
-- planning_docs/tasklist.md (prioritized tasks with DoD + verification)
+- tracking/assessment.md (snapshot + findings + new MS issues)
+- tracking/tasklist.md (prioritized tasks with DoD + verification)
 
-After finished above, search for and list remaining unchecked items (if any exist) in planning_docs/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in tracking/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -108,7 +108,7 @@ New Feature / Issues:
 - Example / New Issue: "The right hand side nav is not expanding as expected"
 - Example / Existing issue not fixed: "MS-0046 is still exhibiting [insert issue here]"
 
-After finished above, search for and list remaining unchecked items (if any exist) in planning_docs/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in tracking/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -125,7 +125,7 @@ Instruction:
 - (your instruction here)
 - (another instruction here)
 
-After finished above, search for and list remaining unchecked items (if any exist) in planning_docs/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in tracking/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -144,7 +144,7 @@ Questions / Confirmations:
 3. Example Confirmation: "MS-00xx fixed"
 4. Example Question: "Are there alternatives to codemirror?"
 
-After finished above, search for and list remaining unchecked items (if any exist) in planning_docs/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in tracking/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -204,7 +204,7 @@ New Feature / Issues:
 - (New Feature or Issue here)
 - (New Feature or Issue here)
 
-After finished above, search for and list remaining unchecked items (if any exist) in planning_docs/tasklist.md (P0 → P1 → P2). Suggest order of operations.
+After finished above, search for and list remaining unchecked items (if any exist) in tracking/tasklist.md (P0 → P1 → P2). Suggest order of operations.
 
 Output using the Response Format (include IDs created).
 ```
@@ -241,8 +241,8 @@ marge "audit codebase" --dry-run       # Preview without executing
 marge --folder .marge "run audit"      # Explicit folder
 marge meta "run self-improvement"      # Shortcut for meta development
 
-# PRD mode (run tasks from planning_docs/PRD.md)
-marge                                  # Run all tasks from planning_docs/PRD.md
+# PRD mode (run tasks from tracking/PRD.md)
+marge                                  # Run all tasks from tracking/PRD.md
 marge --parallel --max-parallel 3      # Run tasks in parallel (bash only)
 marge --branch-per-task --create-pr    # Git workflow automation (bash only)
 
@@ -332,22 +332,22 @@ Marge auto-detects your project type:
 | **Stays focused** | Minimal diffs, root cause fixes |
 
 **Two source-of-truth files:**
-- `planning_docs/tasklist.md` — what's left / doing / done
-- `planning_docs/assessment.md` — root cause notes + verification evidence
+- `tracking/tasklist.md` — what's left / doing / done
+- `tracking/assessment.md` — root cause notes + verification evidence
 
 ## What's Inside
 
 | File/Folder | Purpose |
 |-------------|---------|
 | `AGENTS.md` | Rules the assistant follows |
-| `planning_docs/` | Assessment, tasklist, and feature plans |
+| `tracking/` | Assessment, tasklist, and feature plans |
 | `cli/` | CLI tools (marge, marge-init, install-global) |
 | `scripts/` | Verify scripts, test suite |
 | `workflows/` | Session start/end, planning, audit workflows |
 | `experts/` | Domain expert instructions |
 | `knowledge/` | Decisions, patterns, preferences |
-| `prompt_examples/` | Ready-to-copy templates |
-| `meta/` | Tools for contributing to Marge |
+| `prompts/` | Ready-to-copy templates |
+| `.dev/` | Tools for contributing to Marge |
 
 ## Test Configuration
 
@@ -383,10 +383,10 @@ No config? Scripts auto-detect Node, Python, Go, Rust, .NET, Java.
 
 ## For Contributors
 
-Want to improve Marge itself? See [meta/README.md](./meta/README.md) for the meta-development workflow.
+Want to improve Marge itself? See [.dev/README.md](./.dev/README.md) for the meta-development workflow.
 
 Quick version:
-1. Run `./meta/convert-to-meta.sh` (or `.ps1`) to create `.meta_marge/`
+1. Run `./.dev/convert-to-meta.sh` (or `.ps1`) to create `.meta_marge/`
 2. Use prompts with "Read the AGENTS.md file in the .meta_marge folder"
 3. AI makes improvements directly to `marge-simpson/` (guided by `.meta_marge/AGENTS.md`)
 4. Test with `./scripts/test-marge.sh` (or `.ps1`)

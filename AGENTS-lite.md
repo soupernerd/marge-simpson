@@ -33,7 +33,7 @@ Get it right the first time:
 
 For architecture changes, schema changes, or API contract changes:
 - Make your best judgment on small/medium changes
-- For large changes: outline the plan and risks, then recommend the user set up full tracking (copy AGENTS.md + planning_docs/ to their project)
+- For large changes: outline the plan and risks, then recommend the user set up full tracking (copy AGENTS.md + tracking/ to their project)
 
 ---
 

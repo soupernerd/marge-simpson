@@ -44,18 +44,18 @@ Select-String -Path "./knowledge/decisions.md" -Pattern "#auth|#api|#database"
 ### For FEATURES (type: feature)
 
 1. Create the next MS-#### ID
-2. Create plan file: `./planning_docs/[feature-name]_MS-####.md`
-   - Copy from `./planning_docs/_template.md`
+2. Create plan file: `./tracking/[feature-name]_MS-####.md`
+   - Copy from `./tracking/_template.md`
    - Fill in: Goal, Approach, Why, Risks
    - List sub-tasks (each gets own MS-#### ID)
-3. Add entry to `./planning_docs/assessment.md` referencing the plan
-4. Add task(s) to `./planning_docs/tasklist.md` with parent reference
+3. Add entry to `./tracking/assessment.md` referencing the plan
+4. Add task(s) to `./tracking/tasklist.md` with parent reference
 5. Increment `Next ID` in BOTH files
 
 ### For BUGS/IMPROVEMENTS/REFACTORS
 
 1. Create the next MS-#### ID
-2. Add entry to `./planning_docs/assessment.md`:
+2. Add entry to `./tracking/assessment.md`:
    ```markdown
    ### [MS-####] Short description
    - **Type:** bug | feature | improvement | refactor
@@ -66,7 +66,7 @@ Select-String -Path "./knowledge/decisions.md" -Pattern "#auth|#api|#database"
    - **Verification:** How to confirm it works
    - **Files:** (fill in as you work)
    ```
-3. Add task to `./planning_docs/tasklist.md`:
+3. Add task to `./tracking/tasklist.md`:
    ```markdown
    ### [MS-####] Short description
    - **Type:** bug | feature | improvement
@@ -78,7 +78,7 @@ Select-String -Path "./knowledge/decisions.md" -Pattern "#auth|#api|#database"
 
 ### For EXISTING work (ID already exists)
 
-1. Find the MS-#### in `./planning_docs/tasklist.md`
+1. Find the MS-#### in `./tracking/tasklist.md`
 2. Mark it `In Progress`
 3. Continue from where it left off
 
@@ -86,7 +86,7 @@ Select-String -Path "./knowledge/decisions.md" -Pattern "#auth|#api|#database"
 
 ### Work Order (priority)
 
-1. **First:** Existing unchecked P0/P1 items in `./planning_docs/tasklist.md`
+1. **First:** Existing unchecked P0/P1 items in `./tracking/tasklist.md`
 2. **Then:** Newly created items from this message
 3. **Finally:** Remaining items (P0 → P1 → P2)
 
@@ -96,7 +96,7 @@ Select-String -Path "./knowledge/decisions.md" -Pattern "#auth|#api|#database"
 ┌──────────────────────────────────────────────────┐
 │  1. IMPLEMENT                                    │
 │     - Make the smallest safe change              │
-│     - Update ./planning_docs/assessment.md       │
+│     - Update ./tracking/assessment.md       │
 └───────────────────────┬──────────────────────────┘
                ▼
 ┌─────────────────────────────────────┐
@@ -126,7 +126,7 @@ Select-String -Path "./knowledge/decisions.md" -Pattern "#auth|#api|#database"
 
 - Run the verification runner
 - Capture raw output (or log file path)
-- Record in ./planning_docs/assessment.md
+- Record in ./tracking/assessment.md
 - Only THEN mark complete
 
 ## Labels (for tracking, not routing)

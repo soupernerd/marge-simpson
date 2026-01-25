@@ -5,7 +5,7 @@
 .DESCRIPTION
     Creates a hybrid setup with:
     - Symlinks to global shared resources (AGENTS.md, experts, workflows, etc.)
-    - Local per-project files (planning_docs/assessment.md, planning_docs/tasklist.md)
+    - Local per-project files (tracking/assessment.md, tracking/tasklist.md)
 
 .PARAMETER Force
     Overwrite existing .marge/ folder.
@@ -43,7 +43,7 @@ USAGE:
 DESCRIPTION:
   Creates a hybrid setup with:
   - Symlinks to global shared resources (AGENTS.md, experts, workflows, etc.)
-  - Local per-project files (planning_docs/assessment.md, planning_docs/tasklist.md)
+  - Local per-project files (tracking/assessment.md, tracking/tasklist.md)
 
 OPTIONS:
   -Force          Overwrite existing .marge/ folder
@@ -108,7 +108,7 @@ $SharedLinks = @(
     "experts",
     "knowledge",
     "model_pricing.json",
-    "prompt_examples",
+    "prompts",
     "README.md",
     "scripts",
     "VERSION",
@@ -138,9 +138,9 @@ foreach ($item in $SharedLinks) {
     }
 }
 
-# Copy per-project templates into planning_docs/
-$PlanningDocsDir = "$TargetDir\planning_docs"
-New-Item -ItemType Directory -Path $PlanningDocsDir -Force | Out-Null
+# Copy per-project templates into tracking/
+$TrackingDir = "$TargetDir\tracking"
+New-Item -ItemType Directory -Path $TrackingDir -Force | Out-Null
 
 $TemplateFiles = @(
     "assessment.md",
@@ -151,7 +151,7 @@ $TemplateFiles = @(
 foreach ($item in $TemplateFiles) {
     $srcPath = "$MargeHome\templates\$item"
     if (Test-Path $srcPath) {
-        Copy-Item -Force $srcPath "$PlanningDocsDir\"
+        Copy-Item -Force $srcPath "$TrackingDir\"
     }
 }
 
@@ -194,7 +194,7 @@ Write-Host "  +-- experts\            -> $MargeHome\shared\ $(if($SymlinkFailed)
 Write-Host "  +-- workflows\          -> $MargeHome\shared\ $(if($SymlinkFailed){'(copy)'}else{'(symlink)'})"
 Write-Host "  +-- scripts\            -> $MargeHome\shared\ $(if($SymlinkFailed){'(copy)'}else{'(symlink)'})"
 Write-Host "  +-- knowledge\          -> $MargeHome\shared\ $(if($SymlinkFailed){'(copy)'}else{'(symlink)'})"
-Write-Host "  +-- planning_docs\"
+Write-Host "  +-- tracking\\"
 Write-Host "  |   +-- assessment.md   (local - per-project)"
 Write-Host "  |   +-- tasklist.md     (local - per-project)"
 Write-Host "  |   +-- PRD.md          (local - per-project)"

@@ -73,7 +73,7 @@ SHARED_FILES=(
     "experts"
     "knowledge"
     "model_pricing.json"
-    "prompt_examples"
+    "prompts"
     "README.md"
     "scripts"
     "VERSION"
@@ -86,7 +86,7 @@ for item in "${SHARED_FILES[@]}"; do
     fi
 done
 
-# Copy per-project templates (from planning_docs/)
+# Copy per-project templates (from tracking/)
 TEMPLATE_FILES=(
     "assessment.md"
     "tasklist.md"
@@ -94,8 +94,8 @@ TEMPLATE_FILES=(
 )
 
 for item in "${TEMPLATE_FILES[@]}"; do
-    if [[ -e "$REPO_ROOT/planning_docs/$item" ]]; then
-        cp "$REPO_ROOT/planning_docs/$item" "$INSTALL_DIR/templates/"
+    if [[ -e "$REPO_ROOT/tracking/$item" ]]; then
+        cp "$REPO_ROOT/tracking/$item" "$INSTALL_DIR/templates/"
     fi
 done
 
@@ -166,8 +166,8 @@ echo "  │   ├── workflows/"
 echo "  │   ├── scripts/"
 echo "  │   └── knowledge/"
 echo "  ├── templates/     # Per-project templates"
-echo "  │   ├── assessment.md      (goes into planning_docs/)"
-echo "  │   ├── tasklist.md        (goes into planning_docs/)"
+echo "  │   ├── assessment.md      (goes into tracking/)"
+echo "  │   ├── tasklist.md        (goes into tracking/)"
 echo "  │   └── verify.config.json"
 echo "  ├── marge          # CLI wrapper"
 echo "  └── marge-init     # Project initialization script"

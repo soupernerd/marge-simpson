@@ -4,7 +4,7 @@
 
 **Scope (CRITICAL):**
 1. This folder is **excluded from audits** — it is the tooling, not the target.
-2. Audit the workspace/repo OUTSIDE this folder. Track findings in `./planning_docs/`.
+2. Audit the workspace/repo OUTSIDE this folder. Track findings in `./tracking/`.
 3. Never create files from this folder outside this folder.
 
 ---
@@ -62,9 +62,9 @@ Spawn 2-5 agents for independent tasks, wait for all, then verify.
 
 | File | Purpose |
 |------|---------|
-| `./planning_docs/assessment.md` | Findings + root cause + verification evidence |
-| `./planning_docs/tasklist.md` | Work queue: backlog → in-progress → done |
-| `./planning_docs/[name]_MS-XXXX.md` | Feature plans (created for each feature) |
+| `./tracking/assessment.md` | Findings + root cause + verification evidence |
+| `./tracking/tasklist.md` | Work queue: backlog → in-progress → done |
+| `./tracking/[name]_MS-XXXX.md` | Feature plans (created for each feature) |
 ```
 IMPLEMENT → VERIFY → RECORD → COMPLETE
 ```

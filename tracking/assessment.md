@@ -8,7 +8,7 @@ AI/Agents must read `AGENTS.md` before working.
 
 ## Tracking (required)
 - **Next ID:** MS-0001
-  - Use this for the next new Issue/Task ID, then increment here AND in `planning_docs/tasklist.md`.
+  - Use this for the next new Issue/Task ID, then increment here AND in `tracking/tasklist.md`.
 
 ---
 

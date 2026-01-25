@@ -31,7 +31,7 @@ BRANCH_PER_TASK=false
 CREATE_PR=false
 PARALLEL=false
 MAX_PARALLEL=${MAX_PARALLEL:-3}
-PRD_FILE="planning_docs/PRD.md"
+PRD_FILE="tracking/PRD.md"
 MARGE_FOLDER="${MARGE_FOLDER:-.marge}"
 
 # Fallback pricing (Claude Sonnet) - used when model_pricing.json unavailable
@@ -80,7 +80,7 @@ print_usage() {
 ${BOLD}marge${RESET} v$VERSION - Autonomous AI coding loop
 
 ${BOLD}USAGE:${RESET}
-  marge [options]              Run PRD tasks from planning_docs/PRD.md
+  marge [options]              Run PRD tasks from tracking/PRD.md
   marge "<task>" [options]     Run a single task
   marge "<t1>" "<t2>" ...      Chain multiple tasks
   marge meta "<task>"          Run task using .meta_marge folder
@@ -117,7 +117,7 @@ ${BOLD}OPTIONS:${RESET}
   --help              Show help
 
 ${BOLD}COMMANDS:${RESET}
-  init                Initialize .marge/ and planning_docs/PRD.md template
+  init                Initialize .marge/ and tracking/PRD.md template
   clean               Remove local .marge/ folder
   status              Show current status and progress
   config              Show config file contents
@@ -138,7 +138,7 @@ ${BOLD}META-DEVELOPMENT:${RESET}
            |
     Changes made DIRECTLY to marge-simpson/
            |
-    Work tracked in .meta_marge/planning_docs/
+    Work tracked in .meta_marge/tracking/
 
 ${BOLD}CONFIG FILE:${RESET}
   Place .marge/config.yaml in your project:
@@ -154,7 +154,7 @@ ${BOLD}ENVIRONMENT:${RESET}
   MARGE_FOLDER        Default folder (default: .marge)
 
 ${BOLD}PRD FORMAT:${RESET}
-  Tasks are parsed from planning_docs/PRD.md using "### Task N: Title" format.
+  Tasks are parsed from tracking/PRD.md using "### Task N: Title" format.
   See 'marge init' for a template.
 EOF
 }
@@ -483,8 +483,8 @@ auto_commit() {
 }
 
 is_task_complete() {
-    local tasklist="./$MARGE_FOLDER/planning_docs/tasklist.md"
-    local assessment="./$MARGE_FOLDER/planning_docs/assessment.md"
+    local tasklist="./$MARGE_FOLDER/tracking/tasklist.md"
+    local assessment="./$MARGE_FOLDER/tracking/assessment.md"
 
     # If tasklist exists and has unchecked items, not complete
     [[ -f "$tasklist" ]] && grep -q "\[ \]" "$tasklist" && return 1
@@ -500,8 +500,8 @@ is_task_complete() {
 # =============================================================================
 
 test_meta_has_work() {
-    # Check if .meta_marge/planning_docs has tracked work (MS-#### entries)
-    local assessment=".meta_marge/planning_docs/assessment.md"
+    # Check if .meta_marge/tracking has tracked work (MS-#### entries)
+    local assessment=".meta_marge/tracking/assessment.md"
     [[ ! -f "$assessment" ]] && return 1
     grep -qE 'MS-[0-9]{4}' "$assessment" 2>/dev/null
 }
@@ -510,12 +510,12 @@ get_meta_work_summary() {
     # Output: "issues:N tasks:N"
     local issues=0 tasks=0
     
-    local assessment=".meta_marge/planning_docs/assessment.md"
+    local assessment=".meta_marge/tracking/assessment.md"
     if [[ -f "$assessment" ]]; then
         issues=$(grep -oE 'MS-[0-9]{4}' "$assessment" 2>/dev/null | wc -l | tr -d ' ')
     fi
     
-    local tasklist=".meta_marge/planning_docs/tasklist.md"
+    local tasklist=".meta_marge/tracking/tasklist.md"
     if [[ -f "$tasklist" ]]; then
         tasks=$(grep -cE '\[\s*\]\s*\*\*\[MS-[0-9]{4}\]' "$tasklist" 2>/dev/null || echo 0)
     fi
@@ -558,8 +558,8 @@ initialize_meta() {
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     
     local convert_scripts=(
-        "$script_dir/../meta/convert-to-meta.sh"
-        "./meta/convert-to-meta.sh"
+        "$script_dir/../.dev/convert-to-meta.sh"
+        "./.dev/convert-to-meta.sh"
     )
     
     for convert_script in "${convert_scripts[@]}"; do
@@ -580,7 +580,7 @@ initialize_meta() {
     echo "  git clone https://github.com/org/marge-simpson"
     echo ""
     
-    mkdir -p ".meta_marge/planning_docs"
+    mkdir -p ".meta_marge/tracking"
     
     # Create minimal AGENTS.md
     cat > ".meta_marge/AGENTS.md" << 'AGENTSEOF'
@@ -588,15 +588,15 @@ initialize_meta() {
 
 This is a minimal .meta_marge/ setup. For full meta-development:
 1. Clone the marge repo
-2. Run: ./meta/convert-to-meta.sh
+2. Run: ./.dev/convert-to-meta.sh
 
 ## Scope
 Audit and improve the marge-simpson/ codebase.
-Track work in .meta_marge/planning_docs/
+Track work in .meta_marge/tracking/
 AGENTSEOF
 
     # Create empty planning docs
-    cat > ".meta_marge/planning_docs/assessment.md" << 'ASSESSEOF'
+    cat > ".meta_marge/tracking/assessment.md" << 'ASSESSEOF'
 # .meta_marge Assessment
 
 **Next ID:** MS-0001
@@ -606,7 +606,7 @@ AGENTSEOF
 _None_
 ASSESSEOF
 
-    cat > ".meta_marge/planning_docs/tasklist.md" << 'TASKEOF'
+    cat > ".meta_marge/tracking/tasklist.md" << 'TASKEOF'
 # .meta_marge Tasklist
 
 **Next ID:** MS-0001
@@ -669,7 +669,7 @@ show_meta_status() {
     echo "  │         |                                               │"
     echo "  │  Changes made DIRECTLY to marge-simpson/                │"
     echo "  │         |                                               │"
-    echo "  │  Work tracked in .meta_marge/planning_docs/             │"
+    echo "  │  Work tracked in .meta_marge/tracking/             │"
     echo "  └─────────────────────────────────────────────────────────┘"
     echo ""
 }
@@ -971,7 +971,7 @@ Task: ${task}${fast_suffix}${auto_suffix}"
 Instruction:
 - ${task}$([[ "$LOOP" == true ]] && echo " Loop until complete.")${fast_suffix}${auto_suffix}
 
-After finished, list remaining unchecked items in $MARGE_FOLDER/planning_docs/tasklist.md."
+After finished, list remaining unchecked items in $MARGE_FOLDER/tracking/tasklist.md."
     fi
 
     if [[ "$DRY_RUN" == true ]]; then
@@ -1213,7 +1213,7 @@ run_single() {
 
 init_config() {
     mkdir -p .marge
-    mkdir -p planning_docs
+    mkdir -p tracking
     cat > .marge/config.yaml <<EOF
 engine: claude
 model: ""
@@ -1223,7 +1223,7 @@ auto_commit: true
 folder: .marge
 EOF
 
-    [[ ! -f "planning_docs/PRD.md" ]] && cat > planning_docs/PRD.md <<'EOF'
+    [[ ! -f "tracking/PRD.md" ]] && cat > tracking/PRD.md <<'EOF'
 # PRD
 
 ### Task 1: Setup
@@ -1236,7 +1236,7 @@ EOF
 - [ ] Write tests
 EOF
 
-    log_success "Initialized .marge/ and planning_docs/"
+    log_success "Initialized .marge/ and tracking/"
 }
 
 # Load config before parsing args (CLI overrides config)

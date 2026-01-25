@@ -37,7 +37,7 @@
 - **Observed:** 2026-01-24
 - **Confidence:** High
 - **Insight:** Having `PRD.md` in the source repo caused the CLI to enter PRD mode during testing, even when testing "empty task gracefully"
-- **Evidence:** Test expected "no task" behavior but got PRD mode because `planning_docs/PRD.md` existed
+- **Evidence:** Test expected "no task" behavior but got PRD mode because `tracking/PRD.md` existed
 - **Verified:** [x] Removed PRD.md from source
 - **Related:** D-004
 

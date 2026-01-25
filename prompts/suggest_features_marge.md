@@ -15,7 +15,7 @@ Propose 3-8 new features for this project (marge-simpson assistant framework).
 ## Context Gathering (do this first)
 
 1. Read `README.md`, `ARCHITECTURE.md`, and `./workflows/_index.md` to understand the project's purpose
-2. Skim existing `./planning_docs/` to avoid duplicating planned work
+2. Skim existing `./tracking/` to avoid duplicating planned work
 3. Consider gaps in current workflows, CLI, or documentation
 
 ---
@@ -52,7 +52,7 @@ Propose 3-8 new features for this project (marge-simpson assistant framework).
 
 ## Deliverable
 
-Create or update: `./planning_docs/recommended_features.md`
+Create or update: `./tracking/recommended_features.md`
 
 Include:
 - Date generated

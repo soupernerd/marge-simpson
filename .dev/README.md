@@ -6,7 +6,7 @@
 
 Meta-development means improving the Marge system while using it. The `.meta_marge/` folder contains a copy of Marge's AGENTS.md and supporting files that **guide the AI to make improvements directly to the parent `marge-simpson/` folder**.
 
-**Key concept:** You don't edit files in `.meta_marge/` and copy them back. Instead, `.meta_marge/AGENTS.md` tells the AI to audit and improve `marge-simpson/` directly, while tracking work in `.meta_marge/planning_docs/`.
+**Key concept:** You don't edit files in `.meta_marge/` and copy them back. Instead, `.meta_marge/AGENTS.md` tells the AI to audit and improve `marge-simpson/` directly, while tracking work in `.meta_marge/tracking/`.
 
 ## Architecture
 
@@ -24,14 +24,14 @@ Meta-development means improving the Marge system while using it. The `.meta_mar
 │       ┌───────────────────────────────────┐              │ L │ │
 │       │  .meta_marge/ (SINGLE SOURCE)     │──────────────│ O │ │
 │       │  ├── AGENTS.md     (transformed)  │              │ G │ │
-│       │  ├── planning_docs/ (preserved!)  │              │ I │ │
+│       │  ├── tracking/ (preserved!)  │              │ I │ │
 │       │  └── ...                          │              │ C │ │
 │       └───────────────────────────────────┘              └───┘ │
 │                                                                │
 └────────────────────────────────────────────────────────────────┘
 ```
 
-Both **Chat/IDE mode** and **CLI mode** use the same `.meta_marge/` folder as the single source of truth. Work tracked in planning_docs/ is preserved when switching between modes.
+Both **Chat/IDE mode** and **CLI mode** use the same `.meta_marge/` folder as the single source of truth. Work tracked in tracking/ is preserved when switching between modes.
 
 ## Quick Start
 
@@ -55,7 +55,7 @@ marge meta init --fresh
 
 ```bash
 # Create meta guide folder
-./meta/convert-to-meta.sh
+./.dev/convert-to-meta.sh
 # Creates: .meta_marge/ (gitignored)
 
 # Run task
@@ -88,7 +88,7 @@ marge-simpson/              ← Target of improvements (committed to git)
 ├── workflows/
 └── .meta_marge/            ← Meta guide (gitignored)
     ├── AGENTS.md           ← Says "audit marge-simpson/, not me"
-    └── planning_docs/      ← Tracks meta-dev work
+    └── tracking/      ← Tracks meta-dev work
         ├── assessment.md   ← Issues found
         └── tasklist.md     ← Work queue
 
@@ -98,12 +98,12 @@ Audits marge-simpson/ folder
       ↓
 Makes fixes directly to marge-simpson/
       ↓
-Tracks work in .meta_marge/planning_docs/
+Tracks work in .meta_marge/tracking/
 ```
 
 ## State Preservation
 
-The `.meta_marge/planning_docs/` folder preserves your work across sessions:
+The `.meta_marge/tracking/` folder preserves your work across sessions:
 
 - `marge meta init` — Won't overwrite existing work
 - `marge meta init --fresh` — Explicit reset (you chose this)
@@ -125,14 +125,14 @@ Options:
 
 ### Create Meta Guide
 ```bash
-./meta/convert-to-meta.sh              # Creates .meta_marge/
-./meta/convert-to-meta.sh -f           # Force overwrite existing
+./.dev/convert-to-meta.sh              # Creates .meta_marge/
+./.dev/convert-to-meta.sh -f           # Force overwrite existing
 ```
 
 ### PowerShell
 ```powershell
-.\meta\convert-to-meta.ps1
-.\meta\convert-to-meta.ps1 -Force
+.\.dev\convert-to-meta.ps1
+.\.dev\convert-to-meta.ps1 -Force
 ```
 
 ## Best Practices
@@ -149,7 +149,7 @@ Options:
 ├── AGENTS.md                 ← Guides AI to improve marge-simpson/
 ├── workflows/                ← Reference for AI
 ├── experts/                  ← Reference for AI
-├── planning_docs/            ← AI tracks meta-dev work here
+├── tracking/            ← AI tracks meta-dev work here
 │   ├── assessment.md         ← Issues found in marge-simpson/
 │   └── tasklist.md           ← Work queue for improvements
 └── scripts/                  ← Can run tests from here too

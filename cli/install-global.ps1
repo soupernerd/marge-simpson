@@ -84,7 +84,7 @@ $SharedItems = @(
     "experts",
     "knowledge",
     "model_pricing.json",
-    "prompt_examples",
+    "prompts",
     "README.md",
     "scripts",
     "VERSION",
@@ -98,7 +98,7 @@ foreach ($item in $SharedItems) {
     }
 }
 
-# Copy per-project templates (from planning_docs/)
+# Copy per-project templates (from tracking/)
 $TemplateItems = @(
     "assessment.md",
     "tasklist.md",
@@ -106,7 +106,7 @@ $TemplateItems = @(
 )
 
 foreach ($item in $TemplateItems) {
-    $srcPath = Join-Path $RepoRoot "planning_docs\$item"
+    $srcPath = Join-Path $RepoRoot "tracking\$item"
     if (Test-Path $srcPath) {
         Copy-Item -Force $srcPath "$InstallDir\templates\"
     }
@@ -175,8 +175,8 @@ Write-Host "  │   ├── workflows\"
 Write-Host "  │   ├── scripts\"
 Write-Host "  │   └── knowledge\"
 Write-Host "  ├── templates\     # Per-project templates"
-Write-Host "  │   ├── assessment.md      (goes into planning_docs/)"
-Write-Host "  │   ├── tasklist.md        (goes into planning_docs/)"
+Write-Host "  │   ├── assessment.md      (goes into tracking/)"
+Write-Host "  │   ├── tasklist.md        (goes into tracking/)"
 Write-Host "  │   └── verify.config.json"
 Write-Host "  └── marge-init.ps1 # Project initialization script"
 Write-Host ""

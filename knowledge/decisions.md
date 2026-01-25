@@ -38,12 +38,12 @@
 - **Context:** `.marge/` folder was being created during tests and potentially committed
 - **Decision:** Add `.marge/` to .gitignore. Per-project CLI folders are runtime artifacts.
 - **Alternatives:** Clean up after tests, use different test patterns
-- **Rationale:** `.marge/` is like `.claude/` or `node_modules/` — per-project state that shouldn't be version controlled. planning_docs/ is the committed work tracking.
+- **Rationale:** `.marge/` is like `.claude/` or `node_modules/` — per-project state that shouldn't be version controlled. tracking/ is the committed work tracking.
 - **Related:** D-004
 
 ### [D-004] PRD.md shipped as blank template #templates #runtime
 - **Date:** 2026-01-24
-- **Context:** `planning_docs/PRD.md` existed in source with filled-in content, triggering PRD mode during tests
+- **Context:** `tracking/PRD.md` existed in source with filled-in content, triggering PRD mode during tests
 - **Decision:** Ship PRD.md as a blank template. Users fill it in to enable PRD mode.
 - **Alternatives:** Remove PRD.md entirely, skip PRD detection in tests
 - **Rationale:** PRD.md IS a valid template for global install's templates/ folder. But it must be blank — filled content is user's data, not shipped content.

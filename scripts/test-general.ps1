@@ -174,7 +174,7 @@ $scriptPairs = @(
 if (-not $IsMetaMarge) {
     $scriptPairs += @(
         @{ Base = "cli\install-global"; Extensions = @(".ps1", ".sh") },
-        @{ Base = "meta\convert-to-meta"; Extensions = @(".ps1", ".sh") }
+        @{ Base = ".dev\convert-to-meta"; Extensions = @(".ps1", ".sh") }
     )
 }
 
@@ -216,8 +216,8 @@ $requiredFiles = @(
     "experts\_index.md",
     "knowledge\_index.md",
     "scripts\_index.md",
-    "planning_docs\assessment.md",
-    "planning_docs\tasklist.md"
+    "tracking\assessment.md",
+    "tracking\tasklist.md"
 )
 
 # Additional files only required in full Marge (not .meta_marge)
@@ -256,7 +256,7 @@ if ($IsMetaMarge) {
     $readmeContent = Get-Content $readmePath -Raw
 
     # Check that documented folders exist
-    $documentedFolders = @("cli/", "scripts/", "workflows/", "experts/", "knowledge/", "planning_docs/", "prompt_examples/", "meta/")
+    $documentedFolders = @("cli/", "scripts/", "workflows/", "experts/", "knowledge/", "tracking/", "prompts/", ".dev/")
     foreach ($folder in $documentedFolders) {
         $folderPath = Join-Path $RepoRoot ($folder.TrimEnd('/'))
         Test-Check "Documented folder exists: $folder" {

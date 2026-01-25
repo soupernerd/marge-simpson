@@ -88,13 +88,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.2.2] - 2026-01-23
 
 ### Changed
-- **Folder-agnostic templates** - All prompts and docs now use relative paths ("this folder", "planning_docs/") instead of hardcoded `.marge`
+- **Folder-agnostic templates** - All prompts and docs now use relative paths ("this folder", "tracking/") instead of hardcoded `.marge`
 - **Flexible folder naming** - Users can name their folder anything (`marge/`, `.marge/`, `ai-assistant/`, etc.)
 - **`convert-to-meta` scripts** - Now properly replace both source folder name AND `.marge` references with `.meta_marge`
 
 ### Fixed
 - **MS-0001** - `.meta_marge/` was being created with `.marge` paths inside documents instead of `.meta_marge`
-- All prompt_examples/*.md files updated to use relative folder references
+- All prompts/*.md files updated to use relative folder references
 - README.md prompt templates updated to be folder-agnostic
 - workflows/_index.md scope inference updated for folder-agnostic operation
 
@@ -109,11 +109,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Default folder name** - Changed from `marge_simpson` to `.marge` for user projects
 - **Meta folder name** - Standardized to `.meta_marge/` (inside workspace, gitignored)
 - **CLI location** - Moved to `cli/` subdirectory
-- **Meta tools location** - Moved to `meta/` subdirectory
+- **Meta tools location** - Moved to `.dev/` subdirectory
 
 ### Added
 - **`cli/` directory** - Contains `marge`, `marge.ps1`, `marge-init`, and global install scripts
-- **`meta/` directory** - Contains `convert-to-meta.sh` and `convert-to-meta.ps1`
+- **`.dev/` directory** - Contains `convert-to-meta.sh` and `convert-to-meta.ps1`
 - **`scripts/test-syntax.ps1` and `.sh`** - Validates PowerShell/Bash script syntax at build time
 - **Simplified installation** - Clone repo as `.marge/` and use directly
 
@@ -123,7 +123,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Root-level `install.sh` and `install.ps1` (now in `cli/`)
-- Root-level `convert-to-meta.*` (now in `meta/`)
+- Root-level `convert-to-meta.*` (now in `.dev/`)
 - Nested `marge_simpson/` and `.meta_marge/` folders
 
 ## [1.1.0] - 2026-01-23

@@ -269,10 +269,10 @@ if ($bashAvailable) {
             }
         }
         
-        # Meta scripts in meta/ folder
+        # Meta scripts in .dev/ folder
         $metaScripts = @("convert-to-meta.sh")
         foreach ($script in $metaScripts) {
-            $scriptPath = Join-Path $MsDir "meta\$script"
+            $scriptPath = Join-Path $MsDir ".dev\$script"
             if (Test-Path $scriptPath) {
                 Test-Assert "$script passes shellcheck" {
                     $shPath = $scriptPath -replace '\\', '/'

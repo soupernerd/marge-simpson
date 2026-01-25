@@ -257,7 +257,7 @@ Test-Assert "install-global.ps1 has -Help parameter" {
 }
 
 Test-Assert "convert-to-meta.ps1 has -Help parameter" {
-    $content = Get-Content "$MsDir\meta\convert-to-meta.ps1" -Raw
+    $content = Get-Content "$MsDir\.dev\convert-to-meta.ps1" -Raw
     $content -match '\[switch\]\$Help'
 }
 
@@ -277,8 +277,8 @@ try {
             $initOutput = & "$MsDir\cli\marge.ps1" init 2>&1
             # Check that folders were created in temp directory
             $margeFolder = Join-Path $TempTestDir ".marge"
-            $planningDocs = Join-Path $TempTestDir "planning_docs"
-            return (Test-Path $margeFolder) -and (Test-Path $planningDocs)
+            $trackingFolder = Join-Path $TempTestDir "tracking"
+            return (Test-Path $margeFolder) -and (Test-Path $trackingFolder)
         } finally {
             Set-Location $originalLocation
         }
@@ -391,7 +391,7 @@ Test-Assert "marge (bash) validates max-iterations parameter" {
 }
 
 Test-Assert "marge.ps1 handles empty task gracefully" {
-    # Use temp directory to avoid triggering PRD mode from marge-simpson/planning_docs/PRD.md
+    # Use temp directory to avoid triggering PRD mode from marge-simpson/tracking/PRD.md
     $tempDir = Join-Path ([System.IO.Path]::GetTempPath()) "marge-empty-test-$([System.Guid]::NewGuid().ToString('N').Substring(0,8))"
     New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
     $originalLocation = Get-Location

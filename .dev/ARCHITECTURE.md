@@ -1,7 +1,7 @@
 # Marge Architecture
 
 > Living document describing the system structure, design decisions, and data flow.
-> **Location:** `meta/ARCHITECTURE.md` (persists across `.meta_marge/` recreations)
+> **Location:** `.dev/ARCHITECTURE.md` (persists across `.meta_marge/` recreations)
 > **Last Updated:** 2026-01-24 | **Version:** 1.3.0
 
 ---
@@ -36,7 +36,7 @@ The `convert-to-meta` scripts transform `./` → `.meta_marge/` paths automatica
 ### Immutable Constraints
 
 1. **`.meta_marge/` has no `scripts/` folder** — It uses `marge-simpson/scripts/` to verify the source
-2. **Planning docs are the single source of work state** — `.marge/` is runtime, `planning_docs/` is tracked
+2. **Planning docs are the single source of work state** — `.marge/` is runtime, `tracking/` is tracked
 3. **PRD.md ships blank** — Filled content triggers PRD mode; users fill it in, not shipped with content
 4. **Verify evidence required** — Never claim "tests passed" without raw output
 
@@ -57,7 +57,7 @@ The `convert-to-meta` scripts transform `./` → `.meta_marge/` paths automatica
 
 Think of it as a "hard drive" for AI context — structured markdown files that AI reads at the start of each session to understand:
 - What rules to follow (`AGENTS.md`)
-- What work is in progress (`planning_docs/`)
+- What work is in progress (`tracking/`)
 - What decisions have been made (`knowledge/`)
 - How to approach different task types (`workflows/`, `experts/`)
 
@@ -66,7 +66,7 @@ Think of it as a "hard drive" for AI context — structured markdown files that 
 | Concept | What It Is | Purpose |
 |---------|------------|---------|
 | `AGENTS.md` | Operating rules AI reads first | Consistency across sessions |
-| `planning_docs/` | Persistent work state | AI remembers tasks between sessions |
+| `tracking/` | Persistent work state | AI remembers tasks between sessions |
 | `knowledge/` | Decisions, patterns, insights | AI doesn't repeat mistakes |
 | `workflows/` | Task-specific playbooks | AI follows proven processes |
 | `experts/` | Domain knowledge files | AI loads context on-demand |
@@ -102,7 +102,7 @@ Marge provides structured context that AI assistants read at the start of each s
 ┌─────────────────────────────────────────────────────────────────────┐
 │                        User Project                                  │
 │  ┌─────────────┐    ┌─────────────┐    ┌─────────────────────────┐  │
-│  │ Source Code │    │   .marge/   │    │   planning_docs/        │  │
+│  │ Source Code │    │   .marge/   │    │   tracking/           │  │
 │  │   (yours)   │◄───│  (symlinks) │───►│  (per-project tracking) │  │
 │  └─────────────┘    └──────┬──────┘    └─────────────────────────┘  │
 │                            │                                         │
@@ -151,7 +151,7 @@ Marge provides structured context that AI assistants read at the start of each s
 **CLI Modes:**
 - **Lite mode** — No local `.marge/`, uses `AGENTS-lite.md` for quick tasks
 - **Full mode** — Local `.marge/` exists, uses full `AGENTS.md` + tracking
-- **PRD mode** — Runs tasks from `planning_docs/PRD.md` sequentially
+- **PRD mode** — Runs tasks from `tracking/PRD.md` sequentially
 
 ### /workflows — Structured Processes
 
@@ -212,7 +212,7 @@ Loaded based on task keywords (see `experts/_index.md`):
 | `README.md` | Meta-development guide |
 | `ARCHITECTURE.md` | This file — system design reference |
 
-### /planning_docs — Work Tracking
+### /tracking — Work Tracking
 
 | File | Purpose |
 |------|---------|
@@ -250,14 +250,14 @@ Loaded based on task keywords (see `experts/_index.md`):
 5. Update .gitignore
 ```
 
-### 3. User runs `./meta/convert-to-meta.sh`
+### 3. User runs `./.dev/convert-to-meta.sh`
 
 ```
 1. Copy marge-simpson/ → .meta_marge/
-2. Exclude: cli/, meta/, assets/, scripts/, .git, .marge, etc.
+2. Exclude: cli/, .dev/, assets/, scripts/, .git, .marge, etc.
    (scripts/ excluded — meta uses source scripts directly)
 3. Transform path references (marge-simpson → .meta_marge)
-4. Reset planning_docs to clean state  
+4. Reset tracking to clean state  
 5. Rewrite AGENTS.md scope to target marge-simpson/
 6. Run verification (marge-simpson/scripts/verify.ps1, not .meta_marge)
 ```

@@ -64,7 +64,7 @@ function Write-Row([string]$Label, [string]$Value, [string]$Color = "Gray") {
 # ==============================================================================
 
 function Get-TasklistStats {
-    $tasklistPath = Join-Path $MsDir "planning_docs\tasklist.md"
+    $tasklistPath = Join-Path $MsDir "tracking\tasklist.md"
     
     $stats = @{
         Backlog = 0

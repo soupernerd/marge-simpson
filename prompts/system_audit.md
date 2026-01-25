@@ -3,7 +3,7 @@ Read the AGENTS.md file in this folder and follow it.
 **AUDIT MODE** - Read-only analysis, no code changes.
 
 1. **Understand the system**
-   - Read meta/ARCHITECTURE.md (if exists) and key files
+   - Read .dev/ARCHITECTURE.md (if exists) and key files
    - Map the major components, workflows, and data flows
    - Identify the intended behavior and design patterns
 
@@ -13,8 +13,8 @@ Read the AGENTS.md file in this folder and follow it.
    - P2: Code quality, maintainability, performance concerns
 
 3. **Update tracking docs**
-   - ./planning_docs/assessment.md → System snapshot + findings + new MS-#### issues
-   - ./planning_docs/tasklist.md → Prioritized tasks with DoD + verification steps
+   - ./tracking/assessment.md → System snapshot + findings + new MS-#### issues
+   - ./tracking/tasklist.md → Prioritized tasks with DoD + verification steps
 
 4. **Report**
    - List all MS-#### IDs created

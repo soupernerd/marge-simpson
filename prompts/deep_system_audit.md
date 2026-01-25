@@ -54,8 +54,8 @@ For each P0 and P1 issue:
 1. Create MS-#### tracking ID
 2. Implement the fix
 3. Run `verify.ps1 fast` (or `verify.sh fast`)
-4. Update ./planning_docs/assessment.md with verification evidence
-5. Mark complete in ./planning_docs/tasklist.md
+4. Update ./tracking/assessment.md with verification evidence
+5. Mark complete in ./tracking/tasklist.md
 
 **Loop criteria:**
 - Continue if: P0/P1 issues remain unfixed
@@ -65,13 +65,13 @@ For each P0 and P1 issue:
 
 Before completing, ensure:
 
-1. **./planning_docs/assessment.md** — Contains:
+1. **./tracking/assessment.md** — Contains:
    - Audit snapshot (date, scope, status)
    - All findings with MS-#### IDs
    - Root cause analysis for each fix
    - Verification evidence
 
-2. **./planning_docs/tasklist.md** — Contains:
+2. **./tracking/tasklist.md** — Contains:
    - Completed items moved to Done section
    - P2/P3 items in Backlog with clear DoD
    - Feature suggestions in separate section

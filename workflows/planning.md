@@ -87,7 +87,7 @@ Before these changes, stop and request approval:
 
 When planning is approved and user says "proceed" or "implement":
 
-1. Create MS-#### work items in ./planning_docs/tasklist.md
+1. Create MS-#### work items in ./tracking/tasklist.md
 2. Switch to `./workflows/work.md` process
 3. Reference the planning discussion in work items
 

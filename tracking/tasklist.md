@@ -1,4 +1,4 @@
-# planning_docs/tasklist.md
+# tracking/tasklist.md
 Purpose: Single source of truth for active work. Keep this current as tasks are added/closed.
 Rule: If it's being worked on, it must be here.
 
@@ -9,7 +9,7 @@ AI/Agents must read `AGENTS.md` before working.
 
 ## Tracking (required)
 - **Next ID:** MS-0001
-  - Use this for the next new Issue/Task ID, then increment here AND in `planning_docs/assessment.md`.
+  - Use this for the next new Issue/Task ID, then increment here AND in `tracking/assessment.md`.
 
 ---
 
@@ -34,7 +34,7 @@ AI/Agents must read `AGENTS.md` before working.
       - macOS/Linux: `./scripts/verify.sh fast`
       - Windows: `./scripts/verify.ps1 fast`
     - Add/adjust a regression test or deterministic repro for this MS item.
-    - Record evidence in `./planning_docs/assessment.md` (raw output or verify log path).
+    - Record evidence in `./tracking/assessment.md` (raw output or verify log path).
   - **Files likely involved:** …
   - **Linked assessment:** [MS-0001]
 

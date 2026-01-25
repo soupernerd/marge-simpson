@@ -6,7 +6,7 @@ set -euo pipefail
 #
 # Creates a hybrid setup with:
 #   - Symlinks to global shared resources (AGENTS.md, experts, workflows, etc.)
-#   - Local per-project files (planning_docs/assessment.md, planning_docs/tasklist.md)
+#   - Local per-project files (tracking/assessment.md, tracking/tasklist.md)
 #
 # Usage: marge-init [OPTIONS]
 #
@@ -81,7 +81,7 @@ SHARED_LINKS=(
     "experts"
     "knowledge"
     "model_pricing.json"
-    "prompt_examples"
+    "prompts"
     "README.md"
     "scripts"
     "VERSION"
@@ -103,9 +103,9 @@ for item in "${SHARED_LINKS[@]}"; do
     fi
 done
 
-# Create planning_docs directory and copy per-project templates
-PLANNING_DOCS_DIR="$TARGET_DIR/planning_docs"
-mkdir -p "$PLANNING_DOCS_DIR"
+# Create tracking directory and copy per-project templates
+TRACKING_DIR="$TARGET_DIR/tracking"
+mkdir -p "$TRACKING_DIR"
 
 TEMPLATE_FILES=(
     "assessment.md"
@@ -115,7 +115,7 @@ TEMPLATE_FILES=(
 
 for item in "${TEMPLATE_FILES[@]}"; do
     if [[ -e "$MARGE_HOME/templates/$item" ]]; then
-        cp "$MARGE_HOME/templates/$item" "$PLANNING_DOCS_DIR/"
+        cp "$MARGE_HOME/templates/$item" "$TRACKING_DIR/"
     fi
 done
 
@@ -160,7 +160,7 @@ echo "  +-- experts/            -> \$MARGE_HOME/shared/ $LINK_TYPE"
 echo "  +-- workflows/          -> \$MARGE_HOME/shared/ $LINK_TYPE"
 echo "  +-- scripts/            -> \$MARGE_HOME/shared/ $LINK_TYPE"
 echo "  +-- knowledge/          -> \$MARGE_HOME/shared/ $LINK_TYPE"
-echo "  +-- planning_docs/"
+echo "  +-- tracking/"
 echo "  |   +-- assessment.md   (local - per-project)"
 echo "  |   +-- tasklist.md     (local - per-project)"
 echo "  |   +-- PRD.md          (local - per-project)"

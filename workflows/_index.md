@@ -5,7 +5,7 @@
 ## Path Resolution
 
 All paths in this folder are relative to this folder:
-- `./planning_docs/` → tracking files
+- `./tracking/` → tracking files
 - `./workflows/` → workflow files  
 - `./experts/` → domain expertise
 - `./knowledge/` → decisions and patterns

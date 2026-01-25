@@ -66,7 +66,7 @@ write_row() {
 # ==============================================================================
 
 get_tasklist_stats() {
-    local tasklist_path="$MS_DIR/planning_docs/tasklist.md"
+    local tasklist_path="$MS_DIR/tracking/tasklist.md"
     
     # Initialize stats
     BACKLOG=0

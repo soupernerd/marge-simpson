@@ -95,8 +95,8 @@ if command -v shellcheck &>/dev/null; then
             test_assert "$script_name passes shellcheck" "$SHELLCHECK_RESULT" || true
         fi
     done
-    # Meta scripts in meta/ folder
-    script="$MS_DIR/meta/convert-to-meta.sh"
+    # Meta scripts in .dev/ folder
+    script="$MS_DIR/.dev/convert-to-meta.sh"
     if [[ -f "$script" ]]; then
         script_name=$(basename "$script")
         SHELLCHECK_RESULT=$(shellcheck "$script" 2>&1 && echo 0 || echo 1)

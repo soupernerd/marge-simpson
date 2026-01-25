@@ -155,7 +155,7 @@ script_pairs=(
 if [[ "$IS_META_MARGE" != "true" ]]; then
     script_pairs+=(
         "cli/install-global"
-        "meta/convert-to-meta"
+        ".dev/convert-to-meta"
     )
 fi
 
@@ -197,8 +197,8 @@ required_files=(
     "experts/_index.md"
     "knowledge/_index.md"
     "scripts/_index.md"
-    "planning_docs/assessment.md"
-    "planning_docs/tasklist.md"
+    "tracking/assessment.md"
+    "tracking/tasklist.md"
 )
 
 # Additional files only required in full Marge (not .meta_marge)
@@ -236,7 +236,7 @@ else
     README_PATH="$REPO_ROOT/README.md"
 
     # Check documented folders exist
-    documented_folders=("cli" "scripts" "workflows" "experts" "knowledge" "planning_docs" "prompt_examples" "meta")
+    documented_folders=("cli" "scripts" "workflows" "experts" "knowledge" "tracking" "prompts" ".dev")
     for folder in "${documented_folders[@]}"; do
         if [[ -d "$REPO_ROOT/$folder" ]]; then
             test_check "Documented folder exists: $folder/" "true"

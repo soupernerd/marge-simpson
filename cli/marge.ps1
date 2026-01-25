@@ -79,7 +79,7 @@ $script:RETRY_DELAY = if ($env:RETRY_DELAY) { [int]$env:RETRY_DELAY } else { 5 }
 $script:AUTO_COMMIT = $true
 $script:ENGINE = "claude"
 $script:MARGE_FOLDER = if ($env:MARGE_FOLDER) { $env:MARGE_FOLDER } else { ".marge" }
-$script:PRD_FILE = "planning_docs/PRD.md"
+$script:PRD_FILE = "tracking/PRD.md"
 # Note: CONFIG_FILE intentionally reads from .marge/ (bootstrap config that can redirect to other folders)
 $script:CONFIG_FILE = ".marge\config.yaml"
 # Note: PROGRESS_FILE is set after arg parsing to respect --folder (see MS-0008 fix below)
@@ -115,7 +115,7 @@ function Show-Usage {
 marge v$script:VERSION - Autonomous AI coding loop (PowerShell)
 
 USAGE:
-  .\marge.ps1 [options]              Run PRD tasks from planning_docs/PRD.md
+  .\marge.ps1 [options]              Run PRD tasks from tracking/PRD.md
   .\marge.ps1 "<task>" [options]     Run a single task
   .\marge.ps1 "<t1>" "<t2>" ...      Chain multiple tasks
   .\marge.ps1 meta "<task>"          Run task using .meta_marge folder
@@ -150,7 +150,7 @@ OPTIONS:
   -Help              Show help
 
 COMMANDS:
-  init               Initialize .marge/ and planning_docs/PRD.md template
+  init               Initialize .marge/ and tracking/PRD.md template
   clean              Remove local .marge/ folder
   status             Show current status and progress
   config             Show config file contents
@@ -171,7 +171,7 @@ META-DEVELOPMENT:
            |
     Changes made DIRECTLY to marge-simpson/
            |
-    Work tracked in .meta_marge/planning_docs/
+    Work tracked in .meta_marge/tracking/
 
 CONFIG FILE:
   Place .marge\config.yaml in your project:
@@ -510,8 +510,8 @@ function Invoke-AutoCommit {
 }
 
 function Test-TaskComplete {
-    $tasklistPath = "./$script:MARGE_FOLDER/planning_docs/tasklist.md"
-    $assessmentPath = "./$script:MARGE_FOLDER/planning_docs/assessment.md"
+    $tasklistPath = "./$script:MARGE_FOLDER/tracking/tasklist.md"
+    $assessmentPath = "./$script:MARGE_FOLDER/tracking/assessment.md"
 
     # If tasklist exists and has unchecked items, not complete
     if (Test-Path $tasklistPath) {
@@ -683,7 +683,7 @@ Read the AGENTS.md file in the $script:MARGE_FOLDER folder and follow it.
 Instruction:
 - $Task$loopSuffix$fastSuffix$autoSuffix
 
-After finished, list remaining unchecked items in $script:MARGE_FOLDER/planning_docs/tasklist.md.
+After finished, list remaining unchecked items in $script:MARGE_FOLDER/tracking/tasklist.md.
 "@
     }
 
@@ -931,7 +931,7 @@ function Invoke-SingleTask {
 
 function Initialize-Config {
     New-Item -ItemType Directory -Path ".marge" -Force | Out-Null
-    New-Item -ItemType Directory -Path "planning_docs" -Force | Out-Null
+    New-Item -ItemType Directory -Path "tracking" -Force | Out-Null
 
     @"
 engine: claude
@@ -942,7 +942,7 @@ auto_commit: true
 folder: .marge
 "@ | Out-File -FilePath ".marge\config.yaml" -Encoding utf8
 
-    if (-not (Test-Path "planning_docs/PRD.md")) {
+    if (-not (Test-Path "tracking/PRD.md")) {
         @"
 # PRD
 
@@ -954,10 +954,10 @@ folder: .marge
 
 ### Task 3: Testing
 - [ ] Write tests
-"@ | Out-File -FilePath "planning_docs/PRD.md" -Encoding utf8
+"@ | Out-File -FilePath "tracking/PRD.md" -Encoding utf8
     }
 
-    Write-Success "Initialized .marge/ and planning_docs/"
+    Write-Success "Initialized .marge/ and tracking/"
 }
 
 function Get-ProjectType {
@@ -1176,9 +1176,9 @@ function Show-Doctor {
 function Test-MetaHasWork {
     <#
     .SYNOPSIS
-        Check if .meta_marge/planning_docs has tracked work (MS-#### entries)
+        Check if .meta_marge/tracking has tracked work (MS-#### entries)
     #>
-    $assessmentPath = ".meta_marge\planning_docs\assessment.md"
+    $assessmentPath = ".meta_marge\tracking\assessment.md"
     if (-not (Test-Path $assessmentPath)) { return $false }
     
     $content = Get-Content $assessmentPath -Raw -ErrorAction SilentlyContinue
@@ -1191,14 +1191,14 @@ function Test-MetaHasWork {
 function Get-MetaWorkSummary {
     <#
     .SYNOPSIS
-        Get summary of tracked work in .meta_marge/planning_docs
+        Get summary of tracked work in .meta_marge/tracking
     #>
     $summary = @{
         Issues = 0
         Tasks = 0
     }
     
-    $assessmentPath = ".meta_marge\planning_docs\assessment.md"
+    $assessmentPath = ".meta_marge\tracking\assessment.md"
     if (Test-Path $assessmentPath) {
         $content = Get-Content $assessmentPath -Raw -ErrorAction SilentlyContinue
         if ($content) {
@@ -1207,7 +1207,7 @@ function Get-MetaWorkSummary {
         }
     }
     
-    $tasklistPath = ".meta_marge\planning_docs\tasklist.md"
+    $tasklistPath = ".meta_marge\tracking\tasklist.md"
     if (Test-Path $tasklistPath) {
         $content = Get-Content $tasklistPath -Raw -ErrorAction SilentlyContinue
         if ($content) {
@@ -1251,8 +1251,8 @@ function Initialize-Meta {
     
     # Try to find convert-to-meta script (we're in a marge repo)
     $scriptLocations = @(
-        "$PSScriptRoot\..\meta\convert-to-meta.ps1",
-        ".\meta\convert-to-meta.ps1"
+        "$PSScriptRoot\..\.dev\convert-to-meta.ps1",
+        ".\.dev\convert-to-meta.ps1"
     )
     
     foreach ($convertScript in $scriptLocations) {
@@ -1274,7 +1274,7 @@ function Initialize-Meta {
     Write-Host ""
     
     New-Item -ItemType Directory -Path ".meta_marge" -Force | Out-Null
-    New-Item -ItemType Directory -Path ".meta_marge\planning_docs" -Force | Out-Null
+    New-Item -ItemType Directory -Path ".meta_marge\tracking" -Force | Out-Null
     
     # Create minimal AGENTS.md
     @"
@@ -1282,11 +1282,11 @@ function Initialize-Meta {
 
 This is a minimal .meta_marge/ setup. For full meta-development:
 1. Clone the marge repo
-2. Run: .\meta\convert-to-meta.ps1
+2. Run: .\.dev\convert-to-meta.ps1
 
 ## Scope
 Audit and improve the marge-simpson/ codebase.
-Track work in .meta_marge/planning_docs/
+Track work in .meta_marge/tracking/
 "@ | Out-File -FilePath ".meta_marge\AGENTS.md" -Encoding utf8
     
     # Create empty planning docs
@@ -1298,7 +1298,7 @@ Track work in .meta_marge/planning_docs/
 ## Triage
 
 _None_
-"@ | Out-File -FilePath ".meta_marge\planning_docs\assessment.md" -Encoding utf8
+"@ | Out-File -FilePath ".meta_marge\tracking\assessment.md" -Encoding utf8
 
     @"
 # .meta_marge Tasklist
@@ -1312,7 +1312,7 @@ _None_
 ## Done
 
 _None_
-"@ | Out-File -FilePath ".meta_marge\planning_docs\tasklist.md" -Encoding utf8
+"@ | Out-File -FilePath ".meta_marge\tracking\tasklist.md" -Encoding utf8
     
     Write-Success "Created minimal .meta_marge/"
     return $true
@@ -1360,7 +1360,7 @@ function Show-MetaStatus {
     Write-Host "  1. .meta_marge/AGENTS.md    (Configuration - the guide)"
     Write-Host "  2. AI audits marge-simpson/ (Target of improvements)"
     Write-Host "  3. Changes made DIRECTLY to marge-simpson/"
-    Write-Host "  4. Work tracked in .meta_marge/planning_docs/"
+    Write-Host "  4. Work tracked in .meta_marge/tracking/"
     Write-Host ""
 }
 

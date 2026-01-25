@@ -296,7 +296,7 @@ test_assert "install-global.ps1 has -Help parameter" "$result" || true
 
 # Test: convert-to-meta.ps1 has -Help parameter
 result="false"
-if grep -q '\[switch\]\$Help' "$MS_DIR/meta/convert-to-meta.ps1"; then
+if grep -q '\[switch\]\$Help' "$MS_DIR/.dev/convert-to-meta.ps1"; then
     result="true"
 fi
 test_assert "convert-to-meta.ps1 has -Help parameter" "$result" || true

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # convert-to-meta.sh - Creates .meta_marge/ for meta-development
-# Usage: ./meta/convert-to-meta.sh [-f|--force] [-h|--help]
+# Usage: ./.dev/convert-to-meta.sh [-f|--force] [-h|--help]
 
 FORCE=false
 while [[ $# -gt 0 ]]; do
@@ -18,7 +18,7 @@ done
 
 # Locate source folder
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SOURCE_FOLDER="$([[ "$(basename "$SCRIPT_DIR")" == "meta" ]] && dirname "$SCRIPT_DIR" || echo "$SCRIPT_DIR")"
+SOURCE_FOLDER="$([[ "$(basename "$SCRIPT_DIR")" == ".dev" ]] && dirname "$SCRIPT_DIR" || echo "$SCRIPT_DIR")"
 SOURCE_NAME=$(basename "$SOURCE_FOLDER")
 TARGET_NAME=".meta_marge"
 TARGET_FOLDER="$SOURCE_FOLDER/$TARGET_NAME"
@@ -72,7 +72,7 @@ while IFS= read -r -d '' file; do
     
     # Transform relative paths to explicit .meta_marge/ paths
     # But NOT ./scripts/ - those should point to source (marge-simpson/scripts/)
-    content=${content//".\/planning_docs\/"/".meta_marge/planning_docs/"}
+    content=${content//".\/tracking\/"/".meta_marge/tracking/"}
     content=${content//".\/workflows\/"/".meta_marge/workflows/"}
     content=${content//".\/experts\/"/".meta_marge/experts/"}
     content=${content//".\/knowledge\/"/".meta_marge/knowledge/"}
@@ -95,7 +95,7 @@ echo "  $count files transformed"
 # [3/4] Reset work queues + rewrite AGENTS.md scope
 echo "[3/4] Resetting work queues..."
 
-cat > "$TARGET_FOLDER/planning_docs/assessment.md" << EOF
+cat > "$TARGET_FOLDER/tracking/assessment.md" << EOF
 # $TARGET_NAME Assessment
 
 > Meta-development tracking. AI reads .meta_marge/AGENTS.md, improves marge-simpson/.
@@ -117,7 +117,7 @@ _None_
 _None_
 EOF
 
-cat > "$TARGET_FOLDER/planning_docs/tasklist.md" << EOF
+cat > "$TARGET_FOLDER/tracking/tasklist.md" << EOF
 # $TARGET_NAME Tasklist
 
 > Work queue for meta-development.
@@ -141,13 +141,13 @@ AGENTS_PATH="$TARGET_FOLDER/AGENTS.md"
 NEW_SCOPE="**Scope (CRITICAL):**
 1. The \`$TARGET_NAME/\` folder is **excluded from audits** -- it is the tooling, not the target.
 2. Audit the workspace/repo OUTSIDE this folder (e.g., \`$SOURCE_NAME/\`).
-3. Track findings HERE in \`$TARGET_NAME/planning_docs/\` assessment.md and tasklist.md.
+3. Track findings HERE in \`$TARGET_NAME/tracking/\` assessment.md and tasklist.md.
 4. Never create \`$TARGET_NAME\` files outside this folder.
 
 **Meta-Development Workflow:**
 \`\`\`
   $TARGET_NAME/AGENTS.md  ->  AI audits $SOURCE_NAME/  ->  Changes to $SOURCE_NAME/
-  Work tracked in $TARGET_NAME/planning_docs/
+  Work tracked in $TARGET_NAME/tracking/
   When done: run convert-to-meta again to reset
 \`\`\`
 

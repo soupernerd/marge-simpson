@@ -4,8 +4,8 @@
 .DESCRIPTION
     Copies marge-simpson/ to .meta_marge/ with path transformations.
 .EXAMPLE
-    .\meta\convert-to-meta.ps1
-    .\meta\convert-to-meta.ps1 -Force
+    .\.dev\convert-to-meta.ps1
+    .\.dev\convert-to-meta.ps1 -Force
 #>
 
 param([switch]$Force, [switch]$Help)
@@ -14,7 +14,7 @@ if ($Help) {
     Write-Host @"
 convert-to-meta - Create .meta_marge/ for meta-development
 
-USAGE:  .\meta\convert-to-meta.ps1 [-Force] [-Help]
+USAGE:  .\.dev\convert-to-meta.ps1 [-Force] [-Help]
 
 Creates .meta_marge/ folder. AI reads .meta_marge/AGENTS.md and
 makes changes directly to marge-simpson/ (the target).
@@ -26,7 +26,7 @@ $ErrorActionPreference = "Stop"
 
 # Locate source folder
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$SourceFolder = if ((Split-Path -Leaf $ScriptDir) -eq "meta") { Split-Path -Parent $ScriptDir } else { $ScriptDir }
+$SourceFolder = if ((Split-Path -Leaf $ScriptDir) -eq ".dev") { Split-Path -Parent $ScriptDir } else { $ScriptDir }
 $SourceName = Split-Path -Leaf $SourceFolder
 $TargetName = ".meta_marge"
 $TargetFolder = Join-Path $SourceFolder $TargetName
@@ -87,12 +87,12 @@ Get-ChildItem -Path $TargetFolder -Recurse -File -Force | ForEach-Object {
         $original = $content
         
         # Transform relative paths to explicit .meta_marge/ paths
-        # ./planning_docs/ -> .meta_marge/planning_docs/
+        # ./tracking/ -> .meta_marge/tracking/
         # ./workflows/ -> .meta_marge/workflows/
         # ./experts/ -> .meta_marge/experts/
         # ./knowledge/ -> .meta_marge/knowledge/
         # But NOT ./scripts/ - those should point to source (marge-simpson/scripts/)
-        $content = $content -replace '\./planning_docs/', '.meta_marge/planning_docs/'
+        $content = $content -replace '\.\./tracking/', '.meta_marge/tracking/'
         $content = $content -replace '\./workflows/', '.meta_marge/workflows/'
         $content = $content -replace '\./experts/', '.meta_marge/experts/'
         $content = $content -replace '\./knowledge/', '.meta_marge/knowledge/'
@@ -139,7 +139,7 @@ _None_
 
 ## Done
 _None_
-"@ | Set-Content -Path (Join-Path $TargetFolder "planning_docs\assessment.md")
+"@ | Set-Content -Path (Join-Path $TargetFolder "tracking\assessment.md")
 
 @"
 # $TargetName Tasklist
@@ -158,7 +158,7 @@ _None_
 
 ## Done
 _None_
-"@ | Set-Content -Path (Join-Path $TargetFolder "planning_docs\tasklist.md")
+"@ | Set-Content -Path (Join-Path $TargetFolder "tracking\tasklist.md")
 
 # Rewrite AGENTS.md scope section for meta-development
 $AgentsPath = Join-Path $TargetFolder "AGENTS.md"
@@ -167,13 +167,13 @@ $agentsContent = Get-Content -Path $AgentsPath -Raw
 $newScope = @"
 **Scope (CRITICAL):**
 1. This folder (``.meta_marge/``) is the **control plane** for improving ``$SourceName/``.
-2. Audit ``$SourceName/`` (the target). Track findings HERE in ``.meta_marge/planning_docs/``.
+2. Audit ``$SourceName/`` (the target). Track findings HERE in ``.meta_marge/tracking/``.
 3. Never create ``.meta_marge`` files outside this folder.
 
 **Meta-Development Workflow:**
 ``````
   .meta_marge/AGENTS.md  ->  AI audits $SourceName/  ->  Changes to $SourceName/
-  Work tracked in .meta_marge/planning_docs/
+  Work tracked in .meta_marge/tracking/
   Verify using: $SourceName/scripts/verify.ps1 fast
   When done: run convert-to-meta again to reset
 ``````

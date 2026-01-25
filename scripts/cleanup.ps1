@@ -6,8 +6,8 @@ Reports on Marge tracking files and suggests archiving when they get large.
 This script auto-detects its own folder name, so you can rename the folder if needed.
 
 CLEANUP RULES:
-1. planning_docs/assessment.md  - Suggest archiving if large (no auto-modification)
-2. planning_docs/tasklist.md    - Suggest archiving if large (no auto-modification)
+1. tracking/assessment.md  - Suggest archiving if large (no auto-modification)
+2. tracking/tasklist.md    - Suggest archiving if large (no auto-modification)
 
 Usage:
   ./cleanup.ps1                    # Analyze and report
@@ -85,12 +85,12 @@ Write-Info "Repo Root: $repoRoot"
 Write-Info "Archive After: $ArchiveAfterDays days"
 
 # ==============================================================================
-# 1. Report on planning_docs/assessment.md
+# 1. Report on tracking/assessment.md
 # ==============================================================================
 
-Write-Section "Step 1/2: Analyzing planning_docs/assessment.md"
+Write-Section "Step 1/2: Analyzing tracking/assessment.md"
 
-$assessmentFile = Join-Path $margeDir "planning_docs\assessment.md"
+$assessmentFile = Join-Path $margeDir "tracking\assessment.md"
 
 if (Test-Path $assessmentFile) {
     $assessmentSize = (Get-Item $assessmentFile).Length
@@ -107,16 +107,16 @@ if (Test-Path $assessmentFile) {
     }
 }
 else {
-    Write-Info "No planning_docs/assessment.md found"
+    Write-Info "No tracking/assessment.md found"
 }
 
 # ==============================================================================
-# 2. Report on planning_docs/tasklist.md
+# 2. Report on tracking/tasklist.md
 # ==============================================================================
 
-Write-Section "Step 2/2: Analyzing planning_docs/tasklist.md"
+Write-Section "Step 2/2: Analyzing tracking/tasklist.md"
 
-$tasklistFile = Join-Path $margeDir "planning_docs\tasklist.md"
+$tasklistFile = Join-Path $margeDir "tracking\tasklist.md"
 
 if (Test-Path $tasklistFile) {
     $tasklistSize = (Get-Item $tasklistFile).Length
@@ -134,7 +134,7 @@ if (Test-Path $tasklistFile) {
     }
 }
 else {
-    Write-Info "No planning_docs/tasklist.md found"
+    Write-Info "No tracking/tasklist.md found"
 }
 
 Write-Host ""

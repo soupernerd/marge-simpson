@@ -44,7 +44,7 @@ Before scanning, check what's already known:
 
 ### Document Findings
 
-Update `./planning_docs/assessment.md`:
+Update `./tracking/assessment.md`:
 
 ```markdown
 ## Audit: [Date] - [Scope]
