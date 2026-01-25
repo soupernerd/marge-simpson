@@ -7,17 +7,17 @@ AI/Agents must read `AGENTS.md` before working.
 ---
 
 ## Tracking (required)
-- **Next ID:** MS-0001
+- **Next ID:** MS-0006
   - Use this for the next new Issue/Task ID, then increment here AND in `system/tracking/tasklist.md`.
 
 ---
 
 ## Current Snapshot
-- **Last updated:** YYYY-MM-DD
-- **Scope assessed:** (folders/features/issues covered)
-- **Build/Run context:** (env, branch, key flags, platform if relevant)
-- **Overall status:** ✅ Healthy / ⚠️ Mixed / ❌ Broken
-- **Top risks:** (1–3 bullets)
+- **Last updated:** 2026-01-25
+- **Scope assessed:** Full path integrity audit - all files, CI, configs, workflows
+- **Build/Run context:** Windows PowerShell, verify.ps1 fast
+- **Overall status:** ✅ Healthy
+- **Top risks:** None after fixes applied
 
 ---
 
@@ -45,6 +45,54 @@ AI/Agents must read `AGENTS.md` before working.
 
 ## Issues Log (root-cause oriented)
 > Add one entry per issue investigated/fixed. Keep it factual and file-backed.
+
+### [MS-0002] CI workflow broken paths
+- **Reported:** 2026-01-25
+- **Status:** Done
+- **Expert(s):** devops
+- **Symptom:** CI jobs fail - scripts not found at `./scripts/`
+- **Root cause:** Scripts moved to `./system/scripts/` during restructure but CI not updated
+- **Fix:** Updated all paths in `.github/workflows/ci.yml` from `./scripts/` to `./system/scripts/`
+- **Files touched:** `.github/workflows/ci.yml`
+- **Verification:**
+  - Commands executed: `verify.ps1 fast`
+  - Evidence: ALL CHECKS PASSED (4/4 commands)
+
+### [MS-0003] verify.config.json wrong filename
+- **Reported:** 2026-01-25
+- **Status:** Done
+- **Expert(s):** devops
+- **Symptom:** Shell verification would fail - file `test-marge-cli.sh` doesn't exist
+- **Root cause:** Typo in config - should be `test-cli.sh`
+- **Fix:** Changed `test-marge-cli.sh` to `test-cli.sh` in fast_sh and full_sh profiles
+- **Files touched:** `verify.config.json`
+- **Verification:**
+  - Commands executed: `verify.ps1 fast`
+  - Evidence: Config loads correctly, all tests pass
+
+### [MS-0004] Orphaned knowledge/ folder
+- **Reported:** 2026-01-25
+- **Status:** Done
+- **Expert(s):** architecture
+- **Symptom:** Duplicate `knowledge/decisions.md` at root level
+- **Root cause:** Folder restructure (MS-0001) moved to `system/knowledge/` but old copy remained
+- **Fix:** Deleted orphan folder `knowledge/`
+- **Files touched:** `knowledge/` (deleted)
+- **Verification:**
+  - Commands executed: `Test-Path knowledge/` returns False
+  - Evidence: Folder no longer exists
+
+### [MS-0005] Bash parity issue in convert-to-meta.sh
+- **Reported:** 2026-01-25
+- **Status:** Done
+- **Expert(s):** devops
+- **Symptom:** PowerShell transform handles `./system/model_pricing.json` but Bash doesn't
+- **Root cause:** Missing string replacement in Bash version
+- **Fix:** Added `./system/model_pricing.json` transform to Bash script
+- **Files touched:** `.dev/meta/convert-to-meta.sh`
+- **Verification:**
+  - Commands executed: `verify.ps1 fast`
+  - Evidence: All tests pass, parity now complete
 
 ### [MS-0001] Short title
 - **Reported:** YYYY-MM-DD

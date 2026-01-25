@@ -103,6 +103,7 @@ while IFS= read -r -d '' file; do
     content=${content//"./workflows/"/".meta_marge/system/workflows/"}
     content=${content//"./experts/"/".meta_marge/system/experts/"}
     content=${content//"./knowledge/"/".meta_marge/system/knowledge/"}
+    content=${content//"./system/model_pricing.json"/".meta_marge/model_pricing.json"}
     content=${content//"./model_pricing.json"/".meta_marge/model_pricing.json"}
     
     # Scripts should use source folder for verification (test the source, not meta)

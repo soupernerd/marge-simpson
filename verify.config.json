@@ -15,13 +15,13 @@
     "./marge-simpson/system/scripts/test-syntax.sh",
     "./marge-simpson/system/scripts/test-general.sh",
     "./marge-simpson/system/scripts/test-marge.sh",
-    "./marge-simpson/system/scripts/test-marge-cli.sh"
+    "./marge-simpson/system/scripts/test-cli.sh"
   ],
   "full_sh": [
     "./marge-simpson/system/scripts/test-syntax.sh",
     "./marge-simpson/system/scripts/test-general.sh",
     "./marge-simpson/system/scripts/test-marge.sh",
-    "./marge-simpson/system/scripts/test-marge-cli.sh"
+    "./marge-simpson/system/scripts/test-cli.sh"
   ],
   "_comment": "Marge core tests. Commands run from repo root (parent of this folder), so paths MUST include the folder name.",
   "_profile_note": "fast and full profiles are currently identical. Both run the same test suite. Differentiate if Marge gains slower comprehensive tests.",

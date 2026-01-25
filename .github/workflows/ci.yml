@@ -16,7 +16,7 @@ jobs:
       - name: Run Marge Self-Tests (PowerShell)
         shell: pwsh
         run: |
-          powershell -ExecutionPolicy Bypass -File ./scripts/test-marge.ps1
+          powershell -ExecutionPolicy Bypass -File ./system/scripts/test-marge.ps1
 
   test-linux:
     name: Test on Linux
@@ -26,12 +26,12 @@ jobs:
       
       - name: Make scripts executable
         run: |
-          chmod +x ./scripts/verify.sh
-          chmod +x ./scripts/cleanup.sh
-          chmod +x ./scripts/test-marge.sh
+          chmod +x ./system/scripts/verify.sh
+          chmod +x ./system/scripts/cleanup.sh
+          chmod +x ./system/scripts/test-marge.sh
       
       - name: Run Marge Self-Tests (Bash)
-        run: ./scripts/test-marge.sh
+        run: ./system/scripts/test-marge.sh
 
   test-macos:
     name: Test on macOS
@@ -41,12 +41,12 @@ jobs:
       
       - name: Make scripts executable
         run: |
-          chmod +x ./scripts/verify.sh
-          chmod +x ./scripts/cleanup.sh
-          chmod +x ./scripts/test-marge.sh
+          chmod +x ./system/scripts/verify.sh
+          chmod +x ./system/scripts/cleanup.sh
+          chmod +x ./system/scripts/test-marge.sh
       
       - name: Run Marge Self-Tests (Bash)
-        run: ./scripts/test-marge.sh
+        run: ./system/scripts/test-marge.sh
 
   shellcheck:
     name: ShellCheck Lint
@@ -61,7 +61,13 @@ jobs:
         run: |
           # Run shellcheck on all shell scripts, exit with error if any fail
           # Fix shellcheck warnings in scripts rather than suppressing them here
-          find . -name "*.sh" -type f | while read -r script; do
+          find ./system/scripts -name "*.sh" -type f | while read -r script; do
+            echo "Checking: $script"
+            shellcheck "$script" || exit 1
+          done
+          
+          # Also check meta scripts and CLI scripts
+          find ./.dev -name "*.sh" -type f | while read -r script; do
             echo "Checking: $script"
             shellcheck "$script" || exit 1
           done
