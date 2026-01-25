@@ -41,6 +41,21 @@
 - **Verified:** [x] Removed PRD.md from source
 - **Related:** D-004
 
+### [I-004] CI fails after local tests pass — version/environment mismatch #ci #testing #shellcheck
+- **Observed:** 2026-01-25
+- **Confidence:** High
+- **Insight:** Local shellcheck (v0.11.0 via winget) has different behavior than Ubuntu apt's version. Tests can pass locally but fail in CI due to:
+  1. **ShellCheck version differences** — Ubuntu apt has older shellcheck that flags different warnings
+  2. **Test assertions don't match code** — Tests expect patterns that were refactored out (e.g., `marge-simpson/` vs `./system/`)
+  3. **Disable directives need function+body coverage** — `# shellcheck disable=SC2317` on function isn't enough, need `SC2329,SC2317` to cover unreachable function body
+- **Evidence:** Multiple CI failures after verified local passes; shellcheck v0.11.0 local vs apt's older version; test expected `marge-simpson/` but AGENTS.md was refactored to use `./system/`
+- **Fix pattern:** 
+  1. Always run `verify.ps1 fast` as FINAL step before commit (not during development)
+  2. For trap-invoked functions, use `# shellcheck disable=SC2329,SC2317` 
+  3. When refactoring paths, grep for path patterns in test files too
+- **Verified:** [x] Documented after 3+ occurrences
+- **Related:** D-002
+
 <!-- Example:
 ### [I-001] Dislikes verbose logging #logging #preferences
 - **Observed:** 2026-01-12

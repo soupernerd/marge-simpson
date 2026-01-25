@@ -92,7 +92,7 @@ new_temp_dir() {
     echo "$temp_dir"
 }
 
-# shellcheck disable=SC2329
+# shellcheck disable=SC2329,SC2317
 cleanup_temp_dirs() {
     if [[ "$KEEP_TEMP" == "false" ]]; then
         for dir in "${TEMP_DIRS[@]}"; do

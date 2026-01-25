@@ -143,8 +143,8 @@ AGENTS_CONTENT=$(cat "$AGENTS_PATH")
 HAS_CRITICAL=$(echo "$AGENTS_CONTENT" | grep -q "CRITICAL" && echo 0 || echo 1)
 test_assert "AGENTS.md contains CRITICAL section" "$HAS_CRITICAL" || true
 
-# Check for folder reference - either the actual folder name OR the generic .marge/ reference
-HAS_FOLDER_REF=$(echo "$AGENTS_CONTENT" | grep -qE "(${MS_FOLDER_NAME}/|\\.marge/)" && echo 0 || echo 1)
+# Check for folder reference - folder name, .marge/, or ./system/ (generic structure)
+HAS_FOLDER_REF=$(echo "$AGENTS_CONTENT" | grep -qE "(${MS_FOLDER_NAME}/|\\.marge/|\\./system/)" && echo 0 || echo 1)
 test_assert "AGENTS.md contains folder reference" "$HAS_FOLDER_REF" || true
 
 HAS_VERIFY_REF=$(echo "$AGENTS_CONTENT" | grep -q "verify" && echo 0 || echo 1)
