@@ -4,6 +4,32 @@
 
 ---
 
+## Non-Negotiable Rules (HARD)
+
+1. **NEVER** claim verification passed without raw output
+2. **NEVER** skip expert load in Full mode
+3. **NEVER** edit files in Full mode without MS-#### assigned first
+4. **NEVER** leave work incomplete without stating exactly what remains
+5. **ALWAYS** declare MODE before first edit (see Mode Declaration below)
+
+---
+
+## Mode Declaration (BLOCKING)
+
+**Before ANY file edit, output this block:**
+
+```
+┌─────────────────────────────────────┐
+│ MODE: [Lite | Full]                 │
+│ ID: [MS-#### | N/A]                 │
+│ REASON: [one sentence]              │
+└─────────────────────────────────────┘
+```
+
+**IF this block is not present before your first edit → VIOLATION.**
+
+---
+
 ## Usage Modes (Critical) (Hard)
 
 - **IDE Chat:** `prompts/` + `system/tracking/` — no `.marge/`
@@ -24,10 +50,25 @@ This folder is tooling, not the target. Work happens OUTSIDE this folder.
 
 | Trigger | Mode | Behavior |
 |---------|------|----------|
-| Typo, rename, comment, format | **Lite** | Read → Fix → List files changed. No MS-#### ID. |
-| Feature, refactor, audit, multi-file | **Full** | Workflow + MS-#### + Expert subagents |
+| Single-line typo, comment, format (no behavior change) | **Lite** | MODE block → Fix → List files. No MS-####. |
+| Feature, refactor, audit, multi-file, behavior change | **Full** | MODE block → MS-#### → Experts → Workflow |
 
-**When in doubt → Full mode.** Over-tracking is better than lost context. If it touches system behavior, architecture, or 2+ files → Full.
+**Lite Mode Boundary:**
+- IF files_modified > 1 → Switch to Full
+- IF lines_changed > 10 → Switch to Full  
+- IF behavior changes → Switch to Full
+- IF tests affected → Switch to Full
+
+**When in doubt → Full mode.** Over-tracking is better than lost context.
+
+**3-File Checkpoint:**
+After modifying 3 files under one MS-####:
+1. STOP
+2. List files changed and reasons
+3. Confirm all serve SAME conceptual goal
+4. IF divergent → create new MS-####
+
+EXCEPTION: Mechanical changes (rename, format, import) across 3+ files may continue under one ID if ALL changes are identical in nature.
 
 ---
 

@@ -31,6 +31,11 @@ Direct tools only for: reading files, running commands, trivial single-line fixe
 4. **No secrets in code** — Use env vars
 5. **State uncertainty** — Say what you checked vs what remains unknown
 
+**Lite Mode Limits:**
+- IF modifying > 1 file → recommend full AGENTS.md
+- IF changing > 10 lines → recommend full AGENTS.md
+- IF behavior/test impact → recommend full AGENTS.md
+
 ---
 
 ## Response Style

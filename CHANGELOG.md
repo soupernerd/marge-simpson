@@ -5,6 +5,30 @@ All notable changes to the Marge project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2026-01-26
+
+### Added
+- **Hardline enforcement rules (H1-H6)** - AGENTS.md now enforces compliance at runtime:
+  - H1: Mode Declaration block required before ANY edit
+  - H2: Cannot edit in Full mode without MS-#### assigned
+  - H3: Lite mode auto-escalates if >1 file, >10 lines, or behavior change
+  - H4: 3-File checkpoint forces review (with mechanical-change exception)
+  - H5: One MS-#### = one conceptual change
+  - H6: Tracking sync checkbox mandatory in every response
+- **Non-Negotiable Rules section** - 5 NEVER/ALWAYS rules in AGENTS.md
+- **Lite Mode Limits** - AGENTS-lite.md now recommends full AGENTS.md when thresholds exceeded
+
+### Changed
+- **work.md** - Added One ID = One Concept gate and Tracking Sync mandatory footer
+- **session_end.md** - Removed soft language, trimmed verbose entry format templates
+- **loop.md** - Simplified min/max parsing section from 15 lines to 3
+- **_index.md** - Now references AGENTS.md as primary routing source
+
+### Fixed
+- **Tracking compliance gap** - System now blocks edits without proper tracking setup
+
+---
+
 ## [1.3.1] - 2026-01-25
 
 ### Added

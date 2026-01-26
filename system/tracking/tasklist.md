@@ -11,7 +11,7 @@ AI/Agents must read `AGENTS.md` before working.
 
 ## Tracking (required)
 
-- **Next ID:** MS-0001
+- **Next ID:** MS-0005
   - Use this for the next new Issue/Task ID, then increment here AND in `system/tracking/assessment.md`.
 
 ---
@@ -55,20 +55,22 @@ AI/Agents must read `AGENTS.md` before working.
 
 ## In Progress
 
-- [ ] **MS-000X —** …
-  - **Started:** YYYY-MM-DD
-  - **Expert(s):** Relevant expert(s) from `./system/experts/_index.md`
-  - **Current status:** …
-  - **Blockers:** …
-  - **Next step:** …
+_(none)_
 
 ---
 
 ## Done (recent)
 
-- [x] **MS-000X —** …
-  - **Completed:** YYYY-MM-DD
-  - **Expert(s):** Relevant expert(s) from `./system/experts/_index.md`
+- [x] **MS-0004 — Workflow Hardening (H1-H6)**
+  - **Completed:** 2026-01-26
+  - **Expert(s):** Comprehension, Prompting, Audit, Architecture, Testing, Implementation
   - **Verification:**
-    - Commands run: …
-    - Evidence: (paste raw output)
+    - Commands run: `verify.ps1 fast` after each phase
+    - Evidence: 4/4 passed (syntax, general, marge, cli)
+  - **Changes:**
+    - AGENTS.md: Added Non-Negotiable Rules, Mode Declaration block, Task Mode boundaries, 3-File Checkpoint
+    - AGENTS-lite.md: Added Lite Mode Limits
+    - work.md: Added H5 (One ID = One Concept), H6 (Tracking Sync mandatory)
+    - session_end.md: Removed soft language, trimmed entry formats
+    - loop.md: Simplified min/max parsing section
+    - _index.md: Added AGENTS.md reference note

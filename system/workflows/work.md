@@ -44,6 +44,12 @@ Grep `./system/knowledge/decisions.md` for relevant tags. Don't contradict prior
 
 ## Work Intake
 
+**One ID = One Concept:**
+- Each MS-#### tracks ONE conceptual change
+- "Fix login bug" = 1 ID (even if 3 files)
+- "Fix login bug" + "Add logout" = 2 IDs
+- 10 unrelated fixes = 10 IDs
+
 ### Features
 1. Create MS-#### ID
 2. Create plan: `./system/tracking/[name]_MS-####.md` (copy from `feature_plan_template.md`)
@@ -119,10 +125,19 @@ Process is same for all. Labels are for humans.
 ### Knowledge Captured (if any)
 `📝 D-### | PR-### | P-### | I-###`
 
+### Tracking Sync (MANDATORY)
+```
+- [ ] All MS-#### in response exist in tasklist.md
+- [ ] All files modified listed in assessment.md
+- [ ] Next ID matches in both tracking files
+```
+**IF any unchecked → fix tracking before responding.**
+
 ---
 
 ## After Work
 
-Consider `./system/workflows/session_end.md` to capture decisions/patterns.
+**IF** architectural decision made OR user preference discovered OR reusable pattern identified:
+→ Load `./system/workflows/session_end.md` to capture it.
 
-Skip if: trivial fix with no learnings.
+**IF** trivial fix with no learnings → skip.

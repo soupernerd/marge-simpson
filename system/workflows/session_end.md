@@ -31,7 +31,7 @@ Before extracting new facts, check if knowledge files are empty:
 Select-String -Path "./system/knowledge/_index.md" -Pattern "entries$"
 ```
 
-If all counts show 0, this is a fresh installation. Consider seeding with:
+If all counts show 0, this is a fresh installation. **Seed knowledge with:**
 
 1. **Project defaults** — Common decisions visible in codebase:
    - Language/framework choices (visible in package.json, requirements.txt, etc.)
@@ -111,48 +111,7 @@ Select-String -Path "./system/knowledge/*.md" -Pattern "keyword1|keyword2"
 
 ### Entry Formats
 
-**Decision (D-###):**
-```markdown
-### [D-###] Short title #tag1 #tag2
-- **Date:** YYYY-MM-DD
-- **Last Accessed:** YYYY-MM-DD
-- **Context:** Why this decision was needed
-- **Decision:** What was decided
-- **Alternatives:** What else was considered
-- **Rationale:** Why this option
-```
-
-**Preference (PR-###):**
-```markdown
-### [PR-###] Short description #tag1 #tag2
-- **Stated:** YYYY-MM-DD
-- **Last Accessed:** YYYY-MM-DD
-- **Strength:** Weak / Moderate / Strong
-- **Preference:** What the user prefers
-- **Exceptions:** When this doesn't apply
-- **Quote:** Direct quote if available
-```
-
-**Pattern (P-###):**
-```markdown
-### [P-###] Short title #tag1 #tag2
-- **Observed:** YYYY-MM-DD
-- **Last Accessed:** YYYY-MM-DD
-- **Frequency:** always / usually / sometimes
-- **Pattern:** Description
-- **Example:** Concrete example
-```
-
-**Insight (I-###):**
-```markdown
-### [I-###] Short description #tag1 #tag2
-- **Observed:** YYYY-MM-DD
-- **Last Accessed:** YYYY-MM-DD
-- **Confidence:** Low / Medium / High
-- **Insight:** What was inferred
-- **Evidence:** What led to this
-- **Verified:** [ ] User has confirmed
-```
+See `./system/knowledge/_index.md` for format templates (D-###, PR-###, P-###, I-###).
 
 ---
 

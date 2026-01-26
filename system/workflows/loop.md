@@ -69,22 +69,9 @@ Loop applies ONLY to work items, not questions:
 
 ## Min/Max Loop Counts
 
-Users can specify iteration bounds in their prompt:
+Users can specify iteration bounds: `min 3`, `max 10`, `exactly 5`.
 
-| Phrase | Behavior |
-|--------|----------|
-| `min 3` or `minimum 3 times` | Run at least 3 passes, even if clean earlier |
-| `max 10` or `maximum 10 times` | Stop after 10 passes, even if not clean |
-| `min 2 max 8` | Run 2-8 passes |
-| `exactly 5` or `run 5 times` | Run exactly 5 passes |
-
-**Parsing rules:**
-- Look for `min/minimum` followed by a number
-- Look for `max/maximum` followed by a number
-- Look for `exactly` or `run X times` for fixed count
-- If no max specified, default max is 5 (conservative safety limit; CLI `--max-iterations` defaults to 20)
-- If min > max, treat as exactly min passes
-- Numbers must be digits (1-999)
+**Defaults:** max=5 (safety limit), CLI `--max-iterations` defaults to 20.
 
 ## Examples
 

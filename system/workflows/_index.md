@@ -1,6 +1,7 @@
 # Workflows Index
 
 > Route to the right workflow based on intent. Read only what you need.
+> **Primary routing is in AGENTS.md** — this file is reference only.
 
 ## Path Resolution
 
