@@ -126,13 +126,24 @@ else
     done < <(find "$REPO_ROOT" -type f ! -name "*.*" -print0)
 fi
 
-# Validate PowerShell files (if pwsh is available)
+# Validate PowerShell files (if pwsh is available and functional)
 echo ""
 echo -e "${YELLOW}[3/3] Checking PowerShell (.ps1) files...${NC}"
 
-if ! command -v pwsh &>/dev/null; then
-    echo -e "  ${YELLOW}[SKIP]${NC} pwsh not available on this system"
+# Check both existence AND functionality of pwsh
+PWSH_AVAILABLE=false
+if command -v pwsh &>/dev/null; then
+    # Test pwsh functionality, not just existence (MS-0012)
+    if pwsh -NoProfile -Command "exit 0" &>/dev/null; then
+        PWSH_AVAILABLE=true
+    else
+        echo -e "  ${YELLOW}[SKIP]${NC} pwsh found but not functional (pwsh -c 'exit 0' failed)"
+    fi
 else
+    echo -e "  ${YELLOW}[SKIP]${NC} pwsh not available on this system"
+fi
+
+if [[ "$PWSH_AVAILABLE" == "true" ]]; then
     while IFS= read -r -d '' file; do
         # Skip .meta_marge and node_modules
         if [[ "$file" == *"/.meta_marge/"* ]] || [[ "$file" == *"/node_modules/"* ]]; then

@@ -34,6 +34,17 @@ MAX_PARALLEL=${MAX_PARALLEL:-3}
 PRD_FILE="tracking/PRD.md"
 MARGE_FOLDER="${MARGE_FOLDER:-.marge}"
 
+# Security: Validate MARGE_FOLDER from environment to prevent path traversal
+# This runs early, before any file operations. The --folder flag has its own validation.
+if [[ "$MARGE_FOLDER" == /* ]] || [[ "$MARGE_FOLDER" == \\* ]] || \
+   [[ "$MARGE_FOLDER" == ../* ]] || [[ "$MARGE_FOLDER" == */../* ]] || \
+   [[ "$MARGE_FOLDER" == */.. ]] || [[ "$MARGE_FOLDER" == .. ]] || \
+   [[ "$MARGE_FOLDER" =~ \.\. ]]; then
+    echo "[ERROR] MARGE_FOLDER contains invalid path traversal or absolute path: $MARGE_FOLDER" >&2
+    echo "MARGE_FOLDER must be a relative path within the project (e.g., '.marge')" >&2
+    exit 1
+fi
+
 # Fallback pricing (Claude Sonnet) - used when model_pricing.json unavailable
 DEFAULT_INPUT_RATE=3.00   # $/1M input tokens
 DEFAULT_OUTPUT_RATE=15.00 # $/1M output tokens

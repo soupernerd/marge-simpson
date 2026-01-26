@@ -6,6 +6,12 @@ set -euo pipefail
 # Runs repo verification commands and writes a timestamped log.
 # This script auto-detects its own folder name, so you can rename the folder if needed.
 #
+# SECURITY NOTE:
+#   verify.config.json is TRUSTED CONFIGURATION that specifies commands to execute.
+#   The commands in this file are run directly via bash -c from the repository root.
+#   Only commit verify.config.json from trusted sources. Treat it as executable code.
+#   Malicious entries could execute arbitrary shell commands with user privileges.
+#
 # Usage:
 #   ./system/scripts/verify.sh fast
 #   ./system/scripts/verify.sh full

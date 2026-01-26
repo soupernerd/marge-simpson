@@ -98,6 +98,8 @@ EXCEPTION: Mechanical changes (rename, format, import) across 3+ files may conti
 | Deployment | DevOps + Documentation | `devops.md` |
 | Research | 2+ domain experts | `./system/experts/_index.md` |
 
+> **📋 Full list:** See [`./system/experts/_index.md`](./system/experts/_index.md) for all available experts and their capabilities.
+
 **Rules:**
 - Parallel subagents when tasks are independent
 - Direct tools (no expert) only for: reading, running commands, single-line Lite fixes

@@ -381,6 +381,8 @@ Custom test commands in `verify.config.json`:
 
 No config? Scripts auto-detect Node, Python, Go, Rust, .NET, Java.
 
+> **📁 Path Note:** Marge's `verify.config.json` uses paths relative to the **parent directory** (repo root), not the Marge folder itself. This is intentional — `verify.ps1`/`verify.sh` execute from the parent directory. If you rename the `marge-simpson` folder, update the paths in `verify.config.json` to match.
+
 ---
 
 ## For Contributors

@@ -51,9 +51,21 @@ if [[ ! -f "$REPO_ROOT/AGENTS.md" ]]; then
     exit 1
 fi
 
+# MS-0005: Reject symlinked INSTALL_DIR to prevent symlink attacks
+if [[ -L "$INSTALL_DIR" ]]; then
+    echo "Error: $INSTALL_DIR is a symlink. Refusing to proceed for security." >&2
+    echo "Remove the symlink manually if you want to install here." >&2
+    exit 1
+fi
+
 if [[ -d "$INSTALL_DIR" ]]; then
     if [[ "$FORCE" -ne 1 ]]; then
         echo "Error: $INSTALL_DIR already exists. Use --force to overwrite." >&2
+        exit 1
+    fi
+    # MS-0005: Check again after --force in case it became a symlink
+    if [[ -L "$INSTALL_DIR" ]]; then
+        echo "Error: $INSTALL_DIR is a symlink. Refusing to rm -rf for security." >&2
         exit 1
     fi
     echo "Removing existing installation..."

@@ -80,6 +80,16 @@ $script:AUTO_COMMIT = $true
 $script:ENGINE = "claude"
 $script:MARGE_FOLDER = if ($env:MARGE_FOLDER) { $env:MARGE_FOLDER } else { ".marge" }
 $script:PRD_FILE = "tracking/PRD.md"
+
+# Security: Validate MARGE_FOLDER from environment to prevent path traversal
+# This runs early, before any file operations. The -Folder flag has its own validation.
+if ($script:MARGE_FOLDER -match '\.\.' -or
+    $script:MARGE_FOLDER -match '^[/\\]' -or
+    $script:MARGE_FOLDER -match '^[A-Za-z]:') {
+    Write-Host "[ERROR] MARGE_FOLDER contains invalid path traversal or absolute path: $($script:MARGE_FOLDER)" -ForegroundColor Red
+    Write-Host "MARGE_FOLDER must be a relative path within the project (e.g., '.marge')" -ForegroundColor Red
+    exit 1
+}
 # Note: CONFIG_FILE intentionally reads from .marge/ (bootstrap config that can redirect to other folders)
 $script:CONFIG_FILE = ".marge\config.yaml"
 # Note: PROGRESS_FILE is set after arg parsing to respect --folder (see MS-0008 fix below)

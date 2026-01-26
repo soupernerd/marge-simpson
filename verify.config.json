@@ -1,4 +1,5 @@
 {
+  "_security_warning": "TRUSTED CODE: Commands in this file are executed directly by verify.ps1/verify.sh. Treat this file as executable. Only accept changes from trusted sources.",
   "fast": [
     ".\\marge-simpson\\system\\scripts\\test-syntax.ps1",
     ".\\marge-simpson\\system\\scripts\\test-general.ps1",
