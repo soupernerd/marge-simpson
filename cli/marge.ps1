@@ -102,7 +102,7 @@ $script:RETRY_DELAY = if ($env:RETRY_DELAY) { [int]$env:RETRY_DELAY } else { 5 }
 $script:AUTO_COMMIT = $true
 $script:ENGINE = "claude"
 $script:MARGE_FOLDER = if ($env:MARGE_FOLDER) { $env:MARGE_FOLDER } else { ".marge" }
-$script:PRD_FILE = "tracking/PRD.md"
+$script:PRD_FILE = "system/tracking/PRD.md"  # MS-0026: Fixed path
 
 # Security: Validate MARGE_FOLDER from environment to prevent path traversal
 # This runs early, before any file operations. The -Folder flag has its own validation.

@@ -55,7 +55,7 @@ BRANCH_PER_TASK=false
 CREATE_PR=false
 PARALLEL=false
 MAX_PARALLEL=${MAX_PARALLEL:-3}
-PRD_FILE="tracking/PRD.md"
+PRD_FILE="system/tracking/PRD.md"  # MS-0026: Fixed path
 MARGE_FOLDER="${MARGE_FOLDER:-.marge}"
 
 # Security: Validate MARGE_FOLDER from environment to prevent path traversal
