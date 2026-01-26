@@ -4,6 +4,13 @@
 
 ---
 
+## Usage Modes (Critical) (Hard)
+
+- **IDE Chat:** `prompts/` + `system/tracking/` — no `.marge/`
+- **CLI:** `marge` commands — `.marge/` optional
+
+---
+
 ## Scope (Critical) (Hard)
 
 This folder is tooling, not the target. Work happens OUTSIDE this folder.
