@@ -17,15 +17,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - H6: Tracking sync checkbox mandatory in every response
 - **Non-Negotiable Rules section** - 5 NEVER/ALWAYS rules in AGENTS.md
 - **Lite Mode Limits** - AGENTS-lite.md now recommends full AGENTS.md when thresholds exceeded
+- **Expert Citation format** - AGENTS.md requires `📚 Expert: [file]` citation proving expert was loaded
+- **Violation Recovery protocol** - STOP→DECLARE→RECOVER→LOG flow when rules broken
+- **Architectural definition** - Concrete 5-item checklist defining what needs approval
+- **Security test suite** - Test Suite 8/8 with input validation tests (MS-0028)
 
 ### Changed
 - **work.md** - Added One ID = One Concept gate and Tracking Sync mandatory footer
 - **session_end.md** - Removed soft language, trimmed verbose entry format templates
 - **loop.md** - Simplified min/max parsing section from 15 lines to 3
 - **_index.md** - Now references AGENTS.md as primary routing source
+- **Routing table simplified** - 10 intents reduced to 4 (Ask/Do/Audit/Plan)
 
 ### Fixed
 - **Tracking compliance gap** - System now blocks edits without proper tracking setup
+
+### Security
+- **MS-0001** - Removed eval command injection in bash CLI
+- **MS-0002/MS-0020** - Replaced cmd.exe wrapper with ProcessStartInfo (no shell)
+- **MS-0023/MS-0031** - MODEL and --model validated against `^[a-zA-Z0-9._/-]+$`
+- **MS-0024** - MARGE_HOME validated (rejects `..` and shell metacharacters)
+- **MS-0030** - Bash uses array expansion instead of word-splitting
+- **MS-0005/MS-0021** - Symlink checks before rm -rf in install scripts
 
 ---
 
@@ -217,7 +230,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `.meta_marge/` - Self-development working copy (gitignored)
 - Changes flow: `marge_simpson/` → `.meta_marge/` → validate → back to `marge_simpson/`
 
-[Unreleased]: https://github.com/Soupernerd/marge-simpson/compare/v1.3.1...HEAD
+[Unreleased]: https://github.com/Soupernerd/marge-simpson/compare/v1.3.2...HEAD
+[1.3.2]: https://github.com/Soupernerd/marge-simpson/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/Soupernerd/marge-simpson/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/Soupernerd/marge-simpson/compare/v1.2.2...v1.3.0
 [1.2.2]: https://github.com/Soupernerd/marge-simpson/compare/v1.2.1...v1.2.2
