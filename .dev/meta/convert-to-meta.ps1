@@ -104,8 +104,8 @@ Get-ChildItem -Path $TargetFolder -Recurse -File -Force | ForEach-Object {
         $original = $content
         
         # Transform AGENTS.md references in prompts
-        # "Read the AGENTS.md file in this folder" -> "Read .meta_marge/AGENTS.md"
-        $content = $content -replace 'Read the AGENTS\.md file in this folder[^.]*\.', 'Read .meta_marge/AGENTS.md and follow it.'
+        # "Read the AGENTS.md file in the marge-simpson folder" -> "Read the AGENTS.md file in the .meta_marge folder"
+        $content = $content -replace 'Read the AGENTS\.md file in the marge-simpson folder', 'Read the AGENTS.md file in the .meta_marge folder'
         
         # Transform relative paths to explicit .meta_marge/ paths
         # ./system/tracking/ -> .meta_marge/system/tracking/
