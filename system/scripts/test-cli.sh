@@ -376,6 +376,35 @@ rm -rf "$TEMP_TEST_DIR"
 # Test Suite 7: Edge Cases and Error Handling
 write_section "Test Suite 7/7: Edge Cases and Error Handling"
 
+# MS-0025: Exit code validation
+result="false"
+if "$MS_DIR/cli/marge" --version >/dev/null 2>&1; then
+    result="true"
+fi
+test_assert "marge (bash) --version exits with code 0" "$result" || true
+
+result="false"
+if "$MS_DIR/cli/marge" --help >/dev/null 2>&1; then
+    result="true"
+fi
+test_assert "marge (bash) --help exits with code 0" "$result" || true
+
+result="false"
+cd "$MS_DIR" || exit 1
+if "$MS_DIR/cli/marge" status >/dev/null 2>&1; then
+    result="true"
+fi
+cd "$original_dir" || exit 1
+test_assert "marge (bash) status exits with code 0" "$result" || true
+
+result="false"
+cd "$MS_DIR" || exit 1
+if "$MS_DIR/cli/marge" doctor >/dev/null 2>&1; then
+    result="true"
+fi
+cd "$original_dir" || exit 1
+test_assert "marge (bash) doctor exits with code 0" "$result" || true
+
 # Test: marge.ps1 rejects invalid engine name
 result="false"
 content=$(cat "$MS_DIR/cli/marge.ps1")

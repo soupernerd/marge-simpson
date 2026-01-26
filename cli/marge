@@ -10,12 +10,36 @@ set -eo pipefail
 # ============================================
 
 MARGE_HOME="${MARGE_HOME:-$HOME/.marge}"
+
+# Security: Validate MARGE_HOME to prevent path traversal and shell injection
+# MARGE_HOME can be absolute, but must not contain .. or dangerous characters
+if [[ -n "$MARGE_HOME" ]]; then
+    if [[ "$MARGE_HOME" =~ \.\. ]]; then
+        echo "[ERROR] MARGE_HOME contains path traversal (..): $MARGE_HOME" >&2
+        exit 1
+    fi
+    # Disallow shell metacharacters: $ ` \ (in middle of path) | ; & < > ( ) { } [ ] ! # ~ ?
+    if [[ "$MARGE_HOME" =~ [\$\`\|\;\&\<\>\(\)\{\}\[\]\!\#\~\?] ]]; then
+        echo "[ERROR] MARGE_HOME contains dangerous characters: $MARGE_HOME" >&2
+        exit 1
+    fi
+fi
+
 VERSION=$(cat "$(dirname "${BASH_SOURCE[0]}")/../VERSION" 2>/dev/null || echo "0.0.0")
 
 # Defaults
 DRY_RUN=false
 VERBOSE=false
 MODEL=""
+
+# Security: Validate MODEL from environment to prevent shell injection
+# Only allow alphanumeric, dots, underscores, hyphens, and forward slashes
+if [[ -n "${MODEL:-}" ]] && [[ ! "$MODEL" =~ ^[a-zA-Z0-9._/-]+$ ]]; then
+    echo "[ERROR] MODEL contains invalid characters: $MODEL" >&2
+    echo "MODEL must match pattern: ^[a-zA-Z0-9._/-]+$" >&2
+    exit 1
+fi
+
 # FAST mode: Passed to AI context to skip verification steps (verify.ps1/verify.sh)
 FAST=false
 LOOP=false

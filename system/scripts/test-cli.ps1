@@ -384,6 +384,27 @@ finally {
 # Test Suite 7: Edge Cases and Error Handling
 Write-Section "Test Suite 7/7: Edge Cases and Error Handling"
 
+# MS-0025: Exit code validation
+Test-Assert "marge.ps1 -Version exits with code 0" {
+    & "$MsDir\cli\marge.ps1" @("-Version") 2>&1 | Out-Null
+    $LASTEXITCODE -eq 0
+}
+
+Test-Assert "marge.ps1 -Help exits with code 0" {
+    & "$MsDir\cli\marge.ps1" @("-Help") 2>&1 | Out-Null
+    $LASTEXITCODE -eq 0
+}
+
+Test-Assert "marge.ps1 status exits with code 0" {
+    & "$MsDir\cli\marge.ps1" @("status") 2>&1 | Out-Null
+    $LASTEXITCODE -eq 0
+}
+
+Test-Assert "marge.ps1 doctor exits with code 0" {
+    & "$MsDir\cli\marge.ps1" @("doctor") 2>&1 | Out-Null
+    $LASTEXITCODE -eq 0
+}
+
 Test-Assert "marge.ps1 rejects invalid engine name" {
     $content = Get-Content "$MsDir\cli\marge.ps1" -Raw
     # Check that CLI validates engine parameter and has error handling for invalid engines

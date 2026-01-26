@@ -59,6 +59,20 @@ $versionFile = Get-Content "$PSScriptRoot/../VERSION" -First 1 -ErrorAction Sile
 $script:VERSION = if ($versionFile) { $versionFile.Trim() } else { "0.0.0" }
 $script:MARGE_HOME = if ($env:MARGE_HOME) { $env:MARGE_HOME } else { "$env:USERPROFILE\.marge" }
 
+# Security: Validate MARGE_HOME to prevent path traversal and dangerous characters
+# MARGE_HOME can be absolute, but must not contain .. or shell metacharacters
+if ($script:MARGE_HOME) {
+    if ($script:MARGE_HOME -match '\.\.') {
+        Write-Host "[ERROR] MARGE_HOME contains path traversal (..): $($script:MARGE_HOME)" -ForegroundColor Red
+        exit 1
+    }
+    # Disallow dangerous characters: $ ` | ; & < > ( ) { } [ ] ! # ~ ?
+    if ($script:MARGE_HOME -match '[\$`|;&<>(){}\[\]!#~?]') {
+        Write-Host "[ERROR] MARGE_HOME contains dangerous characters: $($script:MARGE_HOME)" -ForegroundColor Red
+        exit 1
+    }
+}
+
 # Fallback pricing (Claude Sonnet) - used when model_pricing.json unavailable
 $script:DEFAULT_INPUT_RATE = 3.00   # $/1M input tokens
 $script:DEFAULT_OUTPUT_RATE = 15.00 # $/1M output tokens
@@ -67,6 +81,15 @@ $script:DEFAULT_OUTPUT_RATE = 15.00 # $/1M output tokens
 $script:DRY_RUN = $false
 $script:VERBOSE_OUTPUT = $false
 $script:MODEL = ""
+
+# Security: Validate MODEL from environment to prevent injection attacks
+# Only allow alphanumeric, dots, underscores, hyphens, and forward slashes
+if ($env:MODEL -and $env:MODEL -notmatch '^[a-zA-Z0-9._/-]+$') {
+    Write-Host "[ERROR] MODEL contains invalid characters: $($env:MODEL)" -ForegroundColor Red
+    Write-Host "MODEL must match pattern: ^[a-zA-Z0-9._/-]+$" -ForegroundColor Red
+    exit 1
+}
+
 # FAST mode: Passed to AI context to skip verification steps (verify.ps1/verify.sh)
 $script:FAST = $false
 $script:LOOP = $false
