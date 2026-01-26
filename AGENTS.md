@@ -67,8 +67,11 @@ This folder is tooling, not the target. Work happens OUTSIDE this folder.
 | File | Purpose |
 |------|---------|
 | `./system/tracking/assessment.md` | Findings + evidence |
-| `./system/tracking/tasklist.md` | Work queue |
+| `./system/tracking/tasklist.md` | Work queue || `./system/tracking/feature_plan_template.md` | Template for feature plans |
 
+**When to use what:**
+- Simple bug/fix/task: `assessment.md` + `tasklist.md` only
+- New feature (multi-step): Copy `feature_plan_template.md` → `[feature]_PLAN.md` + tracking files
 **Workflow:** IMPLEMENT → VERIFY → RECORD → COMPLETE
 
 **Verify command:**
@@ -86,7 +89,11 @@ This folder is tooling, not the target. Work happens OUTSIDE this folder.
 | Question only | Answer directly, no workflow |
 | Work request | Load `./system/workflows/work.md`, assign MS-#### |
 | Audit request | Load `./system/workflows/audit.md` |
-| Planning request | Load `./system/workflows/planning.md` — NO code |
+| Planning request | Load `./system/workflows/planning.md` |
+| Review request | Load `./system/workflows/audit.md` (analysis mode) |
+| Document request | Load `./system/workflows/work.md` (docs are work) |
+| Decision capture | Load `./system/workflows/session_end.md` |
+| Session start/resume | Load `./system/workflows/session_start.md` |
 | Loop/continuation | Load `./system/workflows/loop.md` |
 
 **Mixed intent:** Answer questions inline, then process each work item (separate MS-####).

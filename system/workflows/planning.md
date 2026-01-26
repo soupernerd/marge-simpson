@@ -1,6 +1,6 @@
 # Planning Workflow
 
-> For design discussions, architecture proposals, and strategic planning without code changes.
+> For design discussions, architecture proposals, and strategic planning. Creates plan documents, not implementation code.
 
 ## Activation Triggers
 
@@ -21,10 +21,15 @@ Bring in relevant experts for planning discussions:
 - Security considerations → `./system/experts/security.md`
 - UX/Design planning → `./system/experts/design.md`
 
-### No Code Changes
-- **DO NOT** modify any files
-- **DO NOT** run verification scripts
-- **DO NOT** create MS-#### work items
+### No Implementation Code
+- **DO NOT** modify source code, configs, or scripts
+- **DO NOT** run verification scripts  
+- **DO NOT** begin implementation work
+
+**DO create:**
+- Plan documents using `feature_plan_template.md` → save to `./system/tracking/[feature]_PLAN.md`
+- MS-#### ID for the plan itself (plan tracking, not implementation tasks)
+- Entry in `assessment.md` with Status: Planning
 
 ### Focus On
 - Analysis and exploration
@@ -35,6 +40,10 @@ Bring in relevant experts for planning discussions:
 - Alternative approaches
 
 ## Planning Response Format
+
+**Feature planning:** Use the template `./system/tracking/feature_plan_template.md`
+
+**Quick brainstorming:** Use inline format:
 
 ```
 ## Planning: [Topic]
@@ -93,21 +102,21 @@ Before these changes, stop and request approval:
 
 When planning is approved and user says "proceed" or "implement":
 
-1. Create MS-#### work items in ./system/tracking/tasklist.md
-2. Switch to `./system/workflows/work.md` process
-3. Reference the planning discussion in work items
+1. Update plan's MS-#### status to "Approved" in assessment.md
+2. Create implementation tasks (sub-IDs) in tasklist.md
+3. Switch to `./system/workflows/work.md` process
 
 ## Examples
 
 ### Planning Request
 User: "What would it take to add multi-tenant support?"
 
-Response: Full planning analysis, no code changes, no work IDs.
+Response: Create MS-####, write plan using template, full analysis. No implementation.
 
 ### Planning to Work Transition
 User: "The plan looks good, proceed with Option B"
 
-Response: Create MS-#### items, begin implementation following work.md.
+Response: Update MS-#### status, create implementation tasks, begin work.md.
 
 ## Token Cost
 

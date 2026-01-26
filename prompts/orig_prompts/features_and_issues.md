@@ -1,4 +1,4 @@
-Read the AGENTS.md file in this folder and follow it.
+Read the AGENTS.md file in the marge-simpson folder and follow it.
 
 New Feature / Issues:
 - Example Feature: "Lets add a drop down next to search that allows for.."

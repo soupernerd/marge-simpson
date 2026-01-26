@@ -106,6 +106,8 @@ Get-ChildItem -Path $TargetFolder -Recurse -File -Force | ForEach-Object {
         # Transform AGENTS.md references in prompts
         # "Read the AGENTS.md file in the marge-simpson folder" -> "Read the AGENTS.md file in the .meta_marge folder"
         $content = $content -replace 'Read the AGENTS\.md file in the marge-simpson folder', 'Read the AGENTS.md file in the .meta_marge folder'
+        # Also handle "this folder" pattern used in orig_prompts
+        $content = $content -replace 'Read the AGENTS\.md file in this folder', 'Read the AGENTS.md file in the .meta_marge folder'
         
         # Transform relative paths to explicit .meta_marge/ paths
         # ./system/tracking/ -> .meta_marge/system/tracking/
@@ -186,10 +188,12 @@ $AgentsPath = Join-Path $TargetFolder "AGENTS.md"
 $agentsContent = Get-Content -Path $AgentsPath -Raw
 
 $newScope = @"
-**Scope (CRITICAL):**
-1. This folder (``.meta_marge/``) is the **control plane** for improving ``$SourceName/``.
-2. Audit ``$SourceName/`` (the target). Track findings HERE in ``.meta_marge/system/tracking/``.
-3. Never create ``.meta_marge`` files outside this folder.
+## Scope (Critical) (Hard)
+
+**This is the control plane for improving ``$SourceName/``.**
+- **Track findings** → ``.meta_marge/system/tracking/``
+- **Make changes** → ``$SourceName/`` (the target, NOT .meta_marge/)
+- **Never** create ``.meta_marge`` files outside this folder
 
 **Meta-Development Workflow:**
 ``````
@@ -198,11 +202,10 @@ $newScope = @"
   Verify using: $SourceName/system/scripts/verify.ps1 fast
   When done: run convert-to-meta again to reset
 ``````
-
-**IMPORTANT:** ``.meta_marge/`` is the control plane, NOT a sandbox.
 "@
 
-$agentsContent = $agentsContent -replace '\*\*Scope \(CRITICAL\):\*\*\r?\n1\.[^\r\n]+\r?\n2\.[^\r\n]+\r?\n3\.[^\r\n]+', $newScope
+# Match the actual AGENTS.md format: ## Scope (Critical) (Hard) followed by content until next ##
+$agentsContent = $agentsContent -replace '(?s)## Scope \(Critical\) \(Hard\).*?(?=\r?\n---)', $newScope
 Set-Content -Path $AgentsPath -Value $agentsContent -NoNewline
 Write-Host "  Reset assessment.md, tasklist.md, AGENTS.md"
 
