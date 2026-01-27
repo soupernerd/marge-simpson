@@ -93,8 +93,8 @@ while IFS= read -r -d '' file; do
     original="$content"
     
     # Transform AGENTS.md references in prompts
-    # "Read the AGENTS.md file in the marge-simpson folder" -> "Read the AGENTS.md file in the .meta_marge folder"
-    content=${content//"Read the AGENTS.md file in the marge-simpson folder"/"Read the AGENTS.md file in the .meta_marge folder"}
+    # "Read marge-simpson/AGENTS.md" -> "Read .meta_marge/AGENTS.md"
+    content=${content//"Read marge-simpson/AGENTS.md"/"Read .meta_marge/AGENTS.md"}
     
     # Transform ONLY tracking and workflow paths to .meta_marge/
     # BUT keep experts and knowledge pointing to source (AI uses source references)
@@ -134,11 +134,9 @@ AGENTS_PATH="$TARGET_FOLDER/AGENTS.md"
 # Create the new scope content
 NEW_SCOPE="## Scope
 
-**Meta-development mode.** This folder controls improvements to \`$SOURCE_NAME/\`.
-
+\`.meta_marge/\` is tooling, not the target. It exists to work on/improve marge itself. Work/auditing happens OUTSIDE this folder.
 - **Track findings** → \`.meta_marge/system/tracking/\`
-- **Make changes** → \`$SOURCE_NAME/\` (the target, NOT .meta_marge/)
-- **Never** create \`.meta_marge\` files outside this folder
+- **Never** create files from this folder elsewhere
 
 **Workflow:**
 \`\`\`
@@ -164,7 +162,39 @@ awk -v new_scope="$NEW_SCOPE" '
     { print }
 ' "$AGENTS_PATH" > "${AGENTS_PATH}.tmp" && mv "${AGENTS_PATH}.tmp" "$AGENTS_PATH"
 
-echo "  Reset tracking IDs, configured AGENTS.md scope"
+# Replace Knowledge Capture section - templates shouldn't be populated with meta-dev learnings
+NEW_KNOWLEDGE="## Knowledge Capture
+
+**SKIP in meta-development mode.** The \`${SOURCE_NAME}/system/knowledge/\` files are templates that ship to users. Do not populate them with meta-development learnings."
+
+awk -v new_section="$NEW_KNOWLEDGE" '
+    /^## Knowledge Capture$/ { 
+        print new_section
+        while ((getline line) > 0) {
+            if (line ~ /^---/) { print ""; break }
+        }
+        next
+    }
+    { print }
+' "$AGENTS_PATH" > "${AGENTS_PATH}.tmp" && mv "${AGENTS_PATH}.tmp" "$AGENTS_PATH"
+
+# Replace Decay Check section - decay is for user knowledge bases, not templates
+NEW_DECAY="## Decay Check
+
+**SKIP in meta-development mode.** Decay check is for user knowledge bases, not template files."
+
+awk -v new_section="$NEW_DECAY" '
+    /^## Decay Check$/ { 
+        print new_section
+        while ((getline line) > 0) {
+            if (line ~ /^---/) { print ""; break }
+        }
+        next
+    }
+    { print }
+' "$AGENTS_PATH" > "${AGENTS_PATH}.tmp" && mv "${AGENTS_PATH}.tmp" "$AGENTS_PATH"
+
+echo "  Reset tracking IDs, configured AGENTS.md scope, disabled knowledge/decay for meta"
 
 # Copy ONLY verify scripts to meta_marge (so it can use its own verify.config.json)
 # The test-templates scripts live in marge-simpson/system/scripts/ - we create trigger wrappers in .meta_marge root

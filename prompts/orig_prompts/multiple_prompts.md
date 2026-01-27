@@ -1,4 +1,4 @@
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)

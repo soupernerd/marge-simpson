@@ -13,7 +13,7 @@ Copy everything below the line:
 ---
 
 ```
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 ## DEEP SYSTEM AUDIT — Loop until clean (min 2, max 5)
 

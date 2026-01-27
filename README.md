@@ -78,7 +78,7 @@ Add a loop phrase to any prompt and Marge will keep iterating until work is comp
 *Use first, or periodically to refresh the plan.*
 
 ```
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 Run a system-wide audit of this workspace/repo (read-only).
 - Read and understand the architecture and major workflows.
@@ -100,7 +100,7 @@ Output using the Response Format (include IDs created).
 *Report bugs or request features. Each becomes tracked work.*
 
 ```
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 New Feature / Issues:
 - Example Feature: "Lets add a drop down next to search that allows for.."
@@ -118,7 +118,7 @@ Output using the Response Format (include IDs created).
 *Give direct instructions without needing a feature/issue format.*
 
 ```
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 Instruction:
 - (your instruction here)
@@ -135,7 +135,7 @@ Output using the Response Format (include IDs created).
 *Ask questions or confirm fixes. Quick answers grounded in code.*
 
 ```
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)
@@ -189,7 +189,7 @@ Minimize follow-up questions. If info is missing, make reasonable assumptions an
 *Mix questions and issues in one prompt for efficiency.*
 
 ```
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 Questions / Confirmations:
 1. (Question/confirmation here)
@@ -389,7 +389,7 @@ Want to improve Marge itself? See [.dev/README.md](./.dev/README.md) for the met
 
 Quick version:
 1. Run `./.dev/meta/convert-to-meta.sh` (or `.ps1`) to create `.meta_marge/`
-2. Use prompts with "Read the AGENTS.md file in the .meta_marge folder"
+2. Use prompts with "Read .meta_marge/AGENTS.md"
 3. AI makes improvements directly to `marge-simpson/` (guided by `.meta_marge/AGENTS.md`)
 4. Test with `marge-simpson/system/scripts/test-marge.sh` (or `.ps1`)
 

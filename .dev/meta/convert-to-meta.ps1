@@ -117,8 +117,8 @@ Get-ChildItem -Path $TargetFolder -Recurse -File -Force | ForEach-Object {
         $original = $content
         
         # Transform AGENTS.md references in prompts
-        # "Read the AGENTS.md file in the marge-simpson folder" -> "Read the AGENTS.md file in the .meta_marge folder"
-        $content = $content -replace 'Read the AGENTS\.md file in the marge-simpson folder', 'Read the AGENTS.md file in the .meta_marge folder'
+        # "Read marge-simpson/AGENTS.md" -> "Read .meta_marge/AGENTS.md"
+        $content = $content -replace 'Read marge-simpson/AGENTS\.md', 'Read .meta_marge/AGENTS.md'
         
         # Transform ONLY tracking and workflow paths to .meta_marge/
         # marge-simpson/system/tracking/ -> .meta_marge/system/tracking/ (meta work is tracked here)
@@ -166,11 +166,9 @@ $agentsContent = Get-Content -Path $AgentsPath -Raw
 $newScope = @"
 ## Scope
 
-**Meta-development mode.** This folder controls improvements to ``$SourceName/``.
-
+``.meta_marge/`` is tooling, not the target. It exists to work on/improve marge itself. Work/auditing happens OUTSIDE this folder.
 - **Track findings** → ``.meta_marge/system/tracking/``
-- **Make changes** → ``$SourceName/`` (the target, NOT .meta_marge/)
-- **Never** create ``.meta_marge`` files outside this folder
+- **Never** create files from this folder elsewhere
 
 **Workflow:**
 ``````
@@ -183,8 +181,25 @@ Reset: run convert-to-meta again
 
 # Match "## Scope" followed by content until next "---"
 $agentsContent = $agentsContent -replace '(?s)## Scope\r?\n.*?(?=\r?\n---)', $newScope
+
+# Replace Knowledge Capture section - templates shouldn't be populated with meta-dev learnings
+$newKnowledge = @"
+## Knowledge Capture
+
+**SKIP in meta-development mode.** The ``$SourceName/system/knowledge/`` files are templates that ship to users. Do not populate them with meta-development learnings.
+"@
+$agentsContent = $agentsContent -replace '(?s)## Knowledge Capture\r?\n.*?(?=\r?\n---)', $newKnowledge
+
+# Replace Decay Check section - decay is for user knowledge bases, not templates
+$newDecay = @"
+## Decay Check
+
+**SKIP in meta-development mode.** Decay check is for user knowledge bases, not template files.
+"@
+$agentsContent = $agentsContent -replace '(?s)## Decay Check\r?\n.*?(?=\r?\n---)', $newDecay
+
 Set-Content -Path $AgentsPath -Value $agentsContent -NoNewline
-Write-Host "  Reset tracking IDs, configured AGENTS.md scope"
+Write-Host "  Reset tracking IDs, configured AGENTS.md scope, disabled knowledge/decay for meta"
 
 # Copy ONLY verify scripts to meta_marge (so it can use its own verify.config.json)
 # The test-templates scripts live in marge-simpson/system/scripts/ - we create trigger wrappers in .meta_marge root

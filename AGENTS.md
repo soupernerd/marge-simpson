@@ -32,7 +32,7 @@
 
 ## Scope
 
-This folder is tooling, not the target. Work happens OUTSIDE this folder.
+marge-simpson/ is tooling, not the target. Work/auditing happens OUTSIDE this folder. UNLESS .meta_marge exists and marge is being worked on.
 - **Track findings** → `marge-simpson/system/tracking/`
 - **Never** create files from this folder elsewhere
 

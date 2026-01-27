@@ -1,6 +1,6 @@
 # Feature Proposal Prompt
 
-Read the AGENTS.md file in the marge-simpson folder and follow it.
+Read marge-simpson/AGENTS.md and follow it.
 
 **MODE:** PLANNING ONLY — no code changes, no patches, no execution.
 
