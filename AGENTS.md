@@ -19,11 +19,11 @@
 **Before ANY file edit, output:**
 
 ```
-+---------------------------------------+
-| MODE: [Lite | Full]                   |
-| ID: [MS-#### | N/A]                   |
-| REASON: [one sentence]                |
-+---------------------------------------+
++---------------------------------------------+
+| MODE: [Lite | Full]                         |
+| ID: [MS-#### | N/A]                         |
+| REASON: [one sentence]                      |
++---------------------------------------------+
 ```
 
 **Missing block before edit = VIOLATION.**
