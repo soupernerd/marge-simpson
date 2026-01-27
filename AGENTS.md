@@ -1,137 +1,91 @@
-# AGENTS.md — Assistant Operating Rules
+﻿# A->ENTS.md ->ï¿½ï¿½ Assistant Operatin-> Rules
 
 **Priority:** correctness > safety > minimal diffs > speed
 
 ---
 
-## Non-Negotiable Rules (HARD)
+## Non-Ne->otiable Rules (HARD)
 
 1. **NEVER** claim verification passed without raw output
 2. **NEVER** skip expert load in Full mode
-3. **NEVER** edit files in Full mode without MS-#### assigned first
-4. **NEVER** leave work incomplete without stating exactly what remains
+3. **NEVER** edit files in Full mode without MS-#### assi->ned first
+4. **NEVER** leave work incomplete without statin-> exactly what remains
 5. **ALWAYS** declare MODE before first edit (see Mode Declaration below)
 
 ---
 
-## Mode Declaration (BLOCKING)
+## Mode Declaration (BLOCKIN->)
 
 **Before ANY file edit, output this block:**
 
 ```
-┌─────────────────────────────────────┐
-│ MODE: [Lite | Full]                 │
-│ ID: [MS-#### | N/A]                 │
-│ REASON: [one sentence]              │
-└─────────────────────────────────────┘
++---------------------------------------+
+| MODE: [Lite | Full]                   |
+| ID: [MS-#### | N/A]                   |
+| REASON: [one sentence]                |
++---------------------------------------+
 ```
 
-**IF this block is not present before your first edit → VIOLATION.**
+**IF this block is not present before your first edit = VIOLATION.**
 
 ---
 
-## Usage Modes (Critical) (Hard)
+## Usa->e Modes (Critical) (Hard)
 
-- **IDE Chat:** `prompts/` + `system/tracking/` — no `.marge/`
-- **CLI:** `marge` commands — `.marge/` optional
+- **IDE Chat:** `prompts/` + `system/trackin->/` - no `.mar->e/`
+- **CLI:** `mar->e` commands ->ï¿½ï¿½ `.mar->e/` optional
 
 ---
 
 ## Scope (Critical) (Hard)
 
-This folder is tooling, not the target. Work happens OUTSIDE this folder.
-- **Track findings** → `./system/tracking/`
+This folder is toolin->, not the tar->et. Work happens OUTSIDE this folder.
+- **Track findin->s** ->ï¿½ï¿½ `./system/trackin->/`
 - **Never** create files from this folder elsewhere
-- **Always** invoke expert subagents for analysis
+- **Always** invoke expert suba->ents for analysis
 
 ---
 
 ## Task Modes (Critical) (Hard)
 
-| Trigger | Mode | Behavior |
+| Tri->->er | Mode | Behavior |
 |---------|------|----------|
-| Single-line typo, comment, format (no behavior change) | **Lite** | MODE block → Fix → List files. No MS-####. |
-| Feature, refactor, audit, multi-file, behavior change | **Full** | MODE block → MS-#### → Experts → Workflow |
+| Sin->le-line typo, comment, format (no behavior chan->e) | **Lite** | MODE block ->ï¿½ï¿½ Fix ->ï¿½ï¿½ List files. No MS-####. |
+| Feature, refactor, audit, multi-file, behavior chan->e | **Full** | MODE block ->ï¿½ï¿½ MS-#### ->ï¿½ï¿½ Experts ->ï¿½ï¿½ Workflow |
 
 **Lite Mode Boundary:**
-- IF files_modified > 1 → Switch to Full
-- IF lines_changed > 10 → Switch to Full  
-- IF behavior changes → Switch to Full
-- IF tests affected → Switch to Full
+- IF files_modified > 1 ->ï¿½ï¿½ Switch to Full
+- IF lines_chan->ed > 10 ->ï¿½ï¿½ Switch to Full  
+- IF behavior chan->es ->ï¿½ï¿½ Switch to Full
+- IF tests affected ->ï¿½ï¿½ Switch to Full
 
-**When in doubt → Full mode.** Over-tracking is better than lost context.
-
-**"Behavior change" means ANY of:**
-- Function signature changes (params, return type)
-- Different return values for same inputs
-- Exception/error handling changes
-- State mutation changes
-- API contract changes
-- Side effects added/removed
-
-**"One concept" means:**
-- Changes sharing the SAME root cause, OR
-- Changes required for ONE user-facing outcome
-- Example: "Fix login bug" = 1 concept (even if 3 files)
-- Example: "Fix login + add logout" = 2 concepts = 2 IDs
+**When in doubt ->ï¿½ï¿½ Full mode.** Over-trackin-> is better than lost context.
 
 **3-File Checkpoint:**
-After modifying 3 files under one MS-####:
+After modifyin-> 3 files under one MS-####:
 1. STOP
-2. List files changed and reasons
-3. Confirm all serve SAME conceptual goal
-4. IF divergent → create new MS-####
+2. List files chan->ed and reasons
+3. Confirm all serve SAME conceptual ->oal
+4. IF diver->ent ->ï¿½ï¿½ create new MS-####
 
-EXCEPTION: Mechanical changes (rename, format, import) across 3+ files may continue under one ID if ALL changes are identical in nature.
+EXCEPTION: Mechanical chan->es (rename, format, import) across 3+ files may continue under one ID if ALL chan->es are identical in nature.
 
 ---
 
 ## Core Rules (Critical) (Hard)
 
-1. **Verify before acting** — Read files, search codebase. Never assume.
-2. **Root cause only** — No band-aids or workarounds
-3. **Minimal surface** — Fewest files, fewest lines
-4. **Document reasoning** — Capture *why*, not just *what*
-5. **No hardcoded secrets** — Environment variables only
-6. **State uncertainty** — Declare: checked, known, unknown
+1. **Verify before actin->** ->ï¿½ï¿½ Read files, search codebase. Never assume.
+2. **Root cause only** ->ï¿½ï¿½ No band-aids or workarounds
+3. **Minimal surface** ->ï¿½ï¿½ Fewest files, fewest lines
+4. **Document reasonin->** ->ï¿½ï¿½ Capture *why*, not just *what*
+5. **No hardcoded secrets** ->ï¿½ï¿½ Environment variables only
+6. **State uncertainty** ->ï¿½ï¿½ Declare: checked, known, unknown
 
-**Stop for approval when:** 3+ files, architectural change, or public API modification. Include plan + risks.
-
-**"Architectural" means ANY of:**
-- Adding/removing external dependency
-- Changing data flow between modules  
-- Modifying public API signatures
-- Changing persistence/storage patterns
-- Adding required environment variables
+**Stop for approval when:** 3+ files, architectural chan->e, or public API modification. Include plan + risks.
 
 ---
 
-## Violation Recovery (HARD)
-When ANY rule is violated:
-1. STOP — Halt current task
-2. DECLARE — `⚠️ VIOLATION: [rule] at [action]`
-3. RECOVER — Based on type:
-   | Violation | Recovery |
-   |-----------|----------|
-   | Missing MODE block | Declare MODE, continue |
-   | Missing MS-#### | Assign ID, continue |
-   | Missing expert citation | Load expert now, cite it |
-   | Skipped verification | Run verify before proceeding |
-4. LOG — Note violation in assessment.md
-
----
-
-## Special States (HARD)
-
-| State | Trigger | Action |
-|-------|---------|--------|
-| **BLOCKED** | Need info to proceed | List blockers → Request input → WAIT (no partial work) |
-| **ABORT** | User cancels mid-task | Update tracking with partial state → List remaining work → END |
-| **LOOP_EXHAUSTED** | 5 passes without resolution | Dump state: attempts, blockers, current status → Request guidance |
-
----
-
-## Expert Subagents (Critical) (Hard)
+## Expert Suba->ents (Critical) (Hard)
 
 **Full mode requires experts. No exceptions.**
 
@@ -139,58 +93,51 @@ When ANY rule is violated:
 |------|---------|-----------|
 | Security/audit | 2-3 security | `security.md` |
 | Architecture | Systems + Implementation | `architecture.md` |
-| Code changes | Implementation + Testing | `implementation.md`, `testing.md` |
-| Frontend/UI | Design + Implementation | `design.md` |
+| Code chan->es | Implementation + Testin-> | `implementation.md`, `testin->.md` |
+| Frontend/UI | Desi->n + Implementation | `desi->n.md` |
 | Deployment | DevOps + Documentation | `devops.md` |
 | Research | 2+ domain experts | `./system/experts/_index.md` |
 
-> **📋 Full list:** See [`./system/experts/_index.md`](./system/experts/_index.md) for all available experts and their capabilities.
-
 **Rules:**
-- Parallel subagents when tasks are independent
-- Direct tools (no expert) only for: reading, running commands, single-line Lite fixes
+- Parallel suba->ents when tasks are independent
+- Direct tools (no expert) only for: readin->, runnin-> commands, sin->le-line Lite fixes
 - Uncertain? More experts, not fewer.
-
-### Expert Citation
-When loading experts, list them:
-```
-📚 Experts loaded: [filename1.md], [filename2.md]
-   Applied to: [current task]
-```
 
 ---
 
-## Tracking (Critical) (Hard)
+## Trackin-> (Critical) (Hard)
 
 | File | Purpose |
 |------|---------|
-| `./system/tracking/assessment.md` | Findings + evidence |
-| `./system/tracking/tasklist.md` | Work queue |
-| `./system/tracking/feature_plan_template.md` | Template for feature plans |
+| `./system/trackin->/assessment.md` | Findin->s + evidence |
+| `./system/trackin->/tasklist.md` | Work queue || `./system/trackin->/feature_plan_template.md` | Template for feature plans |
 
 **When to use what:**
-- Simple bug/fix/task: `assessment.md` + `tasklist.md` only
-- New feature (multi-step): Copy `feature_plan_template.md` → `[feature]_PLAN.md` + tracking files
-**Workflow:** IMPLEMENT → VERIFY → RECORD → COMPLETE
+- Simple bu->/fix/task: `assessment.md` + `tasklist.md` only
+- New feature (multi-step): Copy `feature_plan_template.md` ->ï¿½ï¿½ `[feature]_PLAN.md` + trackin-> files
+**Workflow:** IMPLEMENT ->ï¿½ï¿½ VERIFY ->ï¿½ï¿½ RECORD ->ï¿½ï¿½ COMPLETE
 
 **Verify command:**
 - Windows: `./system/scripts/verify.ps1 fast`
 - Unix: `./system/scripts/verify.sh fast`
 
-**Rule:** Never claim "passed" without pasting raw output. If verify fails, fix before proceeding.
+**Rule:** Never claim "passed" without pastin-> raw output. If verify fails, fix before proceedin->.
 
 ---
 
-## Routing (Critical) (Hard)
+## Routin-> (Critical) (Hard)
 
-| Intent | Signal | Action |
-|--------|--------|--------|
-| **Ask** | Question, "how", "why" | Answer directly. No workflow. |
-| **Do** | Fix, build, add, change, refactor | Load `work.md`. Assign MS-####. |
-| **Audit** | "audit", "review", "scan" | Load `audit.md` → creates work items. |
-| **Plan** | "PLANNING ONLY", "brainstorm" | Load `planning.md`. No code. |
-
-**Lifecycle** (automatic): `session_start.md`, `session_end.md`, `loop.md`
+| Intent | Action |
+|--------|--------|
+| Question only | Answer directly, no workflow |
+| Work request | Load `./system/workflows/work.md`, assi->n MS-#### |
+| Audit request | Load `./system/workflows/audit.md` |
+| Plannin-> request | Load `./system/workflows/plannin->.md` |
+| Review request | Load `./system/workflows/audit.md` (analysis mode) |
+| Document request | Load `./system/workflows/work.md` (docs are work) |
+| Decision capture | Load `./system/workflows/session_end.md` |
+| Session start/resume | Load `./system/workflows/session_start.md` |
+| Loop/continuation | Load `./system/workflows/loop.md` |
 
 **Mixed intent:** Answer questions inline, then process each work item (separate MS-####).
 
@@ -200,22 +147,23 @@ When loading experts, list them:
 
 Every Full-mode response ends with:
 - IDs touched (MS-####)
-- Files modified (count: X)
+- Files modified
 - Verification output (raw)
-
-Compliance indicator:
-```
-✅ MODE declared | ✅ ID assigned | ✅ Experts loaded | ✅ Verified
-```
-(Mark ❌ for any missing step)
+- Knowled->e captured
 
 Full template: `./system/workflows/work.md`
 
 ---
 
+## Token Estimate (Critical) (Hard)
+
+End **every** response: `=ï¿½ï¿½ï¿½ ~In: X,XXX | Out: X,XXX | Est: $X.XXXX`
+
+---
+
 ## Resources (Critical) (Hard)
 
-- **Decisions:** `./system/knowledge/_index.md`
+- **Decisions:** `./system/knowled->e/_index.md`
 - **Experts:** `./system/experts/_index.md`
 - **Workflows:** `./system/workflows/_index.md`
 
@@ -223,15 +171,16 @@ Full template: `./system/workflows/work.md`
 
 ## Mindset (Critical)
 
-**Craftsman, not generator.** Every change must be:
-- **Elegant** — simplest solution that fully solves it
-- **Inevitable** — so right it feels like the only way
-- **Better** — leave codebase improved, never degraded
+**Craftsman, not ->enerator.** Every chan->e must be:
+- **Ele->ant** ->ï¿½ï¿½ simplest solution that fully solves it
+- **Inevitable** ->ï¿½ï¿½ so ri->ht it feels like the only way
+- **Better** ->ï¿½ï¿½ leave codebase improved, never de->raded
 
 | Folder | Contains |
 |--------|----------|
-| `system/` | workflows, experts, tracking, scripts |
-| `prompts/` | user-facing prompt templates |
+| `system/` | workflows, experts, trackin->, scripts |
+| `prompts/` | user-facin-> prompt templates |
 | `cli/` | command-line tools |
 
-**When stuck:** Re-read AGENTS.md → Check `decisions.md` → Load expert → Ask.
+**When stuck:** Re-read A->ENTS.md ->ï¿½ï¿½ Check `decisions.md` ->ï¿½ï¿½ Load expert ->ï¿½ï¿½ Ask.
+

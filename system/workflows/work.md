@@ -112,7 +112,10 @@ Process is same for all. Labels are for humans.
 |-------|-------|
 | **IDs Touched** | MS-000X, MS-000Y |
 | **Files Modified** | `file1.ts`, `file2.ts` |
+| **File Counter** | [1] [2] [3] ← CHECKPOINT |
 | **Status** | ✓ VERIFIED |
+
+**3-File Counter Rule:** When counter reaches 3, STOP and confirm all files serve same concept before continuing.
 
 ### What Changed
 - (Bullet list)
