@@ -58,10 +58,10 @@ Scan the session and extract **discrete, standalone facts**:
 
 | Fact Type | Example | File |
 |-----------|---------|------|
-| User stated preference | "I prefer tabs over spaces" | `preferences.md` |
-| Technical decision made | "Using PostgreSQL for persistence" | `decisions.md` |
-| Repeated behavior (2+ times) | User always asks for tests first | `patterns.md` |
-| Discovered codebase info | "Auth module uses JWT refresh tokens" | `insights.md` |
+| User stated preference | "I prefer tabs over spaces" | `marge-simpson/system/knowledge/preferences.md` |
+| Technical decision made | "Using PostgreSQL for persistence" | `marge-simpson/system/knowledge/decisions.md` |
+| Repeated behavior (2+ times) | User always asks for tests first | `marge-simpson/system/knowledge/patterns.md` |
+| Discovered codebase info | "Auth module uses JWT refresh tokens" | `marge-simpson/system/knowledge/insights.md` |
 
 **Extract 3-5 facts per session.** Quality over quantity.
 

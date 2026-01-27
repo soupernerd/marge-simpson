@@ -11,7 +11,7 @@ AI/Agents must read `AGENTS.md` before working.
 
 ## Tracking (required)
 
-- **Next ID:** See `assessment.md` (single source of truth for ID generation)
+- **Next ID:** See `marge-simpson/system/tracking/assessment.md` (single source of truth for ID generation)
 
 ---
 

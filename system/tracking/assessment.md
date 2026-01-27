@@ -11,7 +11,7 @@ AI/Agents must read `AGENTS.md` before working.
 ## Tracking (required)
 
 - **Next ID:** MS-0001
-  - Single source of truth for ID generation. Increment here only (tasklist.md references this).
+  - Single source of truth for ID generation. Increment here only (`marge-simpson/system/tracking/tasklist.md` references this).
 
 ---
 

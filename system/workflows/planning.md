@@ -28,7 +28,7 @@ Bring in relevant experts for planning discussions:
 **DO create:**
 - Plan documents using `feature_plan_template.md` → save to `marge-simpson/system/tracking/[feature]_PLAN.md`
 - MS-#### ID for the plan itself (plan tracking, not implementation tasks)
-- Entry in `assessment.md` with Status: Planning
+- Entry in `marge-simpson/system/tracking/assessment.md` with Status: Planning
 
 ### Focus On
 - Analysis and exploration
@@ -101,8 +101,8 @@ Before these changes, stop and request approval:
 
 When planning is approved and user says "proceed" or "implement":
 
-1. Update plan's MS-#### status to "Approved" in assessment.md
-2. Create implementation tasks (sub-IDs) in tasklist.md
+1. Update plan's MS-#### status to "Approved" in `marge-simpson/system/tracking/assessment.md`
+2. Create implementation tasks (sub-IDs) in `marge-simpson/system/tracking/tasklist.md`
 3. Switch to `marge-simpson/system/workflows/work.md` process
 
 ## Examples

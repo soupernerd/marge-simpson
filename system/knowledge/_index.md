@@ -44,11 +44,11 @@ _None yet_
 
 | File | Purpose | When to Add |
 |------|---------|-------------|
-| [decisions.md](decisions.md) | Strategic choices with rationale | After making architecture/tech decisions |
-| [patterns.md](patterns.md) | Recurring behaviors observed | After noticing repeated user preferences |
-| [preferences.md](preferences.md) | User's stated preferences | When user expresses how they like things done |
-| [insights.md](insights.md) | Learned facts about codebase | After discovering non-obvious codebase info |
-| [archive.md](archive.md) | Pruned entries (historical) | When entry meets prune criteria |
+| [decisions.md](marge-simpson/system/knowledge/decisions.md) | Strategic choices with rationale | After making architecture/tech decisions |
+| [patterns.md](marge-simpson/system/knowledge/patterns.md) | Recurring behaviors observed | After noticing repeated user preferences |
+| [preferences.md](marge-simpson/system/knowledge/preferences.md) | User's stated preferences | When user expresses how they like things done |
+| [insights.md](marge-simpson/system/knowledge/insights.md) | Learned facts about codebase | After discovering non-obvious codebase info |
+| [archive.md](marge-simpson/system/knowledge/archive.md) | Pruned entries (historical) | When entry meets prune criteria |
 
 ---
 

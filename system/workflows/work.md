@@ -56,12 +56,12 @@ Don't contradict prior decisions. Respect stored preferences.
 ### Features
 1. Create MS-#### ID
 2. Create plan: `marge-simpson/system/tracking/[name]_MS-####.md` (copy from `feature_plan_template.md`)
-3. Add to `assessment.md` + `tasklist.md`
+3. Add to `marge-simpson/system/tracking/assessment.md` + `marge-simpson/system/tracking/tasklist.md`
 4. Increment Next ID in both
 
 ### Bugs/Improvements/Refactors
 1. Create MS-#### ID
-2. Add to `assessment.md`:
+2. Add to `marge-simpson/system/tracking/assessment.md`:
    ```
    ### [MS-####] Description
    - **Type:** bug | feature | improvement | refactor
@@ -69,11 +69,11 @@ Don't contradict prior decisions. Respect stored preferences.
    - **Plan:** Steps
    - **Verification:** How to confirm
    ```
-3. Add to `tasklist.md`
+3. Add to `marge-simpson/system/tracking/tasklist.md`
 4. Increment Next ID
 
 ### Existing Work
-Find MS-#### in `tasklist.md`, mark `In Progress`, continue.
+Find MS-#### in `marge-simpson/system/tracking/tasklist.md`, mark `In Progress`, continue.
 
 ---
 
@@ -87,7 +87,7 @@ Find MS-#### in `tasklist.md`, mark `In Progress`, continue.
 IMPLEMENT → VERIFY → RECORD → NEXT
 ```
 
-1. **Implement** — Smallest safe change, update assessment.md
+1. **Implement** — Smallest safe change, update `marge-simpson/system/tracking/assessment.md`
 2. **Verify** — Run `verify.ps1 fast` (Win) or `verify.sh fast` (Unix)
 3. **Record** — Paste evidence, mark done in tasklist
 4. **Next** — Continue or deliver
@@ -133,8 +133,8 @@ Process is same for all. Labels are for humans.
 
 ### Tracking Sync (MANDATORY)
 ```
-- [ ] All MS-#### in response exist in tasklist.md
-- [ ] All files modified listed in assessment.md
+- [ ] All MS-#### in response exist in marge-simpson/system/tracking/tasklist.md
+- [ ] All files modified listed in marge-simpson/system/tracking/assessment.md
 - [ ] Next ID matches in both tracking files
 ```
 **IF any unchecked → fix tracking before responding.**
@@ -149,12 +149,12 @@ Process is same for all. Labels are for humans.
 
 | What happened | Add to | ID format |
 |---------------|--------|-----------|
-| Made architectural decision | `decisions.md` | D-### |
-| User stated preference | `preferences.md` | PR-### |
-| Noticed repeated user behavior | `patterns.md` | P-### |
-| Learned non-obvious codebase fact | `insights.md` | I-### |
+| Made architectural decision | `marge-simpson/system/knowledge/decisions.md` | D-### |
+| User stated preference | `marge-simpson/system/knowledge/preferences.md` | PR-### |
+| Noticed repeated user behavior | `marge-simpson/system/knowledge/patterns.md` | P-### |
+| Learned non-obvious codebase fact | `marge-simpson/system/knowledge/insights.md` | I-### |
 
-**If yes:** Add entry, update `_index.md` (Quick Stats, Recent Entries, Tag Index).
+**If yes:** Add entry, update `marge-simpson/system/knowledge/_index.md` (Quick Stats, Recent Entries, Tag Index).
 
 **If no:** Skip. Don't force it.
 
