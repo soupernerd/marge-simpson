@@ -84,7 +84,6 @@ SHARED_FILES=(
     "AGENTS-lite.md"
     "experts"
     "knowledge"
-    "model_pricing.json"
     "prompts"
     "README.md"
     "scripts"
@@ -95,6 +94,13 @@ SHARED_FILES=(
 for item in "${SHARED_FILES[@]}"; do
     if [[ -e "$REPO_ROOT/$item" ]]; then
         cp -R "$REPO_ROOT/$item" "$INSTALL_DIR/shared/"
+    fi
+done
+
+# Copy system files (model_pricing.json, LICENSE, CHANGELOG.md)
+for item in "model_pricing.json" "LICENSE" "CHANGELOG.md"; do
+    if [[ -e "$REPO_ROOT/system/$item" ]]; then
+        cp "$REPO_ROOT/system/$item" "$INSTALL_DIR/shared/"
     fi
 done
 

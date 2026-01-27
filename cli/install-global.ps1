@@ -89,13 +89,21 @@ $SharedItems = @(
     "AGENTS-lite.md",
     "experts",
     "knowledge",
-    "model_pricing.json",
     "prompts",
     "README.md",
     "scripts",
     "VERSION",
     "workflows"
 )
+
+# Copy system files (model_pricing.json, LICENSE, CHANGELOG.md)
+$SystemFiles = @("model_pricing.json", "LICENSE", "CHANGELOG.md")
+foreach ($file in $SystemFiles) {
+    $srcPath = Join-Path $RepoRoot "system\$file"
+    if (Test-Path $srcPath) {
+        Copy-Item -Force $srcPath "$InstallDir\shared\$file"
+    }
+}
 
 foreach ($item in $SharedItems) {
     $srcPath = Join-Path $RepoRoot $item

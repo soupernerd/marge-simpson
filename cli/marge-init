@@ -74,6 +74,7 @@ echo "Initializing .marge/..."
 mkdir -p "$TARGET_DIR"
 
 # Symlink shared resources (with fallback to copy if symlinks fail)
+# Note: model_pricing.json is copied from system/ by install-global
 SHARED_LINKS=(
     "AGENTS.md"
     "AGENTS-lite.md"

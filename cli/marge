@@ -439,9 +439,11 @@ parse_token_usage() {
     local input_rate=$DEFAULT_INPUT_RATE
     local output_rate=$DEFAULT_OUTPUT_RATE
 
-    # Try to read from model_pricing.json if available
-    local pricing_file="./$MARGE_FOLDER/model_pricing.json"
-    [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
+    # Try to read from model_pricing.json if available (check multiple locations)
+    local pricing_file=""
+    for path in "./$MARGE_FOLDER/model_pricing.json" "./system/model_pricing.json" "$MARGE_HOME/shared/model_pricing.json"; do
+        [[ -f "$path" ]] && { pricing_file="$path"; break; }
+    done
 
     if [[ -f "$pricing_file" ]]; then
         if ! command -v jq &>/dev/null; then
@@ -751,6 +753,7 @@ show_doctor() {
     # Check model_pricing.json
     local pricing_paths=(
         "./$MARGE_FOLDER/model_pricing.json"
+        "./system/model_pricing.json"
         "./model_pricing.json"
         "$MARGE_HOME/shared/model_pricing.json"
         "$MARGE_HOME/model_pricing.json"
@@ -1159,8 +1162,10 @@ print_session_summary() {
         local input_rate=$DEFAULT_INPUT_RATE
         local output_rate=$DEFAULT_OUTPUT_RATE
 
-        local pricing_file="./$MARGE_FOLDER/model_pricing.json"
-        [[ ! -f "$pricing_file" ]] && pricing_file="$MARGE_HOME/shared/model_pricing.json"
+        local pricing_file=""
+        for path in "./$MARGE_FOLDER/model_pricing.json" "./system/model_pricing.json" "$MARGE_HOME/shared/model_pricing.json"; do
+            [[ -f "$path" ]] && { pricing_file="$path"; break; }
+        done
 
         if [[ -f "$pricing_file" ]] && command -v jq &>/dev/null; then
             local model_name="Claude Sonnet"

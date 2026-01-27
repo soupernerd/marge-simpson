@@ -206,10 +206,10 @@ required_files=(
 if [[ "$IS_META_MARGE" != "true" ]]; then
     required_files+=(
         "README.md"
-        "CHANGELOG.md"
+        "system/CHANGELOG.md"
         "VERSION"
-        "LICENSE"
-        "model_pricing.json"
+        "system/LICENSE"
+        "system/model_pricing.json"
         "cli/marge"
         "cli/marge.ps1"
         "cli/marge-init"

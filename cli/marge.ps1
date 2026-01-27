@@ -399,13 +399,18 @@ function Write-TokenUsage {
         $inputRate = $script:DEFAULT_INPUT_RATE
         $outputRate = $script:DEFAULT_OUTPUT_RATE
         
-        # Try to read from model_pricing.json
-        $pricingFile = "./$script:MARGE_FOLDER/model_pricing.json"
-        if (-not (Test-Path $pricingFile)) {
-            $pricingFile = Join-Path $script:MARGE_HOME "shared\model_pricing.json"
+        # Try to read from model_pricing.json (check multiple locations)
+        $pricingFile = $null
+        $pricingPaths = @(
+            "./$script:MARGE_FOLDER/model_pricing.json",
+            "./system/model_pricing.json",
+            (Join-Path $script:MARGE_HOME "shared\model_pricing.json")
+        )
+        foreach ($path in $pricingPaths) {
+            if (Test-Path $path) { $pricingFile = $path; break }
         }
         
-        if (Test-Path $pricingFile) {
+        if ($pricingFile) {
             try {
                 $pricing = Get-Content $pricingFile -Raw -ErrorAction Stop | ConvertFrom-Json -ErrorAction Stop
                 
@@ -1200,6 +1205,7 @@ function Show-Doctor {
     # Check model_pricing.json
     $pricingPaths = @(
         "./$script:MARGE_FOLDER/model_pricing.json",
+        "./system/model_pricing.json",
         "./model_pricing.json",
         (Join-Path $script:MARGE_HOME "shared\model_pricing.json"),
         (Join-Path $script:MARGE_HOME "model_pricing.json")
@@ -1494,13 +1500,18 @@ function Get-ModelPricing {
     $inputRate = $script:DEFAULT_INPUT_RATE
     $outputRate = $script:DEFAULT_OUTPUT_RATE
     
-    # Try to read from model_pricing.json
-    $pricingFile = "./$script:MARGE_FOLDER/model_pricing.json"
-    if (-not (Test-Path $pricingFile)) {
-        $pricingFile = Join-Path $script:MARGE_HOME "shared\model_pricing.json"
+    # Try to read from model_pricing.json (check multiple locations)
+    $pricingFile = $null
+    $pricingPaths = @(
+        "./$script:MARGE_FOLDER/model_pricing.json",
+        "./system/model_pricing.json",
+        (Join-Path $script:MARGE_HOME "shared\model_pricing.json")
+    )
+    foreach ($path in $pricingPaths) {
+        if (Test-Path $path) { $pricingFile = $path; break }
     }
     
-    if (Test-Path $pricingFile) {
+    if ($pricingFile) {
         try {
             $pricing = Get-Content $pricingFile -Raw | ConvertFrom-Json
             $modelName = if ($script:MODEL -match "opus") { "Claude Opus" } else { "Claude Sonnet" }

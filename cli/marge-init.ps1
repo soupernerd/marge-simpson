@@ -106,7 +106,7 @@ $SharedLinks = @(
     "AGENTS-lite.md",
     "experts",
     "knowledge",
-    "model_pricing.json",
+    "model_pricing.json",  # Copied from system/ by install-global
     "prompts",
     "README.md",
     "scripts",

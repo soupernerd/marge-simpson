@@ -225,10 +225,10 @@ $requiredFiles = @(
 if (-not $IsMetaMarge) {
     $requiredFiles += @(
         "README.md",
-        "CHANGELOG.md",
+        "system\CHANGELOG.md",
         "VERSION",
-        "LICENSE",
-        "model_pricing.json",
+        "system\LICENSE",
+        "system\model_pricing.json",
         "cli\marge",
         "cli\marge.ps1",
         "cli\marge-init",
