@@ -342,80 +342,14 @@
 
 ---
 
-## prompts/new_prompts/*.md (ALL)
+## prompts/*.md
 
 | File | Line | Source Path | Transform? | Meta Path |
 |------|------|-------------|------------|-----------|
-| ask.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| ask.md | 10 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
 | audit.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| audit.md | 13 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| decision.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| decision.md | 10 | `marge-simpson/system/knowledge/decisions.md` | ✅ | `.meta_marge/system/knowledge/decisions.md` |
-| docs.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| fix.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| plan.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| review.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| session.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| work.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| work.md | 7 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-
----
-
-## prompts/new_prompts/meta_prompts/*.md
-
-| File | Line | Source Path | Transform? | Meta Path |
-|------|------|-------------|------------|-----------|
-| deep_audit.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| deep_audit.md | 17 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| deep_audit.md | 21 | `marge-simpson/system/tracking/assessment.md` | ✅ | `.meta_marge/system/tracking/assessment.md` |
-| deep_audit.md | 22 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| deep_audit.md | 23 | `marge-simpson/system/CHANGELOG.md` | 🔒 | `marge-simpson/system/CHANGELOG.md` (stay - source file) |
-| deep_audit.md | 24 | `marge-simpson/system/knowledge/decisions.md` | ✅ | `.meta_marge/system/knowledge/decisions.md` |
-| deep_audit.md | 24 | `marge-simpson/system/knowledge/insights.md` | ✅ | `.meta_marge/system/knowledge/insights.md` |
-| evolve.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| evolve.md | 39 | `marge-simpson/system/knowledge/decisions.md` | ✅ | `.meta_marge/system/knowledge/decisions.md` |
-| expert_calibration.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| prompt_audit.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| release.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| release.md | 12 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| release.md | 15 | `marge-simpson/system/CHANGELOG.md` | 🔒 | `marge-simpson/system/CHANGELOG.md` (stay - source file) |
-| release.md | 20 | `marge-simpson/system/CHANGELOG.md` | 🔒 | `marge-simpson/system/CHANGELOG.md` (stay - source file) |
-| release.md | 35 | `marge-simpson/system/scripts/verify.ps1 full` | 🔒 | `marge-simpson/system/scripts/verify.ps1 full` (stay) |
-
----
-
-## prompts/orig_prompts/*.md
-
-| File | Line | Source Path | Transform? | Meta Path |
-|------|------|-------------|------------|-----------|
-| features_and_issues.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| features_and_issues.md | 8 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| misc_instruction.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| misc_instruction.md | 7 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| multiple_prompts.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| multiple_prompts.md | 15 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| questions_confirmations.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| questions_confirmations.md | 9 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| suggest_features.md | 3 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| suggest_features.md | 41 | `marge-simpson/system/tracking/recommended_features.md` | ✅ | `.meta_marge/system/tracking/recommended_features.md` |
-| system_audit.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| system_audit.md | 16 | `marge-simpson/system/tracking/assessment.md` | ✅ | `.meta_marge/system/tracking/assessment.md` |
-| system_audit.md | 17 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-| system_audit.md | 21 | `marge-simpson/system/tracking/tasklist.md` | ✅ | `.meta_marge/system/tracking/tasklist.md` |
-
----
-
-## prompts/orig_prompts/for_meta/path_integrity_audit.md
-
-| Line | Source Path | Transform? | Meta Path |
-|------|-------------|------------|-----------|
-| 17 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
-| 62 | `marge-simpson/system/experts/engineering.md` | 🔒 | `marge-simpson/system/experts/engineering.md` (stay) |
-| 67 | `marge-simpson/system/tracking/assessment.md` | ✅ | `.meta_marge/system/tracking/assessment.md` |
-| 98 | `marge-simpson/system/workflows/_index.md` | ✅ | `.meta_marge/system/workflows/_index.md` |
-| 104 | `marge-simpson/system/X` | ✅ | `.meta_marge/system/X` (generalized) |
-| 143 | `marge-simpson/system/experts/engineering.md` | 🔒 | `marge-simpson/system/experts/engineering.md` (stay) |
+| prompt.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
+| suggest.md | 1 | `Read marge-simpson/AGENTS.md` | ✅ | `Read .meta_marge/AGENTS.md` |
+| suggest.md | 10 | `marge-simpson/system/tracking/recommended_features.md` | ✅ | `.meta_marge/system/tracking/recommended_features.md` |
 
 ---
 
