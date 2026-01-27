@@ -120,14 +120,16 @@ Get-ChildItem -Path $TargetFolder -Recurse -File -Force | ForEach-Object {
         # "Read marge-simpson/AGENTS.md" -> "Read .meta_marge/AGENTS.md"
         $content = $content -replace 'Read marge-simpson/AGENTS\.md', 'Read .meta_marge/AGENTS.md'
         
-        # Transform ONLY tracking and workflow paths to .meta_marge/
+        # Transform tracking, workflow, and knowledge paths to .meta_marge/
         # marge-simpson/system/tracking/ -> .meta_marge/system/tracking/ (meta work is tracked here)
         # marge-simpson/system/workflows/ -> .meta_marge/system/workflows/ (meta-specific workflow copies)
-        # BUT keep experts and knowledge pointing to source (AI uses source references)
+        # marge-simpson/system/knowledge/ -> .meta_marge/system/knowledge/ (user data stored here)
+        # BUT keep experts pointing to source (AI loads source expert files)
         $content = $content -replace 'marge-simpson/system/tracking/', '.meta_marge/system/tracking/'
         $content = $content -replace 'marge-simpson/system/workflows/', '.meta_marge/system/workflows/'
-        # NOTE: NOT transforming marge-simpson/system/experts/ or marge-simpson/system/knowledge/
-        # Those should stay pointing to source so AI loads actual expert/knowledge files
+        $content = $content -replace 'marge-simpson/system/knowledge/', '.meta_marge/system/knowledge/'
+        # NOTE: NOT transforming marge-simpson/system/experts/
+        # Those should stay pointing to source so AI loads actual expert files
         
         # Protect GitHub URLs
         $content = $content -replace "(github\.com/[^/]+/)$([regex]::Escape($SourceName))", '$1___GITHUB___'

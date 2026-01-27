@@ -96,12 +96,16 @@ while IFS= read -r -d '' file; do
     # "Read marge-simpson/AGENTS.md" -> "Read .meta_marge/AGENTS.md"
     content=${content//"Read marge-simpson/AGENTS.md"/"Read .meta_marge/AGENTS.md"}
     
-    # Transform ONLY tracking and workflow paths to .meta_marge/
-    # BUT keep experts and knowledge pointing to source (AI uses source references)
+    # Transform tracking, workflow, and knowledge paths to .meta_marge/
+    # tracking/ -> meta work is tracked here
+    # workflows/ -> meta-specific workflow copies
+    # knowledge/ -> user data stored here (decisions, patterns, preferences, insights)
+    # BUT keep experts pointing to source (AI loads source expert files)
     content=${content//"marge-simpson/system/tracking/"/".meta_marge/system/tracking/"}
     content=${content//"marge-simpson/system/workflows/"/".meta_marge/system/workflows/"}
-    # NOTE: NOT transforming marge-simpson/system/experts/ or marge-simpson/system/knowledge/
-    # Those should stay pointing to source so AI loads actual expert/knowledge files
+    content=${content//"marge-simpson/system/knowledge/"/".meta_marge/system/knowledge/"}
+    # NOTE: NOT transforming marge-simpson/system/experts/
+    # Those should stay pointing to source so AI loads actual expert files
     
     # Protect GitHub URLs (using sed because this requires capture groups)
     # shellcheck disable=SC2001

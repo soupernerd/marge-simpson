@@ -14,14 +14,14 @@ Read marge-simpson/AGENTS.md and follow it.
 
 ### Stop When
 - All P0/P1 resolved
-- P2+ documented in tasklist.md
+- P2+ documented in `marge-simpson/system/tracking/tasklist.md`
 - Max 5 passes reached
 
 ### Update Before Done
-- assessment.md — findings + evidence
-- tasklist.md — completed + backlog
-- CHANGELOG.md — under [Unreleased]
-- decisions.md, insights.md — if applicable
+- `marge-simpson/system/tracking/assessment.md` — findings + evidence
+- `marge-simpson/system/tracking/tasklist.md` — completed + backlog
+- `marge-simpson/system/CHANGELOG.md` — under [Unreleased]
+- `marge-simpson/system/knowledge/decisions.md`, `marge-simpson/system/knowledge/insights.md` — if applicable
 
 ### Output
 | Metric | Value |

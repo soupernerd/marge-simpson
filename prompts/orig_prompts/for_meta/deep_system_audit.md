@@ -85,7 +85,7 @@ Before completing, ensure:
    - Patterns discovered
    - Lessons learned
 
-5. **CHANGELOG.md** — If fixes were applied:
+5. **marge-simpson/system/CHANGELOG.md** — If fixes were applied:
    - Add entry under [Unreleased] or bump version
    - List changes by category (Fixed, Changed, Added)
 
@@ -136,9 +136,9 @@ Before completing, ensure:
 | Feature idea | Why users want it | Low/Med/High |
 
 ### Documentation Updates
-- [x] assessment.md updated
-- [x] tasklist.md updated
-- [x] CHANGELOG.md updated (if fixes applied)
+- [x] `marge-simpson/system/tracking/assessment.md` updated
+- [x] `marge-simpson/system/tracking/tasklist.md` updated
+- [x] `marge-simpson/system/CHANGELOG.md` updated (if fixes applied)
 - [x] README.md updated (if warranted, keep existing data and structure)
 - [x] VERSION bumped (if warranted)
 - [x] marge-simpson/system/knowledge/*.md updated (if decisions made)

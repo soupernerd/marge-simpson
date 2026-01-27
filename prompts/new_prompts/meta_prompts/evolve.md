@@ -36,7 +36,7 @@ For each:
 1. Create MS-#### ID
 2. Implement
 3. `verify.ps1 fast`
-4. Update decisions.md with rationale
+4. Update `marge-simpson/system/knowledge/decisions.md` with rationale
 
 ### Output
 

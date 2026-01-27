@@ -9,15 +9,15 @@ Read marge-simpson/AGENTS.md and follow it.
 ### Pre-Release Checklist
 
 - [ ] `verify.ps1 full` passes
-- [ ] No P0/P1 in tasklist.md
+- [ ] No P0/P1 in `marge-simpson/system/tracking/tasklist.md`
 - [ ] README.md accurate
 - [ ] CLI help matches implementation
-- [ ] CHANGELOG.md current
+- [ ] `marge-simpson/system/CHANGELOG.md` current
 
 ### Update Files
 
 1. **VERSION** — bump to X.Y.Z
-2. **CHANGELOG.md** — convert [Unreleased] to [X.Y.Z] — YYYY-MM-DD
+2. **`marge-simpson/system/CHANGELOG.md`** — convert [Unreleased] to [X.Y.Z] — YYYY-MM-DD
 3. **README.md** — update version badges if any
 
 ### CHANGELOG Format

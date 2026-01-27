@@ -18,7 +18,7 @@ Read marge-simpson/AGENTS.md and follow it.
 
 4. **Report**
    - List all MS-#### IDs created
-   - Show unchecked items from tasklist.md (P0 → P1 → P2)
+   - Show unchecked items from `marge-simpson/system/tracking/tasklist.md` (P0 → P1 → P2)
    - Suggest order of operations
 
 Output using the Response Format from AGENTS.md, with detailed info on each ms-00xx, in table format.
