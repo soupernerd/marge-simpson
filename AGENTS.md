@@ -106,7 +106,7 @@ Direct tools (no expert) only for: reading, commands, single-line Lite fixes.
 | `marge-simpson/system/tracking/assessment.md` | Findings + evidence |
 | `marge-simpson/system/tracking/tasklist.md` | Work queue |
 
-**Workflow:** IMPLEMENT → VERIFY → RECORD → COMPLETE
+**CRITICAL workflow:** IMPLEMENT → VERIFY → RECORD → COMPLETE
 
 **Verify:** `marge-simpson/system/scripts/verify.ps1 fast` — Never claim "passed" without raw output.
 
