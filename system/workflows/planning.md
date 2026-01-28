@@ -16,9 +16,13 @@ When the user's message includes:
 ## Planning Mode Rules
 
 ### Expert Consultation (Required)
-Bring in relevant experts for planning discussions:
-- Architecture planning → `marge-simpson/system/experts/engineering.md`
+
+Always load relevant experts for planning discussions — even quick brainstorms benefit from expert framing.
+
+- Architecture/features → `marge-simpson/system/experts/engineering.md`
 - Security considerations → `marge-simpson/system/experts/security.md`
+
+> **Note:** This overrides AGENTS.md "Just-in-Time" guidance. For planning, load experts upfront.
 
 ### No Implementation Code
 - **DO NOT** modify source code, configs, or scripts
@@ -27,9 +31,13 @@ Bring in relevant experts for planning discussions:
 
 **DO create:**
 - Plan documents using `feature_plan_template.md` → save to `marge-simpson/system/tracking/[feature]_PLAN.md`
-- MS-#### ID for the plan itself (plan tracking, not implementation tasks)
+- MS-#### ID for formal plans (architecture, large features)
 - Entry in `marge-simpson/system/tracking/assessment.md` with Status: Planning
-- Documentation of recommendations (e.g., `marge-simpson/system/tracking/recommended_features.md`)
+
+**Suggestions (no MS-ID needed):**
+- Feature brainstorms → `marge-simpson/system/tracking/recommended_features.md`
+- These are input for future work, not tracked work themselves
+- When user approves a suggestion → then create MS-ID and add to tasklist
 
 ### Focus On
 - Analysis and exploration
@@ -104,6 +112,16 @@ Bring in relevant experts for planning discussions:
 4. **Risks** - What could go wrong
 5. **Rollback** - How to undo if needed
 6. **Effort** - Rough scope (files, complexity)
+
+## Approving Suggestions
+
+When user says "approve feature [N]" or "let's do feature [N]" from a recommendations doc:
+
+1. Create new MS-#### ID for the approved feature
+2. Add to `marge-simpson/system/tracking/tasklist.md` with appropriate priority
+3. Add assessment entry with Status: Approved
+4. If complex, create `[feature]_PLAN.md` using template
+5. Proceed to implementation or wait for "proceed" signal
 
 ## Transitioning to Work
 

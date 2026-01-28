@@ -37,7 +37,7 @@ Before scanning, check what's already known:
 
 Use the tracking paths from the active AGENTS.md:
 - If the prompt instructs "Read .meta_marge/AGENTS.md" (meta run), track in `.meta_marge/system/tracking/`
-- Otherwise, track in `__BASE_TRACKING__`
+- Otherwise, track in `marge-simpson/system/tracking/`
 
 ### Target of Changes (Meta Runs)
 

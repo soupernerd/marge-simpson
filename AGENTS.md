@@ -76,13 +76,15 @@ marge-simpson/ is tooling, not the target. Work/auditing happens OUTSIDE this fo
 
 | When... | Load... |
 |---------|--------|
-| About to make architecture/code change | `marge-simpson/system/experts/engineering.md` |
-| About to write/modify tests | `marge-simpson/system/experts/quality.md` |
-| Security-related work (auth, input, secrets) | `marge-simpson/system/experts/security.md` |
-| CI/CD, deploy, infra work | `marge-simpson/system/experts/operations.md` |
+| About to make code changes | `marge-simpson/system/experts/_index.md` → select relevant expert(s) |
 | Making a decision between options | Grep `marge-simpson/system/knowledge/decisions.md` for prior choices |
 | User corrects you or states preference | Check `marge-simpson/system/knowledge/preferences.md` |
 | Uncertain how user wants something | Check `marge-simpson/system/knowledge/patterns.md` |
+
+**Expert selection flow:**
+1. Load `_index.md` first (~50 tokens)
+2. Use keyword mapping to identify needed expert(s)
+3. Load only those expert files
 
 **Chain loading:** If a loaded file references another, load that too.
 
@@ -90,14 +92,14 @@ marge-simpson/ is tooling, not the target. Work/auditing happens OUTSIDE this fo
 
 ## Expert Subagents
 
-**Full mode: load relevant expert before work.**
+**Full mode: load `marge-simpson/system/experts/_index.md` first, then select:**
 
-| Task | Experts |
-|------|---------|
-| Architecture/Code | `engineering.md` |
-| Testing/QA | `quality.md` |
-| Security/Audit | `security.md` |
-| Deploy/CI/CD | `operations.md` |
+| Task Keywords | Expert File |
+|---------------|-------------|
+| architecture, API, refactor, implementation | `engineering.md` |
+| test, QA, coverage, automation | `quality.md` |
+| security, auth, encryption, compliance | `security.md` |
+| deploy, CI/CD, docker, monitoring | `operations.md` |
 
 Direct tools (no expert) only for: reading, commands, single-line Lite fixes.
 
@@ -124,6 +126,7 @@ Direct tools (no expert) only for: reading, commands, single-line Lite fixes.
 | Work request | `marge-simpson/system/workflows/work.md`, assign MS-#### |
 | Audit request | `marge-simpson/system/workflows/audit.md` |
 | Planning request | `marge-simpson/system/workflows/planning.md` |
+| Confirmation (MS-#### done) | Verify claim, update tracking, mark Done |
 
 ---
 
@@ -133,21 +136,24 @@ Every Full-mode response ends with:
 - IDs touched (MS-####)
 - Files modified
 - Verification output (raw)
-- Knowledge captured (if any): `📝 D-### | PR-### | P-### | I-###`
+- Knowledge captured (if any)
 
 ---
 
 ## Knowledge Capture
 
-**After completing MS-#### work**, if any of these occurred:
-- Architectural decision made → add to `marge-simpson/system/knowledge/decisions.md`
-- User preference discovered → add to `marge-simpson/system/knowledge/preferences.md`  
-- Reusable pattern identified → add to `marge-simpson/system/knowledge/patterns.md`
-- Non-obvious codebase fact learned → add to `marge-simpson/system/knowledge/insights.md`
+**After completing MS-#### work**, capture noteworthy learnings:
 
-**Then:** Update `marge-simpson/system/knowledge/_index.md` (Quick Stats, Recent Entries, Tag Index).
+| What happened | Add to |
+|---------------|--------|
+| Made architectural decision | `marge-simpson/system/knowledge/decisions.md` |
+| User stated preference | `marge-simpson/system/knowledge/preferences.md` |
+| Noticed reusable pattern | `marge-simpson/system/knowledge/patterns.md` |
+| Learned non-obvious fact | `marge-simpson/system/knowledge/insights.md` |
 
-**Skip if:** Trivial fix with no learnings.
+**Format:** Date + brief entry. No ID schemes required.
+
+**Skip if:** Trivial fix with no learnings. Don't force it.
 
 ---
 

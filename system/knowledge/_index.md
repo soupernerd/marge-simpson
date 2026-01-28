@@ -52,24 +52,20 @@ _None yet_
 
 ---
 
-## Entry ID Formats
+## Entry Format
 
-- `D-###` - Decisions
-- `P-###` - Patterns
-- `PR-###` - Preferences
-- `I-###` - Insights
+Entries use simple format:
+```markdown
+### YYYY-MM-DD: Brief Title
+Description of the learning. Use #tags for searchability.
+```
+
+No ID schemes required. Tags enable grep-based retrieval.
 
 ---
 
 ## Maintenance
 
-**When adding entries:**
-1. Add to the appropriate category file
-2. Update this index:
-   - Increment Quick Stats count
-   - Add to Recent Entries (keep last 5)
-   - Update Tag Index
+**Adding entries:** Just append to the relevant file. No index update needed.
 
-**Quarterly review:**
-- Archive entries older than 6 months to `marge-simpson/system/knowledge/archive.md`
-- Review and merge duplicate/similar entries
+**Periodic review (optional):** Archive stale entries to `marge-simpson/system/knowledge/archive.md`

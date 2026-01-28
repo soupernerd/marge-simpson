@@ -53,6 +53,12 @@ If the task is clear, skip this and execute.
 - 10 unrelated fixes = 10 IDs
 
 ### Features
+
+**Small feature** (single session, < 50 lines):
+1. Create MS-#### ID
+2. Use Bugs/Improvements path below (no separate plan file)
+
+**Large feature** (multi-session, phased, or user requests planning):
 1. Create MS-#### ID
 2. Create plan: `marge-simpson/system/tracking/[name]_MS-####.md` (copy from `feature_plan_template.md`)
 3. Add to `marge-simpson/system/tracking/assessment.md` + `marge-simpson/system/tracking/tasklist.md`
@@ -73,6 +79,14 @@ If the task is clear, skip this and execute.
 
 ### Existing Work
 Find MS-#### in `marge-simpson/system/tracking/tasklist.md`, mark `In Progress`, continue.
+
+### Confirmations
+When user says "MS-#### is fixed" or similar:
+1. Find MS-#### in `marge-simpson/system/tracking/assessment.md`
+2. Check: Was verification evidence recorded?
+   - **Yes** → Mark Done in both tracking files
+   - **No** → Run verify, record evidence, then mark Done
+3. Mode: Lite (status update only)
 
 ---
 
