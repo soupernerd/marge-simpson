@@ -12,6 +12,33 @@ User explicitly asks for:
 
 **This is the ONLY workflow with a discovery phase.** Regular work items skip straight to execution.
 
+## Clarify Audit Scope (Interactive)
+
+Before loading experts, clarify what the user wants audited.
+
+**If scope is unclear, present this menu:**
+
+```
+┌─────────────────────────────────────────┐
+│          AUDIT SCOPE SELECTION          │
+├─────────────────────────────────────────┤
+│  What would you like to audit?          │
+│                                         │
+│  [1] Full codebase                      │
+│  [2] Specific folder (you specify)      │
+│  [3] Recent changes (since last commit) │
+│  [4] Security-focused review            │
+│  [5] Architecture/design review         │
+│                                         │
+│  Reply with a number or describe scope. │
+└─────────────────────────────────────────┘
+```
+
+**Skip this menu if:**
+- User already specified scope ("audit the CLI", "review auth module")
+- Prompt explicitly says what to audit
+- Meta-marge context (audit target is always `marge-simpson/`)
+
 ## Load Experts (Required)
 
 Audits require expert subagents. Load based on audit type:
@@ -19,6 +46,8 @@ Audits require expert subagents. Load based on audit type:
 - **Code audit** → `marge-simpson/system/experts/engineering.md` + `marge-simpson/system/experts/quality.md`
 - **Architecture audit** → `marge-simpson/system/experts/engineering.md`
 - **Full audit** → Multiple experts per `marge-simpson/system/experts/_index.md`
+
+**If audit type not specified:** Default to Code audit (`engineering.md` + `quality.md`).
 
 ## Phase 1: Discovery
 
@@ -99,7 +128,12 @@ Prioritize:
 
 ## Phase 2: Execution
 
-**After discovery:** If user wants issues fixed, fix them. Don't wait for a second "please execute" prompt.
+**Explicit stop signals — do NOT proceed to execution if:**
+- Prompt says "analysis only", "do not modify", "do not fix"
+- Prompt says "stop after discovery" or "report only"
+- User included "AUDIT MODE" banner
+
+**After discovery:** If none of the above, and user wants issues fixed, fix them. Don't wait for a second "please execute" prompt.
 
 After discovery, you have a populated tasklist. Execute using the standard work workflow:
 
@@ -110,6 +144,8 @@ After discovery, you have a populated tasklist. Execute using the standard work 
 **If user says "audit and fix" → do both. If user says "audit only" → stop after discovery.**
 
 ## Response Format
+
+**Format precedence:** Inline prompt format requests > this workflow format > AGENTS.md Response Format.
 
 After audit discovery, report:
 
