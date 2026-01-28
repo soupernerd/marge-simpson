@@ -29,6 +29,7 @@ Bring in relevant experts for planning discussions:
 - Plan documents using `feature_plan_template.md` → save to `marge-simpson/system/tracking/[feature]_PLAN.md`
 - MS-#### ID for the plan itself (plan tracking, not implementation tasks)
 - Entry in `marge-simpson/system/tracking/assessment.md` with Status: Planning
+- Documentation of recommendations (e.g., `marge-simpson/system/tracking/recommended_features.md`)
 
 ### Focus On
 - Analysis and exploration

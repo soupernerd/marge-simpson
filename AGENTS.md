@@ -60,8 +60,6 @@ marge-simpson/ is tooling, not the target. Work/auditing happens OUTSIDE this fo
 5. **No hardcoded secrets** → Environment variables only
 6. **State uncertainty** → Declare: checked, known, unknown
 
-**Stop for approval:** 3+ files, architectural change, or public API modification.
-
 ---
 
 ## Just-in-Time Context
