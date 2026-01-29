@@ -138,6 +138,8 @@ Get-ChildItem -Path $TargetFolder -Recurse -File -Force | ForEach-Object {
         # Transform AGENTS.md references in prompts
         # "Read marge-simpson/AGENTS.md" -> "Read .meta_marge/AGENTS.md"
         $content = $content -replace 'Read marge-simpson/AGENTS\.md', 'Read .meta_marge/AGENTS.md'
+        # "Output using Response Format from marge-simpson/AGENTS.md" -> ".meta_marge/AGENTS.md"
+        $content = $content -replace 'from marge-simpson/AGENTS\.md', 'from .meta_marge/AGENTS.md'
         
         # Transform tracking, workflow, and knowledge paths to .meta_marge/
         # marge-simpson/system/tracking/ -> .meta_marge/system/tracking/ (meta work is tracked here)

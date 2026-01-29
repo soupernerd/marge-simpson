@@ -109,6 +109,8 @@ while IFS= read -r -d '' file; do
     # Transform AGENTS.md references in prompts
     # "Read marge-simpson/AGENTS.md" -> "Read .meta_marge/AGENTS.md"
     content=${content//"Read marge-simpson/AGENTS.md"/"Read .meta_marge/AGENTS.md"}
+    # "from marge-simpson/AGENTS.md" -> "from .meta_marge/AGENTS.md"
+    content=${content//"from marge-simpson/AGENTS.md"/"from .meta_marge/AGENTS.md"}
     
     # Transform tracking, workflow, and knowledge paths to .meta_marge/
     # tracking/ -> meta work is tracked here
