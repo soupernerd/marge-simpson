@@ -7,4 +7,4 @@ Prompt:
 - Example confirmation: "MS-0042 is fixed"
 - Example instruction: "Refactor the auth module to use JWT"
 
-Output using Response Format from AGENTS.md.
+Output using Response Format from marge-simpson/AGENTS.md.

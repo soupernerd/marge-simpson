@@ -7,4 +7,4 @@ Read marge-simpson/AGENTS.md and follow it.
 3. Update tracking docs (assessment.md, tasklist.md) with MS-#### IDs
 4. Stop. Report findings in chat as a table (MS-#### + 1-2 sentence summary per issue)
 
-Output using Response Format from AGENTS.md.
+Output using Response Format from marge-simpson/AGENTS.md.

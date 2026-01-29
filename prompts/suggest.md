@@ -13,4 +13,4 @@ Create: marge-simpson/system/tracking/recommended_features.md
 
 To approve a feature: "Approve feature [N] from recommendations"
 
-Output using Response Format from AGENTS.md.
+Output using Response Format from marge-simpson/AGENTS.md.
