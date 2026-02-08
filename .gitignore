@@ -4,6 +4,7 @@
 meta_marge/
 WIZARD_MODE_REFERENCE/
 .a/
+.marge_assets/
 
 # Internal marketing/notes (not for repo)
 _tweets_for_marge.md
